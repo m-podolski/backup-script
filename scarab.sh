@@ -3,7 +3,7 @@
 # malte.podolski AT web DOT de
 # github.com/m-podolski/scarab-backup
 
-version='0.1.0'
+version='0.2.0'
 
 style_ok='\e[0;32m\e[1m'
 style_warn='\e[0;33m\e[1mWarning: '
@@ -93,7 +93,7 @@ check_arguments() {
   esac
 }
 
-check_arguments
+check_arguments $@
 
 get_destination_path() {
   if [ $mode_flag == 'create' ]; then
@@ -201,10 +201,15 @@ select_destination() {
       ;;
     *)
       drivepath="/media/$USER/$option"
-
       clear
-      echo -e "${style_heading}This is the root directory of your destination:${style_reset}"
-      ls -l --all --color=auto $drivepath
+
+      if [ -x "$(command -v tree)" ]; then
+        echo -e "${style_heading}These are the top 3 levels of your destination:${style_reset}"
+        tree -dL 3 $drivepath
+      else
+        echo -e "${style_heading}This is the root directory of your destination:${style_reset}"
+        ls -l --all --color=auto $drivepath
+      fi
 
       # If creating
       #   Check if there is enough free space at destination location and print stats
@@ -379,37 +384,30 @@ create_update_destination_path
 select_archive_mode() {
   PS3="$(echo -en ${style_reset})Select the archive mode for rsync (number): "
   options=(
-    'Regular Rsync Archive'
     'Scarab Archive'
     'Scarab Archive (Hardlinks)'
-    '(Dry Run) Regular Rsync Archive'
     '(Dry Run) Scarab Archive'
     '(Dry Run) Scarab Archive (Hardlinks)'
     'Custom'
   )
-  printf "${style_heading}%-32s${style_reset} %s\n" "${options[0]}" 'Same as "rsync --archive", deletes at destination.'
-  printf "${style_heading}%-32s${style_reset} %s\n" "${options[1]}" 'Same as above, also keeps access- and creation-times.'
-  printf "${style_heading}%-32s${style_reset} %s\n" "${options[2]}" 'Same as above, also keeps hardlinks. May be slower.'
+  printf "${style_heading}%-32s${style_reset} %s\n" "${options[0]}" 'Same as rsync archive, also keeps access- and creation-times. Deletes files missing from source/excluded at destination.'
+  printf "${style_heading}%-32s${style_reset} %s\n" "${options[1]}" 'Same as above, also keeps hardlinks. May be slower.'
   printf "${style_heading}%-32s${style_reset} %s\n" '(Dry Run) *' 'Uses respective configuration only for logging.'
-  printf "${style_heading}%-32s${style_reset} %s\n\n" "${options[6]}" 'Rsync with custom options. You will be prompted.'
+  printf "${style_heading}%-32s${style_reset} %s\n\n" "${options[4]}" 'Rsync with custom options. You will be prompted.'
 
-  # rsync_options=''
   # --archive is equal to the following options:
   # --recursive --links --perms --times --group --owner --devices --specials
-  rsync_options_regular='--itemize-changes --stats --progress --human-readable --filter=dir-merge_/.rsync-filter --archive --delete --delete-excluded'
   rsync_options_scarab='--itemize-changes --stats --progress --human-readable --filter=dir-merge_/.rsync-filter --archive --atimes --crtimes --delete --delete-excluded'
   rsync_options_scarab_hardlinks='--itemize-changes --stats --progress --human-readable --filter=dir-merge_/.rsync-filter --archive --atimes --crtimes --hard-links --delete --delete-excluded'
   echo -en "${style_menu}"
 
   select answer in "${options[@]}"; do
     case $answer in
-    ${options[0]}) rsync_options=$rsync_options_regular ;;
-    ${options[1]}) rsync_options=$rsync_options_scarab ;;
-    ${options[2]}) rsync_options=$rsync_options_scarab_hardlinks ;;
-    ${options[3]}) rsync_options="--dry-run $rsync_options_regular" ;;
-    ${options[4]}) rsync_options="--dry-run $rsync_options_scarab " ;;
-    ${options[5]}) rsync_options="--dry-run $rsync_options_scarab_hardlinks" ;;
-    ${options[6]})
+    ${options[0]}) rsync_options=$rsync_options_scarab ;;
+    ${options[1]}) rsync_options=$rsync_options_scarab_hardlinks ;;
+    ${options[2]}) rsync_options="--dry-run $rsync_options_scarab " ;;
+    ${options[3]}) rsync_options="--dry-run $rsync_options_scarab_hardlinks" ;;
+    ${options[4]})
       echo
       read -p "Enter your rsync options: " rsync_options
       ;;

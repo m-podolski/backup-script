@@ -1,8 +1,8 @@
 # Scarab Backup
 
-This is a simple BASH utility script to copy files from your machine to an external drive. It is an attempt to take most of the pain and risk out of manual backups. It uses [rsync](https://rsync.samba.org/) for the copy operation and common GNU Coreutils. It is intended for personal use with local drives in a desktop-setup. Its main purpose is to add some CLI-UX to the tools involved by presenting a nice flow with menus and results displayed.
+This is a simple BASH utility script to copy files from your machine to an external drive. It is an attempt to take most of the pain and risk out of manual backups. It is intended for personal use with local drives in a desktop-setup. Its main purpose is to add some CLI-UX to the tools involved by presenting a nice flow with menus and results displayed.
 
-Additional Features:
+## Additional Features
 
 - Path validation
 - Drive listing and selection
@@ -10,6 +10,13 @@ Additional Features:
 - Easily selectable name formats (with source, timestamps, user/host)
 - Preconfigured Rsync options
 - Execution of a custom script before backing up
+
+## Dependencies
+
+- BASH
+- GNU Coreutils
+- [rsync](https://rsync.samba.org/)
+- [Tree (optional)](https://ubuntu.pkgs.org/22.04/ubuntu-universe-amd64/tree_2.0.2-1_amd64.deb.html)
 
 ## Usage
 
@@ -55,8 +62,7 @@ Please note that Scarab doesn't do any file writing or modification itself apart
 
 All options are configured with extensive logging and progress display.
 
-- **Regular Rsync Archive:** Same as `--archive` with the exeption that non-existing files at the source will be deleted from an existing backup. Works recursively. Keeps symlinks, permissions, modification-times, groups, owner, device properties and special files.
-- **Scarab Archive:** Keeps access times and creation times in addition to the above. Files can be excluded with `.rsync-filter`.
+- **Scarab Archive:** Non-existing files at the source will be deleted from an existing backup. Works recursively. Keeps symlinks, permissions, modification-times, access times, creation times, groups, owner, device properties and special files. Files can be excluded with `.rsync-filter`.
 - **Scarab Archive with hardlinks:** Also keeps hardlinks. May be slower
 - **Custom:** Enter any flags as a string which will be passed directly to the `rsync`-command.
 - **(Dry Run) "Option"** All options can be started as a dry run with extensive logging.
