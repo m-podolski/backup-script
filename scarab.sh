@@ -3,7 +3,7 @@
 # malte.podolski AT web DOT de
 # github.com/m-podolski/scarab-backup
 
-version='0.2.0'
+version='0.2.1'
 
 style_ok='\e[0;32m\e[1m'
 style_warn='\e[0;33m\e[1mWarning: '
@@ -13,7 +13,8 @@ style_heading='\e[1m'
 style_reset='\e[0m'
 
 clear
-cat ./welcome-art.txt
+script_dir="$(cd "$(dirname $0)" && pwd)"
+cat "$script_dir/welcome-art.txt"
 echo -e "${style_heading}You are running Scarab Backup ${version} (2022 by Malte Podolski)${style_reset}\n"
 
 source_path=''
@@ -93,7 +94,7 @@ check_arguments() {
   esac
 }
 
-check_arguments $@
+# check_arguments $@
 
 get_destination_path() {
   if [ $mode_flag == 'create' ]; then
@@ -107,7 +108,7 @@ get_destination_path() {
   echo -en ${style_reset}
 
   destination_path="$drivepath/$path_at_destination"
-  echo -e "\nTargetpath is $destination_path"
+  echo -e "\nDestination is ${style_heading}$destination_path${style_reset}"
 
   if [[ $mode_flag == 'update' && ! -d $destination_path ]]; then
     echo -e "${style_error}Your destination path is not a valid directory!${style_reset}\n"
@@ -164,9 +165,9 @@ print_destination_stats() {
   done
 
   echo -en "\n${style_heading}"
-  df --human-readable --output=destination,size,used,avail,pcent $destination_path | head -1
+  df --human-readable --output=target,size,used,avail,pcent $destination_path | head -1
   echo -en "${style_reset}"
-  df --human-readable --output=destination,size,used,avail,pcent $destination_path | tail --lines=1
+  df --human-readable --output=target,size,used,avail,pcent $destination_path | tail --lines=1
 }
 
 reselect_drive() {
@@ -204,8 +205,8 @@ select_destination() {
       clear
 
       if [ -x "$(command -v tree)" ]; then
-        echo -e "${style_heading}These are the top 3 levels of your destination:${style_reset}"
-        tree -dL 3 $drivepath
+        echo -e "${style_heading}These are the top 2 levels of your destination:${style_reset}"
+        tree -dL 2 $drivepath
       else
         echo -e "${style_heading}This is the root directory of your destination:${style_reset}"
         ls -l --all --color=auto $drivepath
@@ -225,6 +226,7 @@ select_destination() {
       destination_stats_values=(0 0 0 0)
 
       backup_possible=''
+      echo -e "${style_heading}Checking your free drive space. Please wait.${style_reset}"
 
       if [ $mode_flag == 'create' ]; then
         check_free_drive_space $drivepath $destination_stats_values
@@ -263,7 +265,7 @@ select_destination() {
   done
 }
 
-select_destination
+# select_destination
 
 # Set backup-directory name format
 #   Check mode and if dir already exists
@@ -276,7 +278,7 @@ select_destination
 #     ("If updating and dir exists not" cannot happen; already validated path)
 
 handle_create_destination_conflict() {
-  if [[ $mode_flag == 'create' && -d "$destination_path/$destination_name" ]]; then
+  if [[ $mode_flag == 'create' && $dest_name_has_time == 'false' && -d "$destination_path/$destination_name" ]]; then
     if [ $has_destination_conflict == 'false' ]; then
       echo -e "\n${style_warn}A directory with the selected name already exists!${style_reset}\nYou can first change the name of the existing directory manually and then use the 'Rescan' option to proceed with your current settings\n"
     fi
@@ -312,59 +314,59 @@ select_destination_name() {
   clear
   printf "${style_heading}%-16s${style_reset} %-16s\n" '<source-dir>' 'The original directory name'
   printf "${style_heading}%-16s${style_reset} %-16s\n" '<date>' 'YYYY-MM-DD'
-  printf "${style_heading}%-16s${style_reset} %-16s\n\n" '<date-time>' 'YYYY-MM-DD_HH:MM:SS'
+  printf "${style_heading}%-16s${style_reset} %-16s\n\n" '<date-time>' 'YYYY-MM-DD_HH-MM-SS'
 
   PS3="$(echo -en ${style_reset})Select a name format for the backup directory (number): "
   options=(
     '<source-dir>'
     '<source-dir>_<date>'
     '<source-dir>_<date-time>'
-    '<user>@<host>:<source-dir>'
-    '<user>@<host>:<source-dir>_<date>'
-    '<user>@<host>:<source-dir>_<date-time>'
+    '<user>@<host>_<source-dir>'
+    '<user>@<host>_<source-dir>_<date>'
+    '<user>@<host>_<source-dir>_<date-time>'
   )
 
   destination_name=''
+  dest_name_has_time='false'
   source_dir_last_seg=$(grep --only-matching '/[^/]\+$' <<<$source_path)
   source_dir=${source_dir_last_seg:1}
   date=$(date +'%Y-%m-%d')
-  date_time=$(date +'%Y-%m-%d_%H:%M:%S')
   echo -en "${style_menu}"
 
   select answer in "${options[@]}"; do
     case $answer in
     ${options[0]}) destination_name="${source_dir}" ;;
     ${options[1]}) destination_name="${source_dir}_${date}" ;;
-    ${options[2]}) destination_name="${source_dir}_${date_time}" ;;
-    ${options[3]}) destination_name="$USER@$HOSTNAME:${source_dir}" ;;
-    ${options[4]}) destination_name="$USER@$HOSTNAME:${source_dir}_${date}" ;;
-    ${options[5]}) destination_name="$USER@$HOSTNAME:${source_dir}_${date_time}" ;;
+    ${options[2]})
+      destination_name="${source_dir}_${date}"
+      dest_name_has_time='true'
+      ;;
+    ${options[3]}) destination_name="${USER}@${HOSTNAME}_${source_dir}" ;;
+    ${options[4]}) destination_name="${USER}@${HOSTNAME}_${source_dir}_${date}" ;;
+    ${options[5]})
+      destination_name="${USER}@${HOSTNAME}_${source_dir}_${date}"
+      dest_name_has_time='true'
+      ;;
     esac
     break
   done
 
-  echo -e "\nYour backup directory will be called ${style_heading}$destination_name${style_reset}"
+  if [ $dest_name_has_time == 'true' ]; then
+    dummy_time="_00:00:00 ${style_reset}(time will be set at the end)"
+  fi
+  echo -e "\nYour backup directory will be called ${style_heading}$destination_name$dummy_time${style_reset}"
 
   has_destination_conflict='false'
   handle_create_destination_conflict
 }
 
-create_update_destination_path() {
-  # update-mode check must happen after create-mode + existing directory check
-  if [ $mode_flag == 'update' ]; then
-    destination_path_last_seg=$(grep --only-matching '/[^/]\+$' <<<$destination_path)
-    destination_dir=${destination_path:0:$((-${#destination_path_last_seg}))}
-    renamed_destination_path="$destination_dir/$destination_name"
-
-    mv $destination_path $renamed_destination_path
-    echo -e "Renamed ${style_heading}$destination_path${style_reset} to ${style_heading}$renamed_destination_path${style_reset}\n"
-    destination_path=$renamed_destination_path
-  fi
-}
+source_path='/home/malte/Desktop/Home'
+# destination_path='/media/malte/Bug/Backup'
+destination_path='/media/malte/Bug/Backup/Home_2022-10-17_20-49-20'
+# mode_flag='create'
+mode_flag='update'
 
 select_destination_name
-
-create_update_destination_path
 
 # Check if source root contains prepare-file (.scarabprepare.sh)
 #   If yes, execute
@@ -390,15 +392,15 @@ select_archive_mode() {
     '(Dry Run) Scarab Archive (Hardlinks)'
     'Custom'
   )
-  printf "${style_heading}%-32s${style_reset} %s\n" "${options[0]}" 'Same as rsync archive, also keeps access- and creation-times. Deletes files missing from source/excluded at destination.'
+  printf "${style_heading}%-32s${style_reset} %s\n" "${options[0]}" 'Same as rsync archive, also keeps access-times. Deletes missing and excluded files.'
   printf "${style_heading}%-32s${style_reset} %s\n" "${options[1]}" 'Same as above, also keeps hardlinks. May be slower.'
   printf "${style_heading}%-32s${style_reset} %s\n" '(Dry Run) *' 'Uses respective configuration only for logging.'
   printf "${style_heading}%-32s${style_reset} %s\n\n" "${options[4]}" 'Rsync with custom options. You will be prompted.'
 
   # --archive is equal to the following options:
   # --recursive --links --perms --times --group --owner --devices --specials
-  rsync_options_scarab='--itemize-changes --stats --progress --human-readable --filter=dir-merge_/.rsync-filter --archive --atimes --crtimes --delete --delete-excluded'
-  rsync_options_scarab_hardlinks='--itemize-changes --stats --progress --human-readable --filter=dir-merge_/.rsync-filter --archive --atimes --crtimes --hard-links --delete --delete-excluded'
+  rsync_options_scarab='--itemize-changes --stats --progress --human-readable --filter=dir-merge_/.rsync-filter --archive --atimes --delete --delete-excluded'
+  rsync_options_scarab_hardlinks='--itemize-changes --stats --progress --human-readable --filter=dir-merge_/.rsync-filter --archive --atimes --hard-links --delete --delete-excluded'
   echo -en "${style_menu}"
 
   select answer in "${options[@]}"; do
@@ -437,11 +439,25 @@ transfer_data() {
   echo -e "${style_ok}Scarab starts rolling...${style_reset}\n"
 
   if [ $mode_flag == 'create' ]; then
-    rsync $rsync_options $source_path "$destination_path"
+    destination_path="$destination_path/$destination_name"
+
+    destination_rename=$destination_path
+    rsync $rsync_options $source_path $destination_path
   fi
   if [ $mode_flag == 'update' ]; then
-    rsync $rsync_options "$source_path/" "$destination_path"
+    destination_path_last_seg=$(grep --only-matching '/[^/]\+$' <<<$destination_path)
+    destination_dir=${destination_path:0:$((-${#destination_path_last_seg}))}
+
+    destination_rename="$destination_dir/$destination_name"
+    rsync $rsync_options "$source_path/" $destination_path
   fi
+
+  if [ $dest_name_has_time == 'true' ]; then
+    time=$(date +'%H-%M-%S')
+    destination_rename="${destination_rename}_$time"
+  fi
+  mv $destination_path $destination_rename
+  echo -e "Updated destination to ${style_heading}$destination_rename${style_reset}\n"
 }
 
 transfer_data

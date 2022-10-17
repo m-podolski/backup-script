@@ -1,11 +1,12 @@
 # Commit
 
+Fix path construction and early timestamps
 
 ## Backlog
 
-- refactor rsync-options-strings to be more dry
-- add optional tree-support
+- check for "[bB]ackup[s?]" at drive and use if present
+  - make select menu from its contents
 
-> 0.2.0
+> 0.3.0
 
 ## Planning
