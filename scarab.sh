@@ -3,7 +3,7 @@
 # malte.podolski AT web DOT de
 # github.com/m-podolski/scarab-backup
 
-version='0.2.1'
+version='0.3.0'
 
 style_ok='\e[0;32m\e[1m'
 style_warn='\e[0;33m\e[1mWarning: '
@@ -17,9 +17,9 @@ script_dir="$(cd "$(dirname $0)" && pwd)"
 cat "$script_dir/welcome-art.txt"
 echo -e "${style_heading}You are running Scarab Backup ${version} (2022 by Malte Podolski)${style_reset}\n"
 
-source_path=''
-destination_path=''
-mode_flag='false'
+source_path='null'
+destination_path='null'
+mode_flag='null'
 
 select_mode() {
   PS3="$(echo -en ${style_reset})Select the backup-mode (number): "
@@ -43,7 +43,7 @@ select_mode() {
 
 read_source_path() {
   echo -en "${style_menu}"
-  read -p "Enter your source directory: " source_path
+  read -p "Enter your source directory (absolute path): " source_path
   echo -en "${style_reset}\n"
 
   source_path=${source_path/#\~/$HOME}
@@ -94,25 +94,61 @@ check_arguments() {
   esac
 }
 
-# check_arguments $@
+check_arguments $@
+
+# Check if folder called "[Bb]ackup[s]*" exists at drive
+#   If yes, append to drivepath and print subdirectories as menu
+#   If not, prompt for path
 
 get_destination_path() {
-  if [ $mode_flag == 'create' ]; then
-    echo -en "\n${style_heading}Your are in Create-Mode\n${style_reset}The backup will be created under the selected directory. Press RETURN for the root directory."
-  fi
-  if [ $mode_flag == 'update' ]; then
-    echo -en "\n${style_heading}Your are in Update-Mode\n${style_reset}The selected directory will be replaced/updated"
-  fi
-  echo -en "\n${style_menu}"
-  read -p "Enter destination location on drive: " path_at_destination
-  echo -en ${style_reset}
+  drive_path=$1
+  backup_dir_matches=($(ls $drive_path | grep --only-matching '[Bb]ackup[s]*'))
 
-  destination_path="$drivepath/$path_at_destination"
-  echo -e "\nDestination is ${style_heading}$destination_path${style_reset}"
+  if ((${#backup_dir_matches[@]})); then
+    backup_dir="$drive_path/${backup_dir_matches[0]}"
 
-  if [[ $mode_flag == 'update' && ! -d $destination_path ]]; then
-    echo -e "${style_error}Your destination path is not a valid directory!${style_reset}\n"
-    get_destination_path
+    if [ $mode_flag == 'create' ]; then
+      destination_path=$backup_dir
+    fi
+    if [ $mode_flag == 'update' ]; then
+      PS3="$(echo -en ${style_reset})Select the destination directory. (number): "
+      options=($(ls $backup_dir))
+      echo -en "${style_menu}"
+
+      select option in "${options[@]}"; do
+        case $option in
+        *) destination_path="$backup_dir/$option" ;;
+        esac
+        break
+      done
+      echo
+    fi
+  else
+    if [ -x "$(command -v tree)" ]; then
+      echo -e "${style_heading}These are the top 2 levels of your destination:${style_reset}"
+      tree -dL 2 $drive_path
+    else
+      echo -e "${style_heading}This is the root directory of your destination:${style_reset}"
+      ls -l --all --color=auto $drive_path
+    fi
+
+    if [ $mode_flag == 'create' ]; then
+      echo -en "\n${style_heading}Your are in Create-Mode\n${style_reset}The backup will be created under the selected directory. Press RETURN for the root directory."
+    fi
+    if [ $mode_flag == 'update' ]; then
+      echo -en "\n${style_heading}Your are in Update-Mode\n${style_reset}The selected directory will be replaced/updated"
+    fi
+    echo -en "\n${style_menu}"
+    read -p "Enter destination on drive: " path_at_destination
+    echo -en ${style_reset}
+
+    destination_path="$drive_path/$path_at_destination"
+    echo -e "\nDestination is ${style_heading}$destination_path${style_reset}"
+
+    if [[ $mode_flag == 'update' && ! -d $destination_path ]]; then
+      echo -e "${style_error}Your destination path is not a valid directory!${style_reset}\n"
+      get_destination_path $drive_path
+    fi
   fi
 }
 
@@ -120,6 +156,8 @@ check_free_drive_space() {
   destination_path=$1
   destination_stats_values=$2
   block_size=512
+
+  echo -e "${style_heading}Checking your free drive space. Please wait.${style_reset}"
 
   size_source=$(du --block-size=$block_size --summarize $source_path | awk '{print $1}')
   avail_destination=$(df --block-size=$block_size --output=avail $destination_path | tail --lines=1 | awk '{print $1}')
@@ -150,9 +188,9 @@ print_destination_stats() {
   available=$2
 
   if [ $available == 'true' ]; then
-    echo -e "\n${style_ok}The destination location has enough space available:${style_reset}"
+    echo -e "\n${style_ok}The destination has enough space available:${style_reset}"
   else
-    echo -e "\n${style_warn}The destination location has not enough space available:${style_reset}"
+    echo -e "\n${style_warn}The destination has not enough space available:${style_reset}"
   fi
 
   list_els_displayed=${#destination_stats_keys[@]}
@@ -173,7 +211,7 @@ print_destination_stats() {
 reselect_drive() {
   PS3="$(echo -en ${style_reset})Select an answer (number): "
   options=('Select another drive' 'Exit')
-  echo -en "${style_menu}"
+  echo -en "\n${style_menu}"
 
   select answer in "${options[@]}"; do
     case $answer in
@@ -188,7 +226,7 @@ reselect_drive() {
 # Check mode
 
 select_destination() {
-  PS3="$(echo -en ${style_reset})Select the destination drive (number): "
+  PS3="$(echo -en ${style_reset})Select the destination drive. Backup directories will be detected automatically (number): "
   add_options=('Scan drives again')
   options=($(ls /media/$USER) "${add_options[@]}")
   echo -en "${style_menu}"
@@ -198,23 +236,15 @@ select_destination() {
     ${add_options[0]})
       echo
       select_destination
-      break
       ;;
     *)
-      drivepath="/media/$USER/$option"
-      clear
-
-      if [ -x "$(command -v tree)" ]; then
-        echo -e "${style_heading}These are the top 2 levels of your destination:${style_reset}"
-        tree -dL 2 $drivepath
-      else
-        echo -e "${style_heading}This is the root directory of your destination:${style_reset}"
-        ls -l --all --color=auto $drivepath
-      fi
+      echo
+      drive_path="/media/$USER/$option"
+      # clear
 
       # If creating
-      #   Check if there is enough free space at destination location and print stats
-      #     If yes, prompt to enter destination location on drive (directory will be created there)
+      #   Check if there is enough free space at destination and print stats
+      #     If yes, prompt to enter destination on drive (directory will be created there)
       #       Validate directory
       #         If valid, proceed
       #         Else, prompt to enter again
@@ -224,23 +254,21 @@ select_destination() {
 
       destination_stats_keys=('Source' 'Free on Drive' 'Existing Target' 'Existing Diff')
       destination_stats_values=(0 0 0 0)
-
       backup_possible=''
-      echo -e "${style_heading}Checking your free drive space. Please wait.${style_reset}"
 
       if [ $mode_flag == 'create' ]; then
-        check_free_drive_space $drivepath $destination_stats_values
-        print_destination_stats $drivepath $backup_possible
+        check_free_drive_space $drive_path $destination_stats_values
+        print_destination_stats $drive_path $backup_possible
 
         if [ $backup_possible == 'true' ]; then
-          get_destination_path
+          get_destination_path $drive_path
         else
           reselect_drive
         fi
       fi
 
       # If updating
-      #   Prompt to enter destination location on drive (must point to existing backup directory)
+      #   Prompt to enter destination on drive (must point to existing backup directory)
       #     Validate directory
       #       If valid
       #         Check if there is enough free space (difference existing/source) and print stats
@@ -251,7 +279,7 @@ select_destination() {
       #       Else, prompt to enter again
 
       if [ $mode_flag == 'update' ]; then
-        get_destination_path
+        get_destination_path $drive_path
         check_free_drive_space $destination_path
         print_destination_stats $destination_path $backup_possible
 
@@ -259,13 +287,13 @@ select_destination() {
           reselect_drive
         fi
       fi
-      break
       ;;
     esac
+    break
   done
 }
 
-# select_destination
+select_destination
 
 # Set backup-directory name format
 #   Check mode and if dir already exists
@@ -360,12 +388,6 @@ select_destination_name() {
   handle_create_destination_conflict
 }
 
-source_path='/home/malte/Desktop/Home'
-# destination_path='/media/malte/Bug/Backup'
-destination_path='/media/malte/Bug/Backup/Home_2022-10-17_20-49-20'
-# mode_flag='create'
-mode_flag='update'
-
 select_destination_name
 
 # Check if source root contains prepare-file (.scarabprepare.sh)
@@ -457,7 +479,6 @@ transfer_data() {
     destination_rename="${destination_rename}_$time"
   fi
   mv $destination_path $destination_rename
-  echo -e "Updated destination to ${style_heading}$destination_rename${style_reset}\n"
 }
 
 transfer_data

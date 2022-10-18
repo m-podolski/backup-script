@@ -25,10 +25,15 @@ Put anywhere and run `scarab-backup/scarab.sh`:
 ```
 ./scarab.sh [-c | -u] [<source-path>]
 ```
--c will create a new backup
--u will update an existing backup
+- `-c` will create a new backup
+- `-u` will update an existing backup
+- `<source-path>` must be an absolute path (`~` will be expanded)
 
 Note that these flags/arguments are only shortcuts. You can start the script without any arguments and will be prompted for all options.
+
+### Backup Directory Detection
+
+Scarab will in any case look for a directory matching `[Bb]ackup[s]*` at the target drive and use the first match as destination. Otherwise you can enter your own. When updating subdirectories will be presented as a select-list.
 
 ### Update Mode
 
@@ -62,7 +67,7 @@ Please note that Scarab doesn't do any file writing or modification itself apart
 
 All options are configured with extensive logging and progress display.
 
-- **Scarab Archive:** Non-existing files at the source will be deleted from an existing backup. Works recursively. Keeps symlinks, permissions, modification-times, access times, creation times, groups, owner, device properties and special files. Files can be excluded with `.rsync-filter`.
+- **Scarab Archive:** Non-existing files at the source will be deleted from an existing backup. Works recursively. Keeps symlinks, permissions, modification-times, access times, groups, owner, device properties and special files. Files can be excluded with `.rsync-filter`.
 - **Scarab Archive with hardlinks:** Also keeps hardlinks. May be slower
 - **Custom:** Enter any flags as a string which will be passed directly to the `rsync`-command.
 - **(Dry Run) "Option"** All options can be started as a dry run with extensive logging.

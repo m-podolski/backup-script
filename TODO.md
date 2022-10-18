@@ -1,11 +1,10 @@
 # Commit
 
-Fix path construction and early timestamps
+Add default backup directory selection
 
 ## Backlog
 
-- check for "[bB]ackup[s?]" at drive and use if present
-  - make select menu from its contents
+- limit variable scopes
 
 > 0.3.0
 
