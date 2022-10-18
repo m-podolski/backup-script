@@ -3,7 +3,7 @@
 # malte.podolski AT web DOT de
 # github.com/m-podolski/scarab-backup
 
-version='0.3.0'
+version='0.3.1'
 
 style_ok='\e[0;32m\e[1m'
 style_warn='\e[0;33m\e[1mWarning: '
@@ -13,7 +13,7 @@ style_heading='\e[1m'
 style_reset='\e[0m'
 
 clear
-script_dir="$(cd "$(dirname $0)" && pwd)"
+script_dir="$(cd "$(dirname "$0")" && pwd)"
 cat "$script_dir/welcome-art.txt"
 echo -e "${style_heading}You are running Scarab Backup ${version} (2022 by Malte Podolski)${style_reset}\n"
 
@@ -22,17 +22,17 @@ destination_path='null'
 mode_flag='null'
 
 select_mode() {
-  PS3="$(echo -en ${style_reset})Select the backup-mode (number): "
+  PS3="$(echo -en "${style_reset}")Select the backup-mode (number): "
   options=('Create new' 'Update existing')
   echo -en "${style_menu}"
 
   select answer in "${options[@]}"; do
     case $answer in
-    ${options[0]})
+    "${options[0]}")
       mode_flag='create'
       break
       ;;
-    ${options[1]})
+    "${options[1]}")
       mode_flag='update'
       break
       ;;
@@ -43,7 +43,7 @@ select_mode() {
 
 read_source_path() {
   echo -en "${style_menu}"
-  read -p "Enter your source directory (absolute path): " source_path
+  read -pr "Enter your source directory (absolute path): " source_path
   echo -en "${style_reset}\n"
 
   source_path=${source_path/#\~/$HOME}
@@ -51,7 +51,7 @@ read_source_path() {
 }
 
 validate_source_path() {
-  if [ ! -d $source_path ]; then
+  if [ ! -d "$source_path" ]; then
     echo -e "${style_error}Your source path is not a valid directory!${style_reset}\n"
     read_source_path
   fi
@@ -94,7 +94,7 @@ check_arguments() {
   esac
 }
 
-check_arguments $@
+check_arguments "$@"
 
 # Check if folder called "[Bb]ackup[s]*" exists at drive
 #   If yes, append to drivepath and print subdirectories as menu
@@ -102,17 +102,24 @@ check_arguments $@
 
 get_destination_path() {
   drive_path=$1
-  backup_dir_matches=($(ls $drive_path | grep --only-matching '[Bb]ackup[s]*'))
+  backup_dir_matches=()
+
+  for file in "$drive_path"/*; do
+    if [[ $file =~ [Bb]ackup[s]* ]]; then
+      backup_dir_matches+=("$file")
+    fi
+  done
+  echo "${backup_dir_matches[@]}"
 
   if ((${#backup_dir_matches[@]})); then
-    backup_dir="$drive_path/${backup_dir_matches[0]}"
+    backup_dir="${backup_dir_matches[0]}"
 
     if [ $mode_flag == 'create' ]; then
       destination_path=$backup_dir
     fi
     if [ $mode_flag == 'update' ]; then
-      PS3="$(echo -en ${style_reset})Select the destination directory. (number): "
-      options=($(ls $backup_dir))
+      PS3="$(echo -en "${style_reset}")Select the destination directory. (number): "
+      mapfile -t options < <(ls "$backup_dir")
       echo -en "${style_menu}"
 
       select option in "${options[@]}"; do
@@ -126,10 +133,10 @@ get_destination_path() {
   else
     if [ -x "$(command -v tree)" ]; then
       echo -e "${style_heading}These are the top 2 levels of your destination:${style_reset}"
-      tree -dL 2 $drive_path
+      tree -dL 2 "$drive_path"
     else
       echo -e "${style_heading}This is the root directory of your destination:${style_reset}"
-      ls -l --all --color=auto $drive_path
+      ls -l --all --color=auto "$drive_path"
     fi
 
     if [ $mode_flag == 'create' ]; then
@@ -139,15 +146,15 @@ get_destination_path() {
       echo -en "\n${style_heading}Your are in Update-Mode\n${style_reset}The selected directory will be replaced/updated"
     fi
     echo -en "\n${style_menu}"
-    read -p "Enter destination on drive: " path_at_destination
-    echo -en ${style_reset}
+    read -pr "Enter destination on drive: " path_at_destination
+    echo -en "${style_reset}"
 
     destination_path="$drive_path/$path_at_destination"
     echo -e "\nDestination is ${style_heading}$destination_path${style_reset}"
 
     if [[ $mode_flag == 'update' && ! -d $destination_path ]]; then
       echo -e "${style_error}Your destination path is not a valid directory!${style_reset}\n"
-      get_destination_path $drive_path
+      get_destination_path "$drive_path"
     fi
   fi
 }
@@ -159,16 +166,16 @@ check_free_drive_space() {
 
   echo -e "${style_heading}Checking your free drive space. Please wait.${style_reset}"
 
-  size_source=$(du --block-size=$block_size --summarize $source_path | awk '{print $1}')
-  avail_destination=$(df --block-size=$block_size --output=avail $destination_path | tail --lines=1 | awk '{print $1}')
+  size_source=$(du --block-size=$block_size --summarize "$source_path" | awk '{print $1}')
+  avail_destination=$(df --block-size=$block_size --output=avail "$destination_path" | tail --lines=1 | awk '{print $1}')
 
   if [ $mode_flag == 'create' ]; then
-    free_space=$(($avail_destination - $size_source))
+    free_space=$((avail_destination - size_source))
   fi
 
   if [ $mode_flag == 'update' ]; then
-    size_existing=$(du --block-size=$block_size --summarize $destination_path | awk '{print $1}')
-    free_space=$(($avail_destination + $size_existing - $size_source))
+    size_existing=$(du --block-size=$block_size --summarize "$destination_path" | awk '{print $1}')
+    free_space=$((avail_destination + size_existing - size_source))
   fi
 
   destination_stats_values[0]=$size_source
@@ -187,7 +194,7 @@ print_destination_stats() {
   destination_path=$1
   available=$2
 
-  if [ $available == 'true' ]; then
+  if [ "$available" == 'true' ]; then
     echo -e "\n${style_ok}The destination has enough space available:${style_reset}"
   else
     echo -e "\n${style_warn}The destination has not enough space available:${style_reset}"
@@ -198,25 +205,25 @@ print_destination_stats() {
     list_els_displayed=$((${#destination_stats_keys[@]} - 2))
   fi
 
-  for ((i = 0; i < $list_els_displayed; ++i)); do
+  for ((i = 0; i < "$list_els_displayed"; ++i)); do
     printf "%-16s  %-16d\n" "${destination_stats_keys[$i]}" "${destination_stats_values[$i]}"
   done
 
   echo -en "\n${style_heading}"
-  df --human-readable --output=target,size,used,avail,pcent $destination_path | head -1
+  df --human-readable --output=target,size,used,avail,pcent "$destination_path" | head -1
   echo -en "${style_reset}"
-  df --human-readable --output=target,size,used,avail,pcent $destination_path | tail --lines=1
+  df --human-readable --output=target,size,used,avail,pcent "$destination_path" | tail --lines=1
 }
 
 reselect_drive() {
-  PS3="$(echo -en ${style_reset})Select an answer (number): "
+  PS3="$(echo -en "${style_reset}")Select an answer (number): "
   options=('Select another drive' 'Exit')
   echo -en "\n${style_menu}"
 
   select answer in "${options[@]}"; do
     case $answer in
-    ${options[0]}) select_destination ;;
-    ${options[1]}) exit ;;
+    "${options[0]}") select_destination ;;
+    "${options[1]}") exit ;;
     esac
   done
 }
@@ -226,14 +233,16 @@ reselect_drive() {
 # Check mode
 
 select_destination() {
-  PS3="$(echo -en ${style_reset})Select the destination drive. Backup directories will be detected automatically (number): "
-  add_options=('Scan drives again')
-  options=($(ls /media/$USER) "${add_options[@]}")
+  PS3="$(echo -en "${style_reset}")Select the destination drive. Backup directories will be detected automatically (number): "
+  mapfile -t options < <(ls "/media/$USER")
+  rescan='Scan drives again'
+  options+=("$rescan")
+
   echo -en "${style_menu}"
 
   select option in "${options[@]}"; do
     case $option in
-    ${add_options[0]})
+    "$rescan")
       echo
       select_destination
       ;;
@@ -257,11 +266,11 @@ select_destination() {
       backup_possible=''
 
       if [ $mode_flag == 'create' ]; then
-        check_free_drive_space $drive_path $destination_stats_values
-        print_destination_stats $drive_path $backup_possible
+        check_free_drive_space "$drive_path" "${destination_stats_values[@]}"
+        print_destination_stats "$drive_path" "$backup_possible"
 
-        if [ $backup_possible == 'true' ]; then
-          get_destination_path $drive_path
+        if [ "$backup_possible" == 'true' ]; then
+          get_destination_path "$drive_path"
         else
           reselect_drive
         fi
@@ -279,11 +288,11 @@ select_destination() {
       #       Else, prompt to enter again
 
       if [ $mode_flag == 'update' ]; then
-        get_destination_path $drive_path
-        check_free_drive_space $destination_path
-        print_destination_stats $destination_path $backup_possible
+        get_destination_path "$drive_path"
+        check_free_drive_space "$destination_path"
+        print_destination_stats "$destination_path" "$backup_possible"
 
-        if [ $backup_possible == 'false' ]; then
+        if [ "$backup_possible" == 'false' ]; then
           reselect_drive
         fi
       fi
@@ -307,17 +316,17 @@ select_destination
 
 handle_create_destination_conflict() {
   if [[ $mode_flag == 'create' && $dest_name_has_time == 'false' && -d "$destination_path/$destination_name" ]]; then
-    if [ $has_destination_conflict == 'false' ]; then
+    if [ "$has_destination_conflict" == 'false' ]; then
       echo -e "\n${style_warn}A directory with the selected name already exists!${style_reset}\nYou can first change the name of the existing directory manually and then use the 'Rescan' option to proceed with your current settings\n"
     fi
 
-    PS3="$(echo -en ${style_reset})Select an answer (number): "
+    PS3="$(echo -en "${style_reset}")Select an answer (number): "
     options=('Rescan' 'Change name format' 'Replace (Switch to Update-Mode)' 'Exit')
     echo -en "${style_menu}"
 
     select answer in "${options[@]}"; do
       case $answer in
-      ${options[0]})
+      "${options[0]}")
         if [ -d "$destination_path/$destination_name" ]; then
           echo -en "\n${style_error}Rescan still found directory of the same name.${style_reset}\n"
           has_destination_conflict='true'
@@ -326,12 +335,12 @@ handle_create_destination_conflict() {
           echo -e "\n${style_ok}Directory conflict has been resolved. Proceeding...${style_reset}\n"
         fi
         ;;
-      ${options[1]}) select_destination_name ;;
-      ${options[2]})
+      "${options[1]}") select_destination_name ;;
+      "${options[2]}")
         mode_flag='update'
         echo -e "\n${style_ok}You have switched into update-mode. The destination directory will be replaced.${style_reset}\n"
         ;;
-      ${options[3]}) exit ;;
+      "${options[3]}") exit ;;
       esac
       break
     done
@@ -344,7 +353,7 @@ select_destination_name() {
   printf "${style_heading}%-16s${style_reset} %-16s\n" '<date>' 'YYYY-MM-DD'
   printf "${style_heading}%-16s${style_reset} %-16s\n\n" '<date-time>' 'YYYY-MM-DD_HH-MM-SS'
 
-  PS3="$(echo -en ${style_reset})Select a name format for the backup directory (number): "
+  PS3="$(echo -en "${style_reset}")Select a name format for the backup directory (number): "
   options=(
     '<source-dir>'
     '<source-dir>_<date>'
@@ -356,22 +365,22 @@ select_destination_name() {
 
   destination_name=''
   dest_name_has_time='false'
-  source_dir_last_seg=$(grep --only-matching '/[^/]\+$' <<<$source_path)
+  source_dir_last_seg=$(grep --only-matching '/[^/]\+$' <<<"$source_path")
   source_dir=${source_dir_last_seg:1}
   date=$(date +'%Y-%m-%d')
   echo -en "${style_menu}"
 
   select answer in "${options[@]}"; do
     case $answer in
-    ${options[0]}) destination_name="${source_dir}" ;;
-    ${options[1]}) destination_name="${source_dir}_${date}" ;;
-    ${options[2]})
+    "${options[0]}") destination_name="${source_dir}" ;;
+    "${options[1]}") destination_name="${source_dir}_${date}" ;;
+    "${options[2]}")
       destination_name="${source_dir}_${date}"
       dest_name_has_time='true'
       ;;
-    ${options[3]}) destination_name="${USER}@${HOSTNAME}_${source_dir}" ;;
-    ${options[4]}) destination_name="${USER}@${HOSTNAME}_${source_dir}_${date}" ;;
-    ${options[5]})
+    "${options[3]}") destination_name="${USER}@${HOSTNAME}_${source_dir}" ;;
+    "${options[4]}") destination_name="${USER}@${HOSTNAME}_${source_dir}_${date}" ;;
+    " ${options[5]}")
       destination_name="${USER}@${HOSTNAME}_${source_dir}_${date}"
       dest_name_has_time='true'
       ;;
@@ -406,7 +415,7 @@ select_destination_name
 # Start copying and show progress
 
 select_archive_mode() {
-  PS3="$(echo -en ${style_reset})Select the archive mode for rsync (number): "
+  PS3="$(echo -en "${style_reset}")Select the archive mode for rsync (number): "
   options=(
     'Scarab Archive'
     'Scarab Archive (Hardlinks)'
@@ -427,13 +436,13 @@ select_archive_mode() {
 
   select answer in "${options[@]}"; do
     case $answer in
-    ${options[0]}) rsync_options=$rsync_options_scarab ;;
-    ${options[1]}) rsync_options=$rsync_options_scarab_hardlinks ;;
-    ${options[2]}) rsync_options="--dry-run $rsync_options_scarab " ;;
-    ${options[3]}) rsync_options="--dry-run $rsync_options_scarab_hardlinks" ;;
-    ${options[4]})
+    "${options[0]}") rsync_options=$rsync_options_scarab ;;
+    "${options[1]}") rsync_options=$rsync_options_scarab_hardlinks ;;
+    "${options[2]}") rsync_options="--dry-run $rsync_options_scarab " ;;
+    "${options[3]}") rsync_options="--dry-run $rsync_options_scarab_hardlinks" ;;
+    "${options[4]}")
       echo
-      read -p "Enter your rsync options: " rsync_options
+      read -pr "Enter your rsync options: " rsync_options
       ;;
     esac
     break
@@ -447,9 +456,10 @@ select_archive_mode
 run_scarabprepare() {
   clear
   scarabprepare_path="$source_path/.scarabprepare.sh"
-  if [ -e $scarabprepare_path ]; then
+  if [ -e "$scarabprepare_path" ]; then
     echo -e "${style_ok}Found .scarabprepare.sh and executing it${style_reset}"
-    source $scarabprepare_path
+    # shellcheck source=/dev/null
+    source "$scarabprepare_path"
   fi
 }
 
@@ -464,21 +474,21 @@ transfer_data() {
     destination_path="$destination_path/$destination_name"
 
     destination_rename=$destination_path
-    rsync $rsync_options $source_path $destination_path
+    rsync "$rsync_options" "$source_path" "$destination_path"
   fi
   if [ $mode_flag == 'update' ]; then
-    destination_path_last_seg=$(grep --only-matching '/[^/]\+$' <<<$destination_path)
+    destination_path_last_seg=$(grep --only-matching '/[^/]\+$' <<<"$destination_path")
     destination_dir=${destination_path:0:$((-${#destination_path_last_seg}))}
 
     destination_rename="$destination_dir/$destination_name"
-    rsync $rsync_options "$source_path/" $destination_path
+    rsync "$rsync_options" "$source_path/" "$destination_path"
   fi
 
   if [ $dest_name_has_time == 'true' ]; then
     time=$(date +'%H-%M-%S')
     destination_rename="${destination_rename}_$time"
   fi
-  mv $destination_path $destination_rename
+  mv "$destination_path" "$destination_rename"
 }
 
 transfer_data
