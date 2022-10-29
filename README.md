@@ -6,6 +6,7 @@ This is a simple BASH utility script to copy files from your machine to an exter
 
 - Path validation
 - Drive listing and selection
+- Auto-detection of backup-folders
 - Precise check for available space
 - Easily selectable name formats (with source, timestamps, user/host)
 - Preconfigured Rsync options
@@ -15,7 +16,7 @@ This is a simple BASH utility script to copy files from your machine to an exter
 
 - BASH
 - GNU Coreutils
-- [rsync](https://rsync.samba.org/)
+- [Rsync](https://rsync.samba.org/)
 - [Tree (optional)](https://ubuntu.pkgs.org/22.04/ubuntu-universe-amd64/tree_2.0.2-1_amd64.deb.html)
 
 ## Usage
@@ -23,13 +24,13 @@ This is a simple BASH utility script to copy files from your machine to an exter
 Put anywhere and run `scarab-backup/scarab.sh`:
 
 ```
-./scarab.sh [-c | -u] [<source-path>]
+./scarab.sh [-c | -u <source-path>] [-s]
 ```
-- `-c` will create a new backup
-- `-u` will update an existing backup
-- `<source-path>` must be an absolute path (`~` will be expanded)
+- `-c` create a new backup
+- `-u` update an existing backup
+- `-s` check if there is enough available space for the backup
 
-Note that these flags/arguments are only shortcuts. You can start the script without any arguments and will be prompted for all options.
+Note that `-c` and `-u` are only shortcuts. You can start the script without them and will be prompted for the options.
 
 ### Backup Directory Detection
 
@@ -45,6 +46,7 @@ Before the actual backup process starts the script will look for a file at the s
 
 ### Excluding Files
 
+`.rsync-filter-example` gives an example for backing up selected parts of your home-directory.
 All archive options  support **rsync-filter-files** by looking for a file in every directory named `.rsync-filter`. This file is fed into rsync's `--filter` option ([see Docs](https://download.samba.org/pub/rsync/rsync.1#opt--filter)). You can check out the rules for the ignorefile [here](https://download.samba.org/pub/rsync/rsync.1#FILTER_RULES) and specific information on pattern matching [here](https://download.samba.org/pub/rsync/rsync.1#PATTERN_MATCHING_RULES).
 
 **Note that the first matching rule will always take effect!** Besides the most important differences to the .gitignore-syntax are that rules for exclusions from transfer are prefixed with `- `(minus space) while inclusions are prefixed `+ `(plus space) and that rules to **include certain files from otherwise excluded locations** have to come **before** the respective exclude-rule.

@@ -1,9 +1,10 @@
 #! /bin/bash
 
+# A script for backing up manually to an external drive using Rsync and GNU Coreutils
 # malte.podolski AT web DOT de
 # github.com/m-podolski/scarab-backup
 
-version='0.3.2'
+version='0.4.0'
 
 style_ok='\e[0;32m\e[1m'
 style_warn='\e[0;33m\e[1mWarning: '
@@ -11,6 +12,22 @@ style_error='\e[0;91m\e[1mError: '
 style_menu='\e[0;34m\e[1m'
 style_heading='\e[1m'
 style_reset='\e[0m'
+
+read_source_path() {
+  echo -en "${style_menu}"
+  read -p "Enter your source directory (absolute path): " source_path
+  echo -en "${style_reset}\n"
+
+  source_path=${source_path/#\~/$HOME}
+  validate_source_path
+}
+
+validate_source_path() {
+  if [[ ! -d "$source_path" ]]; then
+    echo -e "${style_error}Your source path is not a valid directory!${style_reset}\n"
+    read_source_path
+  fi
+}
 
 select_mode() {
   PS3="$(echo -en "${style_reset}")Select the backup-mode (number): "
@@ -32,24 +49,7 @@ select_mode() {
   echo
 }
 
-read_source_path() {
-  echo -en "${style_menu}"
-  read -p "Enter your source directory (absolute path): " source_path
-  echo -en "${style_reset}\n"
-
-  source_path=${source_path/#\~/$HOME}
-  validate_source_path
-}
-
-validate_source_path() {
-  if [[ ! -d "$source_path" ]]; then
-    echo -e "${style_error}Your source path is not a valid directory!${style_reset}\n"
-    read_source_path
-  fi
-}
-
-# If a single argument is given, this is the source path
-# Else, check for source/flags and values
+# Check for source/flags and values
 #   Prompt to enter any missing ones
 # Check if source is a valid directory
 #   If not, prompt to enter again
@@ -60,24 +60,35 @@ check_arguments() {
     read_source_path
     select_mode
     ;;
-  1)
-    source_path=$1
-    validate_source_path
-    select_mode
-    ;;
   *)
-    while getopts 'c:u:' flag; do
+    while getopts ':c:u:s' flag; do
       case "${flag}" in
       c)
         mode_flag='create'
-        source_path="${OPTARG}"
+        source_path="$OPTARG"
+        validate_source_path
         ;;
       u)
         mode_flag='update'
-        source_path="${OPTARG}"
+        source_path="$OPTARG"
+        validate_source_path
         ;;
-      *)
+      s)
+        check_space_flag='true'
+        if [[ $source_path == 'null' ]]; then
+          read_source_path
+        fi
+        if [[ $mode_flag == 'null' ]]; then
+          select_mode
+        fi
+        ;;
+      :)
+        echo -e "${style_error}Option $OPTARG is missing an argument!${style_reset}"
         exit 1
+        ;;
+      ?)
+        echo -e "${style_error}Option $OPTARG is unknown!${style_reset}"
+        exit 2
         ;;
       esac
     done
@@ -180,9 +191,9 @@ check_free_drive_space() {
 
 print_destination_stats() {
   destination_path=$1
-  available=$2
+  backup_possible=$2
 
-  if [[ "$available" == 'true' ]]; then
+  if [[ "$backup_possible" == 'true' ]]; then
     echo -e "\n${style_ok}The destination has enough space available:${style_reset}"
   else
     echo -e "\n${style_warn}The destination has not enough space available:${style_reset}"
@@ -254,10 +265,15 @@ select_destination() {
       backup_possible=''
 
       if [[ $mode_flag == 'create' ]]; then
-        check_free_drive_space "$drive_path" "${destination_stats_values[@]}"
-        print_destination_stats "$drive_path" "$backup_possible"
 
-        if [[ "$backup_possible" == 'true' ]]; then
+        if [[ $check_space_flag == 'true' ]]; then
+          check_free_drive_space "$drive_path" "${destination_stats_values[@]}"
+          print_destination_stats "$drive_path" "$backup_possible"
+        else
+          backup_possible='true'
+        fi
+
+        if [[ $backup_possible == 'true' ]]; then
           get_destination_path "$drive_path"
         else
           reselect_drive
@@ -277,10 +293,15 @@ select_destination() {
 
       if [[ $mode_flag == 'update' ]]; then
         get_destination_path "$drive_path"
-        check_free_drive_space "$destination_path"
-        print_destination_stats "$destination_path" "$backup_possible"
 
-        if [[ "$backup_possible" == 'false' ]]; then
+        if [[ $check_space_flag == 'true' ]]; then
+          check_free_drive_space "$destination_path"
+          print_destination_stats "$destination_path" "$backup_possible"
+        else
+          backup_possible='true'
+        fi
+
+        if [[ $backup_possible == 'false' ]]; then
           reselect_drive
         fi
       fi
@@ -469,7 +490,7 @@ transfer_data() {
     if [[ $destination_current_name = "$destination_name" ]]; then
       destination_rename='false'
     else
-    destination_rename="$destination_dir/$destination_name"
+      destination_rename="$destination_dir/$destination_name"
     fi
 
     rsync $rsync_options "$source_path/" "$destination_path"
@@ -483,15 +504,16 @@ transfer_data() {
 
   if [[ $destination_rename != 'false' && $rsync_exit == 0 ]]; then
     echo -e "Renaming destination from ${style_heading}$destination_path${style_reset} to ${style_heading}$destination_rename${style_reset}"
-  mv "$destination_path" "$destination_rename"
+    mv "$destination_path" "$destination_rename"
   fi
 }
 
 main() {
   source_path='null'
   destination_path='null'
-  mode_flag='null'
   destination_rename='null'
+  mode_flag='null'
+  check_space_flag='null'
 
   clear
   script_dir="$(cd "$(dirname "$0")" && pwd)"

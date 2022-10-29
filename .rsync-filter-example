@@ -1,0 +1,31 @@
+# An example for backing up selected parts of your home-directory
+
+# Global excludes
+- build/***
+- out/***
+- target/***
+- node_modules/***
+- dist/***
+
+# App config
++ .config/
++ .config/autokey/
++ .config/autokey/data/***
+
+# Git
++ .git-template/***
++ .gitconfig
+
+# Directories
++ Desktop/***
++ Downloads/***
++ Documents/***
++ Pictures/***
++ Public/***
+
+# Don't forget these
++ .scarabprepare
++ .rsync-filter
+
+# Exlude everything else
+- *
