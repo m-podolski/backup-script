@@ -3,7 +3,7 @@
 # malte.podolski AT web DOT de
 # github.com/m-podolski/scarab-backup
 
-version='0.3.1'
+version='0.3.2'
 
 style_ok='\e[0;32m\e[1m'
 style_warn='\e[0;33m\e[1mWarning: '
@@ -98,7 +98,6 @@ get_destination_path() {
       backup_dir_matches+=("$file")
     fi
   done
-  echo "${backup_dir_matches[@]}"
 
   if ((${#backup_dir_matches[@]})); then
     backup_dir="${backup_dir_matches[0]}"
@@ -202,6 +201,7 @@ print_destination_stats() {
   df --human-readable --output=target,size,used,avail,pcent "$destination_path" | head -1
   echo -en "${style_reset}"
   df --human-readable --output=target,size,used,avail,pcent "$destination_path" | tail --lines=1
+  echo
 }
 
 reselect_drive() {
@@ -238,7 +238,6 @@ select_destination() {
     *)
       echo
       drive_path="/media/$USER/$option"
-      # clear
 
       # If creating
       #   Check if there is enough free space at destination and print stats
@@ -302,8 +301,11 @@ select_destination() {
 #     ("If updating and dir exists not" cannot happen; already validated path)
 
 handle_create_destination_conflict() {
-  if [[ $mode_flag == 'create' && $dest_name_has_time == 'false' && -d "$destination_path/$destination_name" ]]; then
-    if [[ "$has_destination_conflict" == 'false' ]]; then
+  if [[ $mode_flag == 'create' &&
+    $dest_name_has_time == 'false' &&
+    -d "$destination_path/$destination_name" ]]; then
+
+    if [[ "$create_destination_conflict" == 'false' ]]; then
       echo -e "\n${style_warn}A directory with the selected name already exists!${style_reset}\nYou can first change the name of the existing directory manually and then use the 'Rescan' option to proceed with your current settings\n"
     fi
 
@@ -316,7 +318,7 @@ handle_create_destination_conflict() {
       "${options[0]}")
         if [[ -d "$destination_path/$destination_name" ]]; then
           echo -en "\n${style_error}Rescan still found directory of the same name.${style_reset}\n"
-          has_destination_conflict='true'
+          create_destination_conflict='true'
           handle_create_destination_conflict
         else
           echo -e "\n${style_ok}Directory conflict has been resolved. Proceeding...${style_reset}\n"
@@ -335,7 +337,6 @@ handle_create_destination_conflict() {
 }
 
 select_destination_name() {
-  clear
   printf "${style_heading}%-16s${style_reset} %-16s\n" '<source-dir>' 'The original directory name'
   printf "${style_heading}%-16s${style_reset} %-16s\n" '<date>' 'YYYY-MM-DD'
   printf "${style_heading}%-16s${style_reset} %-16s\n\n" '<date-time>' 'YYYY-MM-DD_HH-MM-SS'
@@ -352,8 +353,8 @@ select_destination_name() {
 
   destination_name=''
   dest_name_has_time='false'
-  source_dir_last_seg=$(grep --only-matching '/[^/]\+$' <<<"$source_path")
-  source_dir=${source_dir_last_seg:1}
+  source_path_last_seg=$(grep --only-matching '/[^/]\+$' <<<"$source_path")
+  source_dir=${source_path_last_seg:1}
   date=$(date +'%Y-%m-%d')
   echo -en "${style_menu}"
 
@@ -367,7 +368,7 @@ select_destination_name() {
       ;;
     "${options[3]}") destination_name="${USER}@${HOSTNAME}_${source_dir}" ;;
     "${options[4]}") destination_name="${USER}@${HOSTNAME}_${source_dir}_${date}" ;;
-    " ${options[5]}")
+    "${options[5]}")
       destination_name="${USER}@${HOSTNAME}_${source_dir}_${date}"
       dest_name_has_time='true'
       ;;
@@ -380,7 +381,7 @@ select_destination_name() {
   fi
   echo -e "\nYour backup directory will be called ${style_heading}$destination_name$dummy_time${style_reset}"
 
-  has_destination_conflict='false'
+  create_destination_conflict='false'
   handle_create_destination_conflict
 }
 
@@ -456,33 +457,46 @@ transfer_data() {
   if [[ $mode_flag == 'create' ]]; then
     destination_path="$destination_path/$destination_name"
 
-    destination_rename=$destination_path
-    rsync "$rsync_options" "$source_path" "$destination_path"
+    destination_rename='false'
+    rsync $rsync_options "$source_path/" "$destination_path"
+    rsync_exit=$?
   fi
   if [[ $mode_flag == 'update' ]]; then
     destination_path_last_seg=$(grep --only-matching '/[^/]\+$' <<<"$destination_path")
     destination_dir=${destination_path:0:$((-${#destination_path_last_seg}))}
+    destination_current_name=${destination_path_last_seg:1}
 
+    if [[ $destination_current_name = "$destination_name" ]]; then
+      destination_rename='false'
+    else
     destination_rename="$destination_dir/$destination_name"
-    rsync "$rsync_options" "$source_path/" "$destination_path"
+    fi
+
+    rsync $rsync_options "$source_path/" "$destination_path"
+    rsync_exit=$?
   fi
 
   if [[ $dest_name_has_time == 'true' ]]; then
     time=$(date +'%H-%M-%S')
     destination_rename="${destination_rename}_$time"
   fi
+
+  if [[ $destination_rename != 'false' && $rsync_exit == 0 ]]; then
+    echo -e "Renaming destination from ${style_heading}$destination_path${style_reset} to ${style_heading}$destination_rename${style_reset}"
   mv "$destination_path" "$destination_rename"
+  fi
 }
 
 main() {
   source_path='null'
   destination_path='null'
   mode_flag='null'
+  destination_rename='null'
 
   clear
   script_dir="$(cd "$(dirname "$0")" && pwd)"
   cat "$script_dir/welcome-art.txt"
-  echo -e "${style_heading}You are running Scarab Backup ${version} (2022 by Malte Podolski)${style_reset}\n"
+  echo -e "You are running Scarab Backup ${version} (2022 by Malte Podolski)\n"
 
   check_arguments "$@"
   select_destination

@@ -59,10 +59,6 @@ All archive options  support **rsync-filter-files** by looking for a file in eve
 - `+ */` `+ *.c` `- *` would include all directories and .c source files but nothing else
 - `+ foo/` `+ foo/bar.c` `- *` would include only the foo directory and foo/bar.c (the foo directory must be explicitly included or it would be excluded by the "- *")
 
-### Writes
-
-Please note that Scarab doesn't do any file writing or modification itself apart from renaming the destination at the very end. The transfer is done by rsync and the backup process only starts right after you have chosen your archive option.
-
 ### Archive Configurations
 
 All options are configured with extensive logging and progress display.
