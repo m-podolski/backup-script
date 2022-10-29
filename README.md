@@ -36,10 +36,6 @@ Note that `-c` and `-u` are only shortcuts. You can start the script without the
 
 Scarab will in any case look for a directory matching `[Bb]ackup[s]*` at the target drive and use the first match as destination. Otherwise you can enter your own. When updating subdirectories will be presented as a select-list.
 
-### Update Mode
-
-The target path must point to an existing directory. Otherwise Scarab cannot calculate the available space correctly and you might encounter an error while copying!
-
 ### Backup Preparation
 
 Before the actual backup process starts the script will look for a file at the source root called `.scarabprepare.sh` and execute it. This is a good way to avoid using links when you want to backup certain files from outside your source directory but not the entire other directories. Just add some copy-instructions and you're done.
