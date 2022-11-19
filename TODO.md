@@ -1,9 +1,10 @@
 # Commit
 
-- put check disk space behind a flag
-> 0.4.0
+
 
 ## Backlog
+
+> 0.5.0
 
 - limit variable scopes
 

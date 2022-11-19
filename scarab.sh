@@ -4,14 +4,7 @@
 # malte.podolski AT web DOT de
 # github.com/m-podolski/scarab-backup
 
-version='0.4.0'
-
-style_ok='\e[0;32m\e[1m'
-style_warn='\e[0;33m\e[1mWarning: '
-style_error='\e[0;91m\e[1mError: '
-style_menu='\e[0;34m\e[1m'
-style_heading='\e[1m'
-style_reset='\e[0m'
+version='0.5.0'
 
 read_source_path() {
   echo -en "${style_menu}"
@@ -61,7 +54,7 @@ check_arguments() {
     select_mode
     ;;
   *)
-    while getopts ':c:u:s' flag; do
+    while getopts ':c:u:s:b' flag; do
       case "${flag}" in
       c)
         mode_flag='create'
@@ -75,6 +68,15 @@ check_arguments() {
         ;;
       s)
         check_space_flag='true'
+        if [[ $source_path == 'null' ]]; then
+          read_source_path
+        fi
+        if [[ $mode_flag == 'null' ]]; then
+          select_mode
+        fi
+        ;;
+      b)
+        detect_backup_folder_flag='false'
         if [[ $source_path == 'null' ]]; then
           read_source_path
         fi
@@ -104,11 +106,13 @@ get_destination_path() {
   drive_path=$1
   backup_dir_matches=()
 
-  for file in "$drive_path"/*; do
-    if [[ $file =~ [Bb]ackup[s]* ]]; then
-      backup_dir_matches+=("$file")
-    fi
-  done
+  if [[ $detect_backup_folder_flag == 'true' ]]; then
+    for file in "$drive_path"/*; do
+      if [[ $file =~ [Bb]ackup[s]* ]]; then
+        backup_dir_matches+=("$file")
+      fi
+    done
+  fi
 
   if ((${#backup_dir_matches[@]})); then
     backup_dir="${backup_dir_matches[0]}"
@@ -327,7 +331,8 @@ handle_create_destination_conflict() {
     -d "$destination_path/$destination_name" ]]; then
 
     if [[ "$create_destination_conflict" == 'false' ]]; then
-      echo -e "\n${style_warn}A directory with the selected name already exists!${style_reset}\nYou can first change the name of the existing directory manually and then use the 'Rescan' option to proceed with your current settings\n"
+      echo -e "\n${style_warn}A directory with the selected name already exists!${style_reset}\
+        \nYou can first change the name of the existing directory manually and then use the 'Rescan' option to proceed with your current settings\n"
     fi
 
     PS3="$(echo -en "${style_reset}")Select an answer (number): "
@@ -503,17 +508,25 @@ transfer_data() {
   fi
 
   if [[ $destination_rename != 'false' && $rsync_exit == 0 ]]; then
-    echo -e "Renaming destination from ${style_heading}$destination_path${style_reset} to ${style_heading}$destination_rename${style_reset}"
+    echo -e "Renaming destination from ${style_heading}$destination_current_name${style_reset} to ${style_heading}$destination_name${style_reset}"
     mv "$destination_path" "$destination_rename"
   fi
 }
 
 main() {
+  style_ok='\e[0;32m\e[1m'
+  style_warn='\e[0;33m\e[1mWarning: '
+  style_error='\e[0;91m\e[1mError: '
+  style_menu='\e[0;34m\e[1m'
+  style_heading='\e[1m'
+  style_reset='\e[0m'
+
   source_path='null'
   destination_path='null'
   destination_rename='null'
   mode_flag='null'
   check_space_flag='null'
+  detect_backup_folder_flag='true'
 
   clear
   script_dir="$(cd "$(dirname "$0")" && pwd)"

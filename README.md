@@ -23,12 +23,14 @@ This is a simple BASH utility script to copy files from your machine to an exter
 
 Put anywhere and run `scarab-backup/scarab.sh`:
 
+```bash
+./scarab.sh [-c | -u <source-path>] [-s] [-b]
 ```
-./scarab.sh [-c | -u <source-path>] [-s]
-```
+
 - `-c` create a new backup
 - `-u` update an existing backup
 - `-s` check if there is enough available space for the backup
+- `-b` disbable backup-folder detection at destination
 
 Note that `-c` and `-u` are only shortcuts. You can start the script without them and will be prompted for the options.
 
