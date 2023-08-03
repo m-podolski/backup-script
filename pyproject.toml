@@ -1,0 +1,21 @@
+[tool.poetry]
+name = "scarab-backup"
+version = "0.1.0"
+description = "A CLI-utility using Rsync to back up to external drives manually"
+authors = ["Podolski, Malte <malte.podolski@web.de>"]
+readme = "README.md"
+packages = [{ include = "app" }]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^7.4.0"
+black = "^23.7.0"
+
+[tool.black]
+line-length = 100
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
