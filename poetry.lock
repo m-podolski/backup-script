@@ -46,6 +46,28 @@ jupyter = ["ipython (>=7.8.0)", "tokenize-rt (>=3.2.0)"]
 uvloop = ["uvloop (>=0.15.2)"]
 
 [[package]]
+name = "cement"
+version = "3.0.8"
+description = "Application Framework for Python"
+optional = false
+python-versions = ">=3.5"
+files = [
+    {file = "cement-3.0.8-py3-none-any.whl", hash = "sha256:6bea33b89d3329c405ca4119b7da402b53b7c2c402e98cda371e882d5a2f485e"},
+    {file = "cement-3.0.8.tar.gz", hash = "sha256:ad11a694665e2ad28457c560494f4f8c36a25fc58e500d608a9d91e04e1d3093"},
+]
+
+[package.extras]
+colorlog = ["colorlog"]
+generate = ["pyYaml"]
+jinja2 = ["jinja2"]
+memcached = ["pylibmc"]
+mustache = ["pystache"]
+redis = ["redis"]
+tabulate = ["tabulate"]
+watchdog = ["watchdog"]
+yaml = ["pyYaml"]
+
+[[package]]
 name = "click"
 version = "8.1.6"
 description = "Composable command line interface toolkit"
@@ -194,4 +216,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "a48feb2d6d37b530b0dee18e3772c1d14dc95f5341580bbb3e493b81305b13a1"
+content-hash = "e88484b6598986b0b85bace232ad59566a87b7b4b800cb4af0e0130a34c9f14e"

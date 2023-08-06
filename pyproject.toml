@@ -8,6 +8,7 @@ packages = [{ include = "app" }]
 
 [tool.poetry.dependencies]
 python = "^3.10"
+cement = "^3.0.8"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.4.0"
