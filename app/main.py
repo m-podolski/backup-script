@@ -1,5 +1,5 @@
 from cement import App, CaughtSignal, init_defaults
-from app import Base
+from .controllers.base import Base
 
 CONFIG = init_defaults("scarab")
 CONFIG["scarab"]["prop"] = "otherValue"

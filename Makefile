@@ -1,4 +1,7 @@
-.PHONY: test
+.PHONY: run test
+
+run:
+	poetry run python3 -m app.main
 
 test:
 	poetry run python3 -m pytest \

@@ -1,5 +1,6 @@
 from cement import TestApp
-from app import Scarab
+
+from app.main import Scarab
 
 
 class ScarabTest(TestApp, Scarab):
