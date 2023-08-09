@@ -1,4 +1,4 @@
-from cement import App, CaughtSignal, init_defaults
+from cement import App, TestApp, CaughtSignal, init_defaults
 from .controllers.base import Base
 
 CONFIG = init_defaults("scarab")
@@ -22,6 +22,11 @@ class Scarab(App):
         handlers = [
             Base,
         ]
+
+
+class ScarabTest(TestApp, Scarab):
+    class Meta:
+        label = "scarabTest"
 
 
 def main():

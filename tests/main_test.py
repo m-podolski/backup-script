@@ -1,11 +1,4 @@
-from cement import TestApp
-
-from app.main import Scarab
-
-
-class ScarabTest(TestApp, Scarab):
-    class Meta:
-        label = "scarabTest"
+from app.main import ScarabTest
 
 
 def test_debug_flag():

@@ -1,8 +1,10 @@
 from cement import Controller, ex, get_version
 
-VERSION = (0, 0, 1, "alpha", 0)
+from app.services.backup import run_backup
+
+VERSION = (0, 5, 0, "alpha", 0)
 VERSION_BANNER = """
-cement-script v%s
+scarab-backup v%s
 """ % get_version(
     VERSION
 )
@@ -19,13 +21,31 @@ class Base(Controller):
         self.app.args.print_help()
 
     @ex(
-        help="example sub command1",
+        help="Back up from from a sourcepath to an external drive",
         arguments=[
-            (["-f", "--foo"], {"help": "notorious foo option", "action": "store", "dest": "foo"}),
+            (
+                ["-s", "--source"],
+                {"help": "The sourcepath", "action": "store", "dest": "sourcepath"},
+            ),
+            (
+                ["-c", "--create"],
+                {
+                    "help": "Create a new backup",
+                    "action": "store_const",
+                    "const": "CREATE",
+                    "dest": "backup_mode",
+                },
+            ),
+            (
+                ["-u", "--update"],
+                {
+                    "help": "Update an existig backup",
+                    "action": "store_const",
+                    "const": "UPDATE",
+                    "dest": "backup_mode",
+                },
+            ),
         ],
     )
-    def command1(self):
-        print("Inside Base.command1")
-
-        if self.app.pargs.foo is not None:
-            print("Foo Argument > %s" % self.app.pargs.foo)
+    def backup(self):
+        run_backup(self.app.pargs.sourcepath, self.app.pargs.backup_mode)
