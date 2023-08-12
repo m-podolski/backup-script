@@ -1,15 +1,12 @@
-def run_backup(sourcepath, backup_mode):
-    print("run_backup")
-    if sourcepath is not None:
-        validate_sourcepath(sourcepath)
-    else:
-        read_sourcepath()
+from typing import Optional
+
+BackupMode = Optional[str]
 
 
-def validate_sourcepath(path):
+def validate_sourcepath(path: str) -> bool:
     print("validate_sourcepath")
     return True
 
 
-def read_sourcepath():
+def read_sourcepath() -> None:
     print("Enter your source directory (absolute path): ")

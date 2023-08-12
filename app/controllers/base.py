@@ -1,6 +1,12 @@
-from cement import Controller, ex, get_version
+from enum import Enum, auto
+from typing import Optional
+from cement import Controller, ex, get_version  # pyright: ignore
 
-from app.services.backup import run_backup
+from app.services.backup import (
+    read_sourcepath,
+    validate_sourcepath,
+)  # pyright: ignore
+
 
 VERSION = (0, 5, 0, "alpha", 0)
 VERSION_BANNER = """
@@ -10,15 +16,20 @@ scarab-backup v%s
 )
 
 
+class BackupMode(Enum):
+    CREATE = auto()
+    UPDATE = auto()
+
+
 class Base(Controller):
-    class Meta:
+    class Meta:  # pyright: ignore
         label = "base"
         arguments = [
             (["-v", "--version"], {"action": "version", "version": VERSION_BANNER}),
         ]
 
     def _default(self):
-        self.app.args.print_help()
+        self.app.args.print_help()  # pyright: ignore
 
     @ex(
         help="Back up from from a sourcepath to an external drive",
@@ -32,7 +43,7 @@ class Base(Controller):
                 {
                     "help": "Create a new backup",
                     "action": "store_const",
-                    "const": "CREATE",
+                    "const": BackupMode.CREATE,
                     "dest": "backup_mode",
                 },
             ),
@@ -41,11 +52,16 @@ class Base(Controller):
                 {
                     "help": "Update an existig backup",
                     "action": "store_const",
-                    "const": "UPDATE",
+                    "const": BackupMode.UPDATE,
                     "dest": "backup_mode",
                 },
             ),
         ],
-    )
-    def backup(self):
-        run_backup(self.app.pargs.sourcepath, self.app.pargs.backup_mode)
+    )  # pyright: ignore
+    def backup(self) -> None:
+        print(self.app.pargs)  # pyright: ignore
+        sourcepath: Optional[str] = self.app.pargs.sourcepath  # pyright: ignore
+        if sourcepath is not None:
+            validate_sourcepath(sourcepath)  # pyright: ignore
+        else:
+            read_sourcepath()

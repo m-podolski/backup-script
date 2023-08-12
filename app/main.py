@@ -1,14 +1,14 @@
-from cement import App, TestApp, CaughtSignal, init_defaults
-from .controllers.base import Base
+from cement import App, TestApp, CaughtSignal, init_defaults  # pyright: ignore
+from app.controllers.base import Base
 
-CONFIG = init_defaults("scarab")
+CONFIG = init_defaults("scarab")  # pyright: ignore
 CONFIG["scarab"]["prop"] = "otherValue"
 
 
 class Scarab(App):
-    class Meta:
-        label = "scarab"
-        config_defaults = CONFIG
+    class Meta:  # pyright: ignore
+        label: str = "scarab"
+        config_defaults = CONFIG  # pyright: ignore[reportUnknownVariableType]
         close_on_exit = True
         # extensions = [
         #     "yaml",
@@ -24,12 +24,12 @@ class Scarab(App):
         ]
 
 
-class ScarabTest(TestApp, Scarab):
-    class Meta:
-        label = "scarabTest"
+class ScarabTest(TestApp, Scarab):  # pyright: ignore
+    class Meta:  # pyright: ignore
+        label: str = "scarabTest"
 
 
-def main():
+def main() -> None:
     with Scarab() as app:
         try:
             app.run()
@@ -37,13 +37,12 @@ def main():
         except AssertionError as e:
             print("AssertionError > %s" % e.args[0])
             app.exit_code = 1
-            if app.debug is True:
+            if app.debug is True:  # pyright: ignore
                 import traceback
 
                 traceback.print_exc()
 
         except CaughtSignal as e:
-            # Default Cement signals are SIGINT and SIGTERM, exit 0 (non-error)
             print("\n%s" % e)
             app.exit_code = 0
 
