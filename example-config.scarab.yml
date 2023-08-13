@@ -1,7 +1,7 @@
+# Put under ~/.scarab.yml
+
 scarab:
   prop: value
-  log_handler: colorlog
-  output_handler: jinja2
 
 log.colorlog:
   # Where the log file lives (no log file by default)

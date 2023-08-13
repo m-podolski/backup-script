@@ -2,26 +2,27 @@ from cement import App, TestApp, CaughtSignal, init_defaults  # pyright: ignore
 from app.controllers.base import Base
 
 CONFIG = init_defaults("scarab")  # pyright: ignore
-CONFIG["scarab"]["prop"] = "otherValue"
+CONFIG["scarab"]["otherProp"] = "otherValue"
 
 
 class Scarab(App):
     class Meta:  # pyright: ignore
         label: str = "scarab"
-        config_defaults = CONFIG  # pyright: ignore[reportUnknownVariableType]
-        close_on_exit = True
-        # extensions = [
-        #     "yaml",
-        #     "colorlog",
-        #     "jinja2",
-        # ]
-        # config_handler = "yaml"
-        # config_file_suffix = ".yml"
-        # log_handler = "colorlog"
-        # output_handler = "jinja2"
         handlers = [
             Base,
         ]
+        extensions = [
+            "yaml",
+            "jinja2",
+            "colorlog",
+        ]
+        config_defaults = CONFIG  # pyright: ignore
+        config_handler = "yaml"
+        config_file_suffix = ".yml"
+        output_handler = "jinja2"
+        template_dir = "./app/templates"
+        log_handler = "colorlog"
+        close_on_exit = True
 
 
 class ScarabTest(TestApp, Scarab):  # pyright: ignore
@@ -33,6 +34,11 @@ def main() -> None:
     with Scarab() as app:
         try:
             app.run()
+
+            print(app.config["scarab"]["prop"])  # pyright: ignore
+            app.log.error("fgd")  # pyright: ignore
+            data = {"foo": "bar"}
+            app.render(data, "base.jinja2")  # pyright: ignore
 
         except AssertionError as e:
             print("AssertionError > %s" % e.args[0])
