@@ -4,12 +4,6 @@ from app.main import ScarabTest
 from app.controllers import base
 
 
-class Bla:
-    @staticmethod
-    def blub() -> None:
-        pass
-
-
 def test_backup(mocker: MockerFixture) -> None:
     spy_validate_sourcepath = mocker.spy(base, "validate_sourcepath")
     spy_read_sourcepath = mocker.spy(base, "read_sourcepath")

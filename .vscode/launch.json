@@ -2,7 +2,24 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Python: Current File",
+      "name": "app.main",
+      "type": "python",
+      "request": "launch",
+      "module": "app.main",
+      "console": "integratedTerminal",
+      "justMyCode": true
+    },
+    {
+      "name": "app.main backup --source /path",
+      "type": "python",
+      "request": "launch",
+      "module": "app.main",
+      "console": "integratedTerminal",
+      "justMyCode": true,
+      "args": ["backup", "--source", "/path"]
+    },
+    {
+      "name": "File",
       "type": "python",
       "request": "launch",
       "program": "${file}",

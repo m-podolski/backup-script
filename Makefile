@@ -3,6 +3,9 @@
 run:
 	poetry run python3 -m app.main
 
+run-bu-pa:
+	poetry run python3 -m app.main backup --source /path
+
 test:
 	poetry run python3 -m pytest \
 		-v \
