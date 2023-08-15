@@ -1,12 +1,8 @@
-from typing import Optional
-
-BackupMode = Optional[str]
+import os
 
 
 def validate_sourcepath(path: str) -> bool:
-    print("validate_sourcepath")
-    return True
+    path = os.path.expanduser(path)
+    path = os.path.expandvars(path)
 
-
-def read_sourcepath() -> None:
-    print("Enter your source directory (absolute path): ")
+    return os.path.exists(path)

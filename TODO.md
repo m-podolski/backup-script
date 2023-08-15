@@ -4,6 +4,7 @@
 
 ## Backlog
 
-> 0.5.0
+- add command for generating local config-file
+- generalise to also target arbitrary os locations
 
-rewrite in python
+> 0.6.0

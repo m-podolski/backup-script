@@ -3,7 +3,6 @@ from typing import Optional
 from cement import Controller, ex, get_version  # pyright: ignore
 
 from app.services.backup import (
-    read_sourcepath,
     validate_sourcepath,
 )  # pyright: ignore
 
@@ -59,9 +58,32 @@ class Base(Controller):
         ],
     )  # pyright: ignore
     def backup(self) -> None:
-        print(self.app.pargs)  # pyright: ignore
-        sourcepath: Optional[str] = self.app.pargs.sourcepath  # pyright: ignore
-        if sourcepath is not None:
-            validate_sourcepath(sourcepath)  # pyright: ignore
+        checked_sourcepath: str = self._check_sourcepath(
+            self.app.pargs.sourcepath  # pyright: ignore
+        )
+        print(checked_sourcepath)
+
+    def _check_sourcepath(self, path: Optional[str]) -> str:
+        if path is not None:
+            valid: bool = validate_sourcepath(path)
+            if valid:
+                return path
+            else:
+                self.app.render(  # pyright: ignore
+                    {
+                        "message": "Your sourcepath is not a valid directory! Please check and enter it again."
+                    },
+                    "input_prompt.jinja2",
+                )
+                path_in: str = self._read_sourcepath()
+                return self._check_sourcepath(path_in)
         else:
-            read_sourcepath()
+            self.app.render(  # pyright: ignore
+                {"message": "Please specify a sourcepath to the directory you want backed up."},
+                "input_prompt.jinja2",
+            )
+            path_in = self._read_sourcepath()
+            return self._check_sourcepath(path_in)
+
+    def _read_sourcepath(self) -> str:
+        return "/path"

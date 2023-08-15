@@ -37,8 +37,6 @@ def main() -> None:
 
             print(app.config["scarab"]["prop"])  # pyright: ignore
             app.log.error("fgd")  # pyright: ignore
-            data = {"foo": "bar"}
-            app.render(data, "base.jinja2")  # pyright: ignore
 
         except AssertionError as e:
             print("AssertionError > %s" % e.args[0])
