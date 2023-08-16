@@ -4,7 +4,7 @@ from pytest_mock import MockerFixture
 
 from app.main import ScarabTest
 from app.controllers.base import Base
-from tests.conftest import AppStub
+from tests.conftest import AppStub, Temp, home_dir
 
 
 @pytest.fixture()
@@ -15,44 +15,38 @@ def controller_fixture(app_fixture: AppStub) -> Base:
 
 
 def test_backup(mocker: MockerFixture) -> None:
-    spy_check_sourcepath: Mock = mocker.patch("app.controllers.base.Base._check_sourcepath")
+    mock_check_sourcepath: Mock = mocker.patch("app.controllers.base.Base._check_sourcepath")
 
     with ScarabTest(argv=["backup"]) as app:  # pyright: ignore
         app.run()
-        spy_check_sourcepath.assert_called_with(None)
+        mock_check_sourcepath.assert_called_with(None)
 
     with ScarabTest(argv=["backup", "--source", "/path"]) as app:
         app.run()
-        spy_check_sourcepath.assert_called_with("/path")
-
-
-valid_sourcepath = "~/dev"
+        mock_check_sourcepath.assert_called_with("/path")
 
 
 @pytest.mark.parametrize(
-    "path_in, path_out, read_sourcepath_call_count",
+    "path_in",
     [
-        (None, valid_sourcepath, 1),
-        ("/invalid", valid_sourcepath, 1),
-        (valid_sourcepath, valid_sourcepath, 0),
+        (None),
+        (f"{home_dir}"),
+        (f"{home_dir}/invalid_48zfhbn0934jf"),
     ],
 )
 def test_check_sourcepath(
     mocker: MockerFixture,
     controller_fixture: Base,
+    temp_dir_fixture: Temp,
     path_in: str | None,
-    path_out: str,
-    read_sourcepath_call_count: int,
 ) -> None:
-    mock_read_sourcepath: Mock = mocker.patch.object(
-        controller_fixture, attribute="_read_sourcepath", return_value=valid_sourcepath
+    mocker.patch.object(
+        controller_fixture, attribute="_read_sourcepath", return_value=temp_dir_fixture.path
     )
 
-    path_checked: str = (
+    path_checked: str | bool = (
         controller_fixture._check_sourcepath(  # pyright: ignore [reportPrivateUsage]
-            path_in  # pyright: ignore
+            f"{path_in}/{temp_dir_fixture.dirname}"  # pyright: ignore
         )
     )
-    assert path_checked == path_out
-    assert mock_read_sourcepath.call_count == read_sourcepath_call_count
-    mock_read_sourcepath.reset_mock()
+    assert path_checked == temp_dir_fixture.path

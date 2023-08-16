@@ -65,25 +65,23 @@ class Base(Controller):
 
     def _check_sourcepath(self, path: Optional[str]) -> str:
         if path is not None:
-            valid: bool = validate_sourcepath(path)
-            if valid:
-                return path
+            valid_path: Optional[str] = validate_sourcepath(path)
+            if valid_path:
+                return valid_path
             else:
-                self.app.render(  # pyright: ignore
-                    {
-                        "message": "Your sourcepath is not a valid directory! Please check and enter it again."
-                    },
-                    "input_prompt.jinja2",
+                path_in: str = self._read_sourcepath(
+                    "Your sourcepath is not a valid directory! Please check and enter it again."
                 )
-                path_in: str = self._read_sourcepath()
                 return self._check_sourcepath(path_in)
         else:
-            self.app.render(  # pyright: ignore
-                {"message": "Please specify a sourcepath to the directory you want backed up."},
-                "input_prompt.jinja2",
+            path_in = self._read_sourcepath(
+                "Please specify a sourcepath to the directory you want backed up."
             )
-            path_in = self._read_sourcepath()
             return self._check_sourcepath(path_in)
 
-    def _read_sourcepath(self) -> str:
+    def _read_sourcepath(self, prompt_message: str) -> str:
+        self.app.render(  # pyright: ignore
+            {"message": prompt_message},
+            "input_prompt.jinja2",
+        )
         return "/path"
