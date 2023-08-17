@@ -44,9 +44,16 @@ def test_check_sourcepath(
         controller_fixture, attribute="_read_sourcepath", return_value=temp_dir_fixture.path
     )
 
-    path_checked: str | bool = (
-        controller_fixture._check_sourcepath(  # pyright: ignore [reportPrivateUsage]
-            f"{path_in}/{temp_dir_fixture.dirname}"  # pyright: ignore
-        )
+    path_checked: str | bool = controller_fixture._check_sourcepath(  # pyright: ignore
+        f"{path_in}/{temp_dir_fixture.dirname}"  # pyright: ignore
     )
     assert path_checked == temp_dir_fixture.path
+
+
+def test_read_sourcepath(mocker: MockerFixture, controller_fixture: Base) -> None:
+    user_input: str = "/path"
+    mocker.patch("builtins.input", return_value=user_input)
+
+    path_read: str = controller_fixture._read_sourcepath("Some Message")  # pyright: ignore
+
+    assert path_read == user_input

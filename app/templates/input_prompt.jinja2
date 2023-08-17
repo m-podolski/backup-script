@@ -1,1 +1,4 @@
-{% if message %}Input: {{ message }}{% endif %}
+
+{% if message -%}
+  {{ message }}
+{%- endif %}

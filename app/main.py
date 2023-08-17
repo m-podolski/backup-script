@@ -1,4 +1,5 @@
-from cement import App, TestApp, CaughtSignal, init_defaults  # pyright: ignore
+from cement import App, TestApp, CaughtSignal, init_defaults, Handler  # pyright: ignore
+
 from app.controllers.base import Base
 
 CONFIG = init_defaults("scarab")  # pyright: ignore
@@ -34,9 +35,6 @@ def main() -> None:
     with Scarab() as app:
         try:
             app.run()
-
-            print(app.config["scarab"]["prop"])  # pyright: ignore
-            app.log.error("fgd")  # pyright: ignore
 
         except AssertionError as e:
             print("AssertionError > %s" % e.args[0])

@@ -4,7 +4,7 @@ from cement import Controller, ex, get_version  # pyright: ignore
 
 from app.services.backup import (
     validate_sourcepath,
-)  # pyright: ignore
+)
 
 
 VERSION = (0, 5, 0, "alpha", 0)
@@ -49,7 +49,7 @@ class Base(Controller):
             (
                 ["-u", "--update"],
                 {
-                    "help": "Update an existig backup",
+                    "help": "Update an existing backup",
                     "action": "store_const",
                     "const": BackupMode.UPDATE,
                     "dest": "backup_mode",
@@ -84,4 +84,4 @@ class Base(Controller):
             {"message": prompt_message},
             "input_prompt.jinja2",
         )
-        return "/path"
+        return input("Path: ")
