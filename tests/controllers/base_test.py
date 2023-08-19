@@ -2,6 +2,7 @@ from pathlib import Path
 from unittest.mock import Mock
 import pytest
 from pytest_mock import MockerFixture
+from app.exceptions import ScarabArgumentError
 
 from app.main import ScarabTest
 from app.controllers.base import Base
@@ -63,3 +64,19 @@ def test_read_sourcepath(mocker: MockerFixture, controller_fixture: Base) -> Non
     path_read: str = controller_fixture._read_sourcepath("Some Message")  # pyright: ignore
 
     assert path_read == user_input
+
+
+def test_read_sourcepath_raises_in_quiet_mode(
+    mocker: MockerFixture, controller_fixture: Base
+) -> None:
+    mocker.patch("builtins.input")
+    controller_fixture.app.quiet = False  # pyright: ignore
+
+    controller_fixture._read_sourcepath("msg")  # pyright: ignore
+
+    with pytest.raises(
+        ScarabArgumentError,
+        match=r"^Scarab got wrong or conflicting arguments: Cannot receive input in quiet mode",
+    ):
+        controller_fixture.app.quiet = True  # pyright: ignore
+        controller_fixture._read_sourcepath("msg")  # pyright: ignore

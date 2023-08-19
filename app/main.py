@@ -1,6 +1,7 @@
 from cement import App, TestApp, CaughtSignal, init_defaults, Handler  # pyright: ignore
 
 from app.controllers.base import Base
+from app.exceptions import ScarabException
 
 CONFIG = init_defaults("scarab")  # pyright: ignore
 CONFIG["scarab"]["otherProp"] = "otherValue"
@@ -35,6 +36,10 @@ def main() -> None:
     with Scarab() as app:
         try:
             app.run()
+
+        except ScarabException as e:
+            print("\n%s" % e)
+            app.exit_code = 0
 
         except AssertionError as e:
             print("AssertionError > %s" % e.args[0])

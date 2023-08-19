@@ -4,6 +4,8 @@ import os
 
 
 class AppStub:
+    quiet: bool = False
+
     def render(self, data: dict[str, str], template: str) -> None:
         pass
 

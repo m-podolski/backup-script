@@ -1,12 +1,11 @@
 # Commit
 
-- replace temp_dir_fixture with pytests tmp_path
+- make read_sourcepath raise exception in quiet-mode
 
 ## In Progress
 
 ## Backlog
 
-- make read_sourcepath raise exception in quiet-mode
 - refactor to Path with .validate()
 
 - add destination-path (arg and selection)

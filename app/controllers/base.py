@@ -2,6 +2,8 @@ from enum import Enum, auto
 from typing import Optional
 from cement import Controller, ex, get_version  # pyright: ignore
 
+from app.exceptions import ScarabArgumentError  # pyright: ignore
+
 from app.services.backup import (
     validate_sourcepath,
 )
@@ -80,6 +82,8 @@ class Base(Controller):
             return self._check_sourcepath(path_in)
 
     def _read_sourcepath(self, prompt_message: str) -> str:
+        if self.app.quiet:  # pyright: ignore
+            raise ScarabArgumentError("Cannot receive input in quiet mode")
         self.app.render(  # pyright: ignore
             {"message": prompt_message},
             "input_prompt.jinja2",
