@@ -1,13 +1,13 @@
 import pytest
 from app.services.backup import validate_sourcepath
-from tests.conftest import Temp, home_dir
+from tests.conftest import Temp, HOME_DIR
 
 
 @pytest.mark.parametrize(
     "path_in, valid",
     [
-        (f"{home_dir}", True),
-        (f"{home_dir}/invalid_48zfhbn0934jf", False),
+        (f"{HOME_DIR}", True),
+        (f"{HOME_DIR}/invalid_48zfhbn0934jf", False),
         ("~", True),
         ("$HOME", True),
     ],

@@ -4,11 +4,14 @@ from pytest_mock import MockerFixture
 
 from app.main import ScarabTest
 from app.controllers.base import Base
-from tests.conftest import AppStub, Temp, home_dir
+from tests.conftest import AppStub, Temp, HOME_DIR
 
 
 @pytest.fixture()
 def controller_fixture(app_fixture: AppStub) -> Base:
+    """
+    Provides the controller instance and sets .app
+    """
     controller = Base()
     setattr(controller, "app", app_fixture)
     return controller
@@ -30,8 +33,8 @@ def test_backup(mocker: MockerFixture) -> None:
     "path_in",
     [
         (None),
-        (f"{home_dir}"),
-        (f"{home_dir}/invalid_48zfhbn0934jf"),
+        (f"{HOME_DIR}"),
+        (f"{HOME_DIR}/invalid_48zfhbn0934jf"),
     ],
 )
 def test_check_sourcepath(

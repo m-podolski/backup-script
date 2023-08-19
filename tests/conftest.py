@@ -12,10 +12,13 @@ class AppStub:
 
 @pytest.fixture(scope="function")
 def app_fixture() -> AppStub:
+    """
+    Provides a stub of the cement app-object to set globals.
+    """
     return AppStub()
 
 
-home_dir: str = os.environ["HOME"]
+HOME_DIR: str = os.environ["HOME"]
 
 
 class Temp:
@@ -24,12 +27,15 @@ class Temp:
     """
 
     def __init__(self) -> None:
-        self.path: str = mkdtemp(dir=f"{home_dir}")
-        self.dirname: str = self.path[-len(home_dir) : :]
+        self.path: str = mkdtemp(dir=f"{HOME_DIR}")
+        self.dirname: str = self.path[-len(HOME_DIR) : :]
 
 
 @pytest.fixture(scope="function")
 def temp_dir_fixture() -> Generator[Temp, Any, None]:
+    """
+    Sets up and removes os-locations.
+    """
     temp = Temp()
     yield temp
 
