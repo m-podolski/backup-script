@@ -1,12 +1,10 @@
 # Commit
 
-- make read_sourcepath raise exception in quiet-mode
+- refactor base-controller to use pathlib.Path
 
 ## In Progress
 
 ## Backlog
-
-- refactor to Path with .validate()
 
 - add destination-path (arg and selection)
   - add rescan-option

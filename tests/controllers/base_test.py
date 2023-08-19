@@ -37,6 +37,8 @@ def test_backup(mocker: MockerFixture) -> None:
         (None),
         (f"{HOME_DIR}"),
         (f"{HOME_DIR}/invalid_48zfhbn0934jf"),
+        ("~"),
+        ("$HOME"),
     ],
 )
 def test_check_sourcepath(
@@ -48,13 +50,13 @@ def test_check_sourcepath(
     correct_path: str = str(tmp_path.absolute())
     mocker.patch.object(controller_fixture, attribute="_read_sourcepath", return_value=correct_path)
 
-    if path_in is not None:
-        path: str = replace_homedir_with_test_parameter(tmp_path, path_in)
-        path_checked: str | bool = controller_fixture._check_sourcepath(path)  # pyright: ignore
+    if path_in is None:
+        path_checked: Path = controller_fixture._check_sourcepath(path_in)  # pyright: ignore
     else:
-        path_checked: str | bool = controller_fixture._check_sourcepath(path_in)  # pyright: ignore
+        path: str = replace_homedir_with_test_parameter(tmp_path, path_in)
+        path_checked: Path = controller_fixture._check_sourcepath(path)  # pyright: ignore
 
-    assert path_checked == correct_path
+    assert path_checked == Path(correct_path)
 
 
 def test_read_sourcepath(mocker: MockerFixture, controller_fixture: Base) -> None:

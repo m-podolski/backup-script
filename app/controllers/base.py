@@ -1,12 +1,10 @@
 from enum import Enum, auto
+import os
+from pathlib import Path
 from typing import Optional
 from cement import Controller, ex, get_version  # pyright: ignore
 
 from app.exceptions import ScarabArgumentError  # pyright: ignore
-
-from app.services.backup import (
-    validate_sourcepath,
-)
 
 
 VERSION = (0, 5, 0, "alpha", 0)
@@ -60,16 +58,18 @@ class Base(Controller):
         ],
     )  # pyright: ignore
     def backup(self) -> None:
-        checked_sourcepath: str = self._check_sourcepath(
+        checked_sourcepath: Path = self._check_sourcepath(
             self.app.pargs.sourcepath  # pyright: ignore
         )
         print(checked_sourcepath)
 
-    def _check_sourcepath(self, path: Optional[str]) -> str:
-        if path is not None:
-            valid_path: Optional[str] = validate_sourcepath(path)
-            if valid_path:
-                return valid_path
+    def _check_sourcepath(self, path_string: Optional[str]) -> Path:
+        if path_string is not None:
+            path_string = os.path.expanduser(path_string)
+            path_string = os.path.expandvars(path_string)
+            path = Path(path_string)
+            if path.exists():
+                return path
             else:
                 path_in: str = self._read_sourcepath(
                     "Your sourcepath is not a valid directory! Please check and enter it again."
