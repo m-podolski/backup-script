@@ -1,10 +1,11 @@
+from pathlib import Path
 from unittest.mock import Mock
 import pytest
 from pytest_mock import MockerFixture
 
 from app.main import ScarabTest
 from app.controllers.base import Base
-from tests.conftest import AppStub, Temp, HOME_DIR
+from tests.conftest import AppStub, HOME_DIR, replace_homedir_with_test_parameter
 
 
 @pytest.fixture()
@@ -40,17 +41,19 @@ def test_backup(mocker: MockerFixture) -> None:
 def test_check_sourcepath(
     mocker: MockerFixture,
     controller_fixture: Base,
-    temp_dir_fixture: Temp,
+    tmp_path: Path,
     path_in: str | None,
 ) -> None:
-    mocker.patch.object(
-        controller_fixture, attribute="_read_sourcepath", return_value=temp_dir_fixture.path
-    )
+    correct_path: str = str(tmp_path.absolute())
+    mocker.patch.object(controller_fixture, attribute="_read_sourcepath", return_value=correct_path)
 
-    path_checked: str | bool = controller_fixture._check_sourcepath(  # pyright: ignore
-        f"{path_in}/{temp_dir_fixture.dirname}"  # pyright: ignore
-    )
-    assert path_checked == temp_dir_fixture.path
+    if path_in is not None:
+        path: str = replace_homedir_with_test_parameter(tmp_path, path_in)
+        path_checked: str | bool = controller_fixture._check_sourcepath(path)  # pyright: ignore
+    else:
+        path_checked: str | bool = controller_fixture._check_sourcepath(path_in)  # pyright: ignore
+
+    assert path_checked == correct_path
 
 
 def test_read_sourcepath(mocker: MockerFixture, controller_fixture: Base) -> None:

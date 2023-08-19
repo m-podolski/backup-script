@@ -1,6 +1,7 @@
+from pathlib import Path
 import pytest
 from app.services.backup import validate_sourcepath
-from tests.conftest import Temp, HOME_DIR
+from tests.conftest import HOME_DIR, replace_homedir_with_test_parameter
 
 
 @pytest.mark.parametrize(
@@ -13,11 +14,11 @@ from tests.conftest import Temp, HOME_DIR
     ],
 )
 def test_validate_sourcepath(
-    temp_dir_fixture: Temp,
+    tmp_path: Path,
     path_in: str,
     valid: bool,
 ) -> None:
-    path: str = f"{path_in}/{temp_dir_fixture.dirname}"
+    path: str = replace_homedir_with_test_parameter(tmp_path, path_in)
     if valid:
         assert isinstance(validate_sourcepath(path), str)
     else:

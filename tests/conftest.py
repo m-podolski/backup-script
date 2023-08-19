@@ -1,8 +1,6 @@
-from typing import Any, Generator
+from pathlib import Path
 import pytest
 import os
-import shutil
-from tempfile import mkdtemp
 
 
 class AppStub:
@@ -21,23 +19,10 @@ def app_fixture() -> AppStub:
 HOME_DIR: str = os.environ["HOME"]
 
 
-class Temp:
+def replace_homedir_with_test_parameter(tmp_path: Path, path_in: str | None) -> str:
     """
-    Creates temporary directories. It uses the home-dir as root to enable testing for tilde- and var-expansions.
+    Strips the home-directory (as set in pyproject.toml) and replaces ist with parameters given to the test to enable checking for variable-expansions
     """
-
-    def __init__(self) -> None:
-        self.path: str = mkdtemp(dir=f"{HOME_DIR}")
-        self.dirname: str = self.path[-len(HOME_DIR) : :]
-
-
-@pytest.fixture(scope="function")
-def temp_dir_fixture() -> Generator[Temp, Any, None]:
-    """
-    Sets up and removes os-locations.
-    """
-    temp = Temp()
-    yield temp
-
-    if os.path.exists(temp.path):
-        shutil.rmtree(temp.path)
+    temp_dir: str = f"{tmp_path.parts[3]}/{tmp_path.parts[4]}"
+    path: str = f"{path_in}/{temp_dir}"
+    return path
