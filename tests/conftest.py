@@ -1,21 +1,5 @@
 from pathlib import Path
-import pytest
 import os
-
-
-class AppStub:
-    quiet: bool = False
-
-    def render(self, data: dict[str, str], template: str) -> None:
-        pass
-
-
-@pytest.fixture(scope="function")
-def app_fixture() -> AppStub:
-    """
-    Provides a stub of the cement app-object to set globals.
-    """
-    return AppStub()
 
 
 HOME_DIR: str = os.environ["HOME"]

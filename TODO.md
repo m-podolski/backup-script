@@ -1,14 +1,17 @@
 # Commit
 
-- rename and restructure tests
-
 ## In Progress
+
+- refactor to use service class
 
 ## Backlog
 
 - add destination-path (arg and selection)
+  - get /media/USER when --media is set (ignore --dest)
+  - print destination contents
   - add rescan-option
   - add backup-folder-detection
+
 - add mode-selection (or raise ex)
 
 - add destination-name-selection
@@ -26,6 +29,6 @@
   - add command for generating local config-file
   - generalize to also target arbitrary os locations
 
-- ? replace jinja-templates with custom solored output
+- ? replace jinja-templates with custom colored output
 
 > 0.6.0

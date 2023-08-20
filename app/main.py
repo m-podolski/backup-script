@@ -1,6 +1,6 @@
 from cement import App, TestApp, CaughtSignal, init_defaults, Handler  # pyright: ignore
 
-from app.controllers.base import Base
+from app.controller import Base
 from app.exceptions import ScarabException
 
 CONFIG = init_defaults("scarab")  # pyright: ignore

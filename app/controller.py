@@ -67,10 +67,13 @@ class Base(Controller):
         ],
     )  # pyright: ignore
     def backup(self) -> None:
-        sourcepath: Path = self._check_path(
+        sourcepath: Path = self._check_path(  # pyright: ignore
             self.app.pargs.sourcepath, PathType.SOURCE  # pyright: ignore
         )
-        destpath: Path = self._check_path(self.app.pargs.destpath, PathType.DEST)  # pyright: ignore
+        destpath: Path = self._check_path(  # pyright: ignore
+            self.app.pargs.destpath, PathType.DEST  # pyright: ignore
+        )
+        print({"source": sourcepath.absolute(), "dest": destpath.absolute()})
 
     def _check_path(self, path_string: Optional[str], type: PathType) -> Path:
         if path_string is not None:

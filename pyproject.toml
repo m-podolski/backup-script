@@ -22,6 +22,7 @@ reportUnnecessaryTypeIgnoreComment = "true"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+python_functions = "it_*"
 # Must be set to home-directory to test for var-expansion
 addopts = "--basetemp /home/malte/pytest-temp-scarab"
 
