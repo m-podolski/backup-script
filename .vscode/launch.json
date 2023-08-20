@@ -20,6 +20,15 @@
       "args": ["--debug", "backup", "--source", "/path"]
     },
     {
+      "name": "app.main backup --dest /path",
+      "type": "python",
+      "request": "launch",
+      "module": "app.main",
+      "console": "integratedTerminal",
+      "justMyCode": true,
+      "args": ["--debug", "backup", "--dest", "/path"]
+    },
+    {
       "name": "File",
       "type": "python",
       "request": "launch",

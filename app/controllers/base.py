@@ -20,6 +20,11 @@ class BackupMode(Enum):
     UPDATE = auto()
 
 
+class PathType(Enum):
+    SOURCE = "sourcepath"
+    DEST = "destinationpath"
+
+
 class Base(Controller):
     class Meta:  # pyright: ignore
         label = "base"
@@ -36,6 +41,10 @@ class Base(Controller):
             (
                 ["-s", "--source"],
                 {"help": "The sourcepath", "action": "store", "dest": "sourcepath"},
+            ),
+            (
+                ["-d", "--dest"],
+                {"help": "The destinationpath", "action": "store", "dest": "destpath"},
             ),
             (
                 ["-c", "--create"],
@@ -58,12 +67,12 @@ class Base(Controller):
         ],
     )  # pyright: ignore
     def backup(self) -> None:
-        checked_sourcepath: Path = self._check_sourcepath(
-            self.app.pargs.sourcepath  # pyright: ignore
+        sourcepath: Path = self._check_path(
+            self.app.pargs.sourcepath, PathType.SOURCE  # pyright: ignore
         )
-        print(checked_sourcepath)
+        destpath: Path = self._check_path(self.app.pargs.destpath, PathType.DEST)  # pyright: ignore
 
-    def _check_sourcepath(self, path_string: Optional[str]) -> Path:
+    def _check_path(self, path_string: Optional[str], type: PathType) -> Path:
         if path_string is not None:
             path_string = os.path.expanduser(path_string)
             path_string = os.path.expandvars(path_string)
@@ -72,14 +81,19 @@ class Base(Controller):
                 return path
             else:
                 path_in: str = self._read_sourcepath(
-                    "Your sourcepath is not a valid directory! Please check and enter it again."
+                    f"Your {type.value} is not a valid directory! Please check and enter it again."
                 )
-                return self._check_sourcepath(path_in)
+                return self._check_path(path_in, type)
         else:
-            path_in = self._read_sourcepath(
-                "Please specify a sourcepath to the directory you want backed up."
-            )
-            return self._check_sourcepath(path_in)
+            match type:
+                case PathType.SOURCE:
+                    msg: str = "Please specify a sourcepath to the directory you want backed up."
+                case PathType.DEST:
+                    msg = (
+                        "Please specify a destinationpath to the directory you want to back up to."
+                    )
+            path_in = self._read_sourcepath(msg)
+            return self._check_path(path_in, type)
 
     def _read_sourcepath(self, prompt_message: str) -> str:
         if self.app.quiet:  # pyright: ignore

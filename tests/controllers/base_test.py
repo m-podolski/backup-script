@@ -1,11 +1,10 @@
 from pathlib import Path
-from unittest.mock import Mock
 import pytest
 from pytest_mock import MockerFixture
 from app.exceptions import ScarabArgumentError
 
 from app.main import ScarabTest
-from app.controllers.base import Base
+from app.controllers.base import Base, PathType
 from tests.conftest import AppStub, HOME_DIR, replace_homedir_with_test_parameter
 
 
@@ -20,15 +19,19 @@ def controller_fixture(app_fixture: AppStub) -> Base:
 
 
 def test_backup(mocker: MockerFixture) -> None:
-    mock_check_sourcepath: Mock = mocker.patch("app.controllers.base.Base._check_sourcepath")
+    mocker.patch("app.controllers.base.Base._check_path")
 
     with ScarabTest(argv=["backup"]) as app:  # pyright: ignore
         app.run()
-        mock_check_sourcepath.assert_called_with(None)
+        assert app.pargs.sourcepath == None  # pyright: ignore
 
     with ScarabTest(argv=["backup", "--source", "/path"]) as app:
         app.run()
-        mock_check_sourcepath.assert_called_with("/path")
+        assert app.pargs.sourcepath == "/path"  # pyright: ignore
+
+    with ScarabTest(argv=["backup", "--dest", "/path"]) as app:
+        app.run()
+        assert app.pargs.destpath == "/path"  # pyright: ignore
 
 
 @pytest.mark.parametrize(
@@ -41,20 +44,24 @@ def test_backup(mocker: MockerFixture) -> None:
         ("$HOME"),
     ],
 )
-def test_check_sourcepath(
+def test_check_path(
     mocker: MockerFixture,
     controller_fixture: Base,
     tmp_path: Path,
     path_in: str | None,
 ) -> None:
     correct_path: str = str(tmp_path.absolute())
-    mocker.patch.object(controller_fixture, attribute="_read_sourcepath", return_value=correct_path)
+    mocker.patch("builtins.input", return_value=correct_path)
 
     if path_in is None:
-        path_checked: Path = controller_fixture._check_sourcepath(path_in)  # pyright: ignore
+        path_checked: Path = controller_fixture._check_path(  # pyright: ignore
+            path_in, PathType.SOURCE
+        )
     else:
         path: str = replace_homedir_with_test_parameter(tmp_path, path_in)
-        path_checked: Path = controller_fixture._check_sourcepath(path)  # pyright: ignore
+        path_checked: Path = controller_fixture._check_path(  # pyright: ignore
+            path, PathType.SOURCE
+        )
 
     assert path_checked == Path(correct_path)
 
