@@ -1,4 +1,4 @@
-from cement import App, TestApp, CaughtSignal, init_defaults, Handler  # pyright: ignore
+from cement import App, TestApp, CaughtSignal, init_defaults  # pyright: ignore
 
 from app.controller import Base
 from app.exceptions import ScarabException
@@ -15,14 +15,11 @@ class Scarab(App):
         ]
         extensions = [
             "yaml",
-            "jinja2",
             "colorlog",
         ]
         config_defaults = CONFIG  # pyright: ignore
         config_handler = "yaml"
         config_file_suffix = ".yml"
-        output_handler = "jinja2"
-        template_dir = "./app/templates"
         log_handler = "colorlog"
         close_on_exit = True
 

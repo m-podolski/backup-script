@@ -58,7 +58,6 @@ files = [
 
 [package.dependencies]
 colorlog = {version = "*", optional = true, markers = "extra == \"colorlog\""}
-jinja2 = {version = "*", optional = true, markers = "extra == \"jinja2\""}
 pyYaml = {version = "*", optional = true, markers = "extra == \"yaml\""}
 
 [package.extras]
@@ -473,4 +472,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "c618a5df48e09e3ef57fdcb5fb6e247f5740fbe9276bd786cb1a37276459b2d8"
+content-hash = "6cfde4312b493532f997b764cb99e3ed1253346b804e56cb50d74d21e49cf636"

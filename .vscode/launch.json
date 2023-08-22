@@ -20,6 +20,15 @@
       "args": ["--debug", "backup", "--source", "/path"]
     },
     {
+      "name": "app.main -q backup --source /invalid",
+      "type": "python",
+      "request": "launch",
+      "module": "app.main",
+      "console": "integratedTerminal",
+      "justMyCode": true,
+      "args": ["-q", "backup", "--source", "/path"]
+    },
+    {
       "name": "app.main backup --dest /path",
       "type": "python",
       "request": "launch",

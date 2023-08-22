@@ -8,7 +8,8 @@ packages = [{ include = "app" }]
 
 [tool.poetry.dependencies]
 python = "^3.10"
-cement = { extras = ["colorlog", "jinja2", "yaml"], version = "^3.0.8" }
+cement = {extras = ["colorlog", "yaml"], version = "^3.0.8"}
+jinja2 = "^3.1.2"
 
 [tool.poetry.group.dev.dependencies]
 black = "^23.7.0"

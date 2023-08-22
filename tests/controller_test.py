@@ -2,7 +2,7 @@ from pathlib import Path
 from unittest.mock import Mock
 import pytest
 from pytest_mock import MockerFixture
-from app.exceptions import ScarabArgumentError
+from app.exceptions import ScarabOptionError
 
 from app.main import ScarabTest
 from tests.conftest import HOME_DIR, replace_homedir_with_test_parameter
@@ -59,11 +59,14 @@ def it_gets_paths_from_input_when_arg_is_invalid_or_missing(
         )
 
 
-def it_raises_in_quiet_mode_when_input_required(mocker: MockerFixture) -> None:
+def it_raises_in_quiet_mode_when_input_required(
+    mocker: MockerFixture,
+    tmp_path: Path,
+) -> None:
     mocker.patch("builtins.input")
 
     with pytest.raises(
-        ScarabArgumentError,
+        ScarabOptionError,
         match=r"^Scarab got wrong or conflicting arguments: Cannot receive input in quiet mode",
     ):
         with ScarabTest(argv=["-q", "backup", "--source", "invalid"]) as app:

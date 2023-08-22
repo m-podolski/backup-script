@@ -1,16 +1,16 @@
 # Commit
 
+
 ## In Progress
 
-- refactor to use service class
-
-## Backlog
-
 - add destination-path (arg and selection)
+  - refactor to use distinct path-classes
   - get /media/USER when --media is set (ignore --dest)
   - print destination contents
   - add rescan-option
   - add backup-folder-detection
+
+## Backlog
 
 - add mode-selection (or raise ex)
 

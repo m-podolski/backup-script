@@ -1,13 +1,13 @@
-from enum import Enum, auto
-import os
+from enum import Enum
 from pathlib import Path
 from typing import Optional
 from cement import Controller, ex, get_version  # pyright: ignore
 
-from app.exceptions import ScarabArgumentError  # pyright: ignore
+from app.exceptions import ScarabOptionError  # pyright: ignore
+import app.locations as locations
+from app.globals import OutputMode
 
-
-VERSION = (0, 5, 0, "alpha", 0)
+VERSION: tuple[int, int, int, str, int] = (0, 5, 0, "alpha", 0)
 VERSION_BANNER = """
 scarab-backup v%s
 """ % get_version(
@@ -16,13 +16,8 @@ scarab-backup v%s
 
 
 class BackupMode(Enum):
-    CREATE = auto()
-    UPDATE = auto()
-
-
-class PathType(Enum):
-    SOURCE = "sourcepath"
-    DEST = "destinationpath"
+    CREATE = 1
+    UPDATE = 2
 
 
 class Base(Controller):
@@ -40,11 +35,11 @@ class Base(Controller):
         arguments=[
             (
                 ["-s", "--source"],
-                {"help": "The sourcepath", "action": "store", "dest": "sourcepath"},
+                {"help": "The sourcepath", "action": "store", "dest": "source"},
             ),
             (
                 ["-d", "--dest"],
-                {"help": "The destinationpath", "action": "store", "dest": "destpath"},
+                {"help": "The destinationpath", "action": "store", "dest": "dest"},
             ),
             (
                 ["-c", "--create"],
@@ -67,42 +62,20 @@ class Base(Controller):
         ],
     )  # pyright: ignore
     def backup(self) -> None:
-        sourcepath: Path = self._check_path(  # pyright: ignore
-            self.app.pargs.sourcepath, PathType.SOURCE  # pyright: ignore
-        )
-        destpath: Path = self._check_path(  # pyright: ignore
-            self.app.pargs.destpath, PathType.DEST  # pyright: ignore
-        )
-        print({"source": sourcepath.absolute(), "dest": destpath.absolute()})
+        quiet: bool = self.app.quiet  # pyright: ignore
+        source: Optional[str] = self.app.pargs.source  # pyright: ignore
+        dest: Optional[str] = self.app.pargs.dest  # pyright: ignore
 
-    def _check_path(self, path_string: Optional[str], type: PathType) -> Path:
-        if path_string is not None:
-            path_string = os.path.expanduser(path_string)
-            path_string = os.path.expandvars(path_string)
-            path = Path(path_string)
-            if path.exists():
-                return path
-            else:
-                path_in: str = self._read_sourcepath(
-                    f"Your {type.value} is not a valid directory! Please check and enter it again."
-                )
-                return self._check_path(path_in, type)
+        if quiet:
+            output_mode = OutputMode.QUIET
         else:
-            match type:
-                case PathType.SOURCE:
-                    msg: str = "Please specify a sourcepath to the directory you want backed up."
-                case PathType.DEST:
-                    msg = (
-                        "Please specify a destinationpath to the directory you want to back up to."
-                    )
-            path_in = self._read_sourcepath(msg)
-            return self._check_path(path_in, type)
+            output_mode = OutputMode.NORMAL
 
-    def _read_sourcepath(self, prompt_message: str) -> str:
-        if self.app.quiet:  # pyright: ignore
-            raise ScarabArgumentError("Cannot receive input in quiet mode")
-        self.app.render(  # pyright: ignore
-            {"message": prompt_message},
-            "input_prompt.jinja2",
+        sourcepath: Path = locations.check_path(
+            source, locations.PathType.SOURCE, output_mode  # pyright: ignore
         )
-        return input("Path: ")
+        destpath: Path = locations.check_path(
+            dest, locations.PathType.DEST, output_mode  # pyright: ignore
+        )
+
+        print({"source": sourcepath.absolute(), "dest": destpath.absolute()})  # pyright: ignore
