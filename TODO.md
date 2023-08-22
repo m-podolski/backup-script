@@ -1,6 +1,5 @@
 # Commit
 
-
 ## In Progress
 
 - add destination-path (arg and selection)
@@ -28,7 +27,5 @@
 - add option to target preconfigured profiles
   - add command for generating local config-file
   - generalize to also target arbitrary os locations
-
-- ? replace jinja-templates with custom colored output
 
 > 0.6.0

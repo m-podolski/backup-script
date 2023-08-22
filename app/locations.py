@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import Optional
 from app.globals import OutputMode
 
-import app.output as output
+import app.io as io
 
 
 class PathType(Enum):
@@ -20,7 +20,7 @@ def check_path(path_string: Optional[str], type: PathType, output_mode: OutputMo
         if path.exists():
             return path
         else:
-            path_in: str = output.read_path(
+            path_in: str = io.read_path(
                 f"Your {type.value} is not a valid directory! Please check and enter it again.",
                 output_mode,
             )
@@ -31,5 +31,5 @@ def check_path(path_string: Optional[str], type: PathType, output_mode: OutputMo
                 msg: str = "Please specify a sourcepath to the directory you want backed up."
             case PathType.DEST:
                 msg = "Please specify a destinationpath to the directory you want to back up to."
-        path_in = output.read_path(msg, output_mode)
+        path_in = io.read_path(msg, output_mode)
         return check_path(path_in, type, output_mode)
