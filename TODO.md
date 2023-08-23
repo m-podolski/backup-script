@@ -5,6 +5,7 @@
 - add destination-path (arg and selection)
   - refactor to use distinct path-classes
   - get /media/USER when --media is set (ignore --dest)
+  - generalize to also target arbitrary os locations
   - print destination contents
   - add rescan-option
   - add backup-folder-detection
@@ -21,11 +22,14 @@
 - add available-space-check
   - print destination-stats
 
-- add rsync-operation
-  - add archive-mode-selection
-
 - add option to target preconfigured profiles
   - add command for generating local config-file
-  - generalize to also target arbitrary os locations
+
+- add tree-diff for incremental backup
+
+- ? add rsync-operation
+  - add archive-mode-selection
+
+- configure ci and publish
 
 > 0.6.0
