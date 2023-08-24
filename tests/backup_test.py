@@ -1,9 +1,10 @@
 from pathlib import Path
 from unittest.mock import Mock
+
 import pytest
 from pytest_mock import MockerFixture
-from app.exceptions import ScarabOptionError
 
+from app.exceptions import ScarabOptionError
 from app.main import ScarabTest
 from tests.conftest import HOME_DIR, replace_homedir_with_test_parameter
 
@@ -28,9 +29,7 @@ def it_expands_and_validates_paths(
     with ScarabTest(argv=["backup", "--source", path_in, "--dest", path_in]) as app:
         app.run()
 
-        mock_print.assert_called_with(
-            {"source": Path(correct_path).absolute(), "dest": Path(correct_path).absolute()}
-        )
+        mock_print.assert_called_with({"source": correct_path, "dest": correct_path})
 
 
 @pytest.mark.parametrize(
@@ -54,9 +53,7 @@ def it_gets_paths_from_input_when_arg_is_invalid_or_missing(
         app.run()
 
         mock_input.assert_called_with("Path: ")
-        mock_print.assert_called_with(
-            {"source": Path(correct_path).absolute(), "dest": Path(correct_path).absolute()}
-        )
+        mock_print.assert_called_with({"source": correct_path, "dest": correct_path})
 
 
 def it_raises_in_quiet_mode_when_input_required(

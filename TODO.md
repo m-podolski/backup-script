@@ -1,9 +1,10 @@
 # Commit
 
+- refactor to use distinct location-types
+
 ## In Progress
 
 - add destination-path (arg and selection)
-  - refactor to use distinct path-classes
   - get /media/USER when --media is set (ignore --dest)
   - generalize to also target arbitrary os locations
   - print destination contents

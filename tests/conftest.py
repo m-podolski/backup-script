@@ -1,6 +1,5 @@
-from pathlib import Path
 import os
-
+from pathlib import Path
 
 HOME_DIR: str = os.environ["HOME"]
 

@@ -1,13 +1,13 @@
 from typing import Any, Literal, TypeAlias
-from app.exceptions import ScarabOptionError
-from app.globals import OutputMode
 
 from jinja2 import Environment, PackageLoader, Template
+
+from app.exceptions import ScarabOptionError
+from app.globals import OutputMode
 
 env = Environment(loader=PackageLoader("app"))
 
 Style: TypeAlias = Literal["NONE", "OK", "WARN", "ERROR", "HEADING", "INTERACTIVE", "END"]
-
 STYLES: dict[Style, str] = {
     "NONE": "",
     "OK": "\033[1;32m",

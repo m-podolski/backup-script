@@ -1,11 +1,12 @@
 from enum import Enum
-from pathlib import Path
 from typing import Optional
+
 from cement import Controller, ex, get_version  # pyright: ignore
 
-from app.exceptions import ScarabOptionError  # pyright: ignore
 import app.locations as locations
+from app.exceptions import ScarabOptionError  # pyright: ignore
 from app.globals import OutputMode
+from app.locations import Location
 
 VERSION: tuple[int, int, int, str, int] = (0, 5, 0, "alpha", 0)
 VERSION_BANNER = """
@@ -71,11 +72,11 @@ class Base(Controller):
         else:
             output_mode = OutputMode.NORMAL
 
-        sourcepath: Path = locations.check_path(
+        source: Location = locations.check_path(
             source, locations.PathType.SOURCE, output_mode  # pyright: ignore
         )
-        destpath: Path = locations.check_path(
+        destination: Location = locations.check_path(
             dest, locations.PathType.DEST, output_mode  # pyright: ignore
         )
 
-        print({"source": sourcepath.absolute(), "dest": destpath.absolute()})  # pyright: ignore
+        print({"source": str(source.path), "dest": str(destination.path)})  # pyright: ignore

@@ -1,4 +1,4 @@
-from cement import App, TestApp, CaughtSignal, init_defaults  # pyright: ignore
+from cement import App, CaughtSignal, TestApp, init_defaults  # pyright: ignore
 
 from app.controller import Base
 from app.exceptions import ScarabException
