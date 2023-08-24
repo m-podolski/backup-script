@@ -6,7 +6,7 @@ from cement import Controller, ex, get_version  # pyright: ignore
 import app.locations as locations
 from app.exceptions import ScarabOptionError  # pyright: ignore
 from app.globals import OutputMode
-from app.locations import Location
+from app.locations import Destination, Source
 
 VERSION: tuple[int, int, int, str, int] = (0, 5, 0, "alpha", 0)
 VERSION_BANNER = """
@@ -64,19 +64,17 @@ class Base(Controller):
     )  # pyright: ignore
     def backup(self) -> None:
         quiet: bool = self.app.quiet  # pyright: ignore
-        source: Optional[str] = self.app.pargs.source  # pyright: ignore
-        dest: Optional[str] = self.app.pargs.dest  # pyright: ignore
+        source_arg: Optional[str] = self.app.pargs.source  # pyright: ignore
+        dest_arg: Optional[str] = self.app.pargs.dest  # pyright: ignore
 
         if quiet:
             output_mode = OutputMode.QUIET
         else:
             output_mode = OutputMode.NORMAL
 
-        source: Location = locations.check_path(
-            source, locations.PathType.SOURCE, output_mode  # pyright: ignore
-        )
-        destination: Location = locations.check_path(
-            dest, locations.PathType.DEST, output_mode  # pyright: ignore
+        source: Source = locations.check_path(Source(source_arg), output_mode)  # pyright: ignore
+        destination: Destination = locations.check_path(
+            Destination(dest_arg), output_mode  # pyright: ignore
         )
 
         print({"source": str(source.path), "dest": str(destination.path)})  # pyright: ignore

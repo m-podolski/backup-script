@@ -1,6 +1,6 @@
 # Commit
 
-- refactor to use distinct location-types
+- add test to cover multiple invalid path-inputs
 
 ## In Progress
 
