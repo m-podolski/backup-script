@@ -1,4 +1,5 @@
 from enum import Enum
+import os
 from typing import Optional
 
 from cement import Controller, ex, get_version  # pyright: ignore
@@ -41,6 +42,15 @@ class Base(Controller):
             (
                 ["-d", "--dest"],
                 {"help": "The destinationpath", "action": "store", "dest": "dest"},
+            ),
+            (
+                ["-m", "--media"],
+                {
+                    "help": "Select your media directory as destination",
+                    "action": "store_const",
+                    "const": f"/media/{os.environ['USER']}",
+                    "dest": "dest",
+                },
             ),
             (
                 ["-c", "--create"],

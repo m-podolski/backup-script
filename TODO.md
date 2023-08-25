@@ -1,12 +1,10 @@
 # Commit
 
-- fix empty string-paths are converted to cwd
+- add media-arg to set destination
 
 ## In Progress
 
 - add destination-path (arg and selection)
-  - get /media/USER when --media is set (ignore --dest)
-  - generalize to also target arbitrary os locations
   - print destination contents
   - add rescan-option
   - add backup-folder-detection

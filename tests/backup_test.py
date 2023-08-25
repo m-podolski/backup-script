@@ -8,7 +8,7 @@ import app.locations as locations
 from app.exceptions import ScarabOptionError
 from app.locations import Location, Source
 from app.main import ScarabTest
-from tests.conftest import HOME_DIR, replace_homedir_with_test_parameter
+from tests.conftest import HOME, USER, replace_homedir_with_test_parameter
 
 
 def it_outputs_given_path_args(
@@ -27,7 +27,7 @@ def it_outputs_given_path_args(
 @pytest.mark.parametrize(
     "path_in",
     [
-        f"{HOME_DIR}",
+        f"{HOME}",
         "~",
         "$HOME",
     ],
@@ -79,3 +79,12 @@ def it_raises_in_quiet_mode_when_input_required(
     ):
         with ScarabTest(argv=["-q", "backup", "--source", "invalid"]) as app:
             app.run()
+
+
+def it_uses_the_media_dir_when_set_and_ignores_dest_args(mocker: MockerFixture) -> None:
+    mock_print: Mock = mocker.patch("builtins.print")
+
+    with ScarabTest(argv=["backup", "--source", "~", "--dest", "~", "--media"]) as app:
+        app.run()
+
+        mock_print.assert_called_with({"source": f"{HOME}", "dest": f"/media/{USER}"})
