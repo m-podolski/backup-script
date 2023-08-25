@@ -1,8 +1,4 @@
-import os
 from pathlib import Path
-
-HOME: str = os.environ["HOME"]
-USER: str = os.environ["USER"]
 
 
 def replace_homedir_with_test_parameter(tmp_path: Path, path_in: str | None) -> str:
