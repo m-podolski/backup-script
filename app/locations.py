@@ -10,20 +10,24 @@ class Location:
     _path: Optional[Path]
 
     def __init__(self, path_arg: Optional[str]) -> None:
-        if path_arg is None:
-            self._path = None
-        else:
-            self.path = path_arg
+        self.path = path_arg
 
     @property
     def path(self) -> Optional[Path]:
         return self._path
 
     @path.setter
-    def path(self, path_arg: str) -> None:
-        expanded_user: str = os.path.expanduser(path_arg)
-        expanded_vars: str = os.path.expandvars(expanded_user)
-        self._path = Path(expanded_vars)
+    def path(self, path_arg: Optional[str]) -> None:
+        match path_arg:
+            case None:
+                self._path = None
+            case "":
+                # Path converts empty strings to cwd by default
+                self._path = None
+            case _:
+                expanded_user: str = os.path.expanduser(path_arg)
+                expanded_vars: str = os.path.expandvars(expanded_user)
+                self._path = Path(expanded_vars)
 
     @property
     def exists(self) -> bool:

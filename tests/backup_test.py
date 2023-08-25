@@ -57,14 +57,13 @@ def it_gets_paths_from_input_when_arg_is_invalid_or_missing(
     path_in: str | None,
 ) -> None:
     correct_path: str = str(tmp_path)
-
     mock_input: MagicMock = mocker.patch("builtins.input")
-    mock_input.side_effect = ["invalid_again", correct_path]
+    mock_input.side_effect = ["", "invalid_again", correct_path]
 
     source: Location = locations.check_path(Source(path_in))
 
     mock_input.assert_called_with("Path: ")
-    assert mock_input.call_count == 2
+    assert mock_input.call_count == 3
     assert str(source.path) == correct_path
 
 

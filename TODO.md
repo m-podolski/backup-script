@@ -1,8 +1,6 @@
 # Commit
 
-- restructure tests to use top-level calls in controller
-- add test to cover multiple invalid path-inputs
-- fix stringification of none-value in test
+- fix empty string-paths are converted to cwd
 
 ## In Progress
 
