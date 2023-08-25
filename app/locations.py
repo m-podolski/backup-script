@@ -58,7 +58,9 @@ class Destination(Location):
     }
 
 
-def check_path(location: Source | Destination, output_mode: OutputMode) -> Source | Destination:
+def check_path(
+    location: Source | Destination, output_mode: OutputMode = OutputMode.NORMAL
+) -> Source | Destination:
     if location.path is not None:
         if location.exists:
             return location

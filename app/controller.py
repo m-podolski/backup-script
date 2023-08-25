@@ -6,7 +6,7 @@ from cement import Controller, ex, get_version  # pyright: ignore
 import app.locations as locations
 from app.exceptions import ScarabOptionError  # pyright: ignore
 from app.globals import OutputMode
-from app.locations import Destination, Source
+from app.locations import Destination, Location, Source
 
 VERSION: tuple[int, int, int, str, int] = (0, 5, 0, "alpha", 0)
 VERSION_BANNER = """
@@ -72,8 +72,8 @@ class Base(Controller):
         else:
             output_mode = OutputMode.NORMAL
 
-        source: Source = locations.check_path(Source(source_arg), output_mode)  # pyright: ignore
-        destination: Destination = locations.check_path(
+        source: Location = locations.check_path(Source(source_arg), output_mode)  # pyright: ignore
+        destination: Location = locations.check_path(
             Destination(dest_arg), output_mode  # pyright: ignore
         )
 
