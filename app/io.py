@@ -7,29 +7,32 @@ from app.globals import OutputMode
 
 env = Environment(loader=PackageLoader("app"))
 
-Style: TypeAlias = Literal["NONE", "OK", "WARN", "ERROR", "HEADING", "INTERACTIVE", "END"]
+Style: TypeAlias = Literal[
+    "NONE", "OK", "WARN", "ERROR", "HEADING", "EMPHASIS", "INTERACTIVE", "END"
+]
 STYLES: dict[Style, str] = {
     "NONE": "",
     "OK": "\033[1;32m",
     "WARN": "\033[1;33m",
     "ERROR": "\033[1;91m",
     "HEADING": "\033[1m",
+    "EMPHASIS": "\033[1m",
     "INTERACTIVE": "\033[34m",
     "END": "\033[0m",
 }
 
 
-def read_path(prompt_message: str, output_mode: OutputMode) -> str:
-    if output_mode is OutputMode.QUIET:
-        raise ScarabOptionError("Cannot receive input in quiet mode")
-    _render("input_prompt.jinja2", {"message": prompt_message})
-    return input("Path: ")
-
-
-def _render(file: str, content: dict[str, Any], style: Style = "NONE") -> None:
+def render(file: str, content: dict[str, Any], style: Style = "NONE") -> None:
     template: Template = env.get_template(file)
     styled: str = _escape_string(template.render(content), style)
     print(styled)
+
+
+def read_path(prompt_message: str, output_mode: OutputMode) -> str:
+    if output_mode is OutputMode.QUIET:
+        raise ScarabOptionError("Cannot receive input in quiet mode")
+    render("input_prompt.jinja2", {"message": prompt_message})
+    return input("Path: ")
 
 
 def _escape_string(content: str, style: Style) -> str:
@@ -39,8 +42,8 @@ def _escape_string(content: str, style: Style) -> str:
 # Template Filters
 
 
-def style(value: str, style: Style) -> str:
+def _style(value: str, style: Style) -> str:
     return _escape_string(value, style)
 
 
-env.filters["style"] = style  # pyright: ignore
+env.filters["style"] = _style  # pyright: ignore

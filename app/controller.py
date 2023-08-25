@@ -1,9 +1,10 @@
-from enum import Enum
 import os
+from enum import Enum
 from typing import Optional
 
 from cement import Controller, ex, get_version  # pyright: ignore
 
+import app.io as io
 import app.locations as locations
 from app.exceptions import ScarabOptionError  # pyright: ignore
 from app.globals import OutputMode
@@ -87,4 +88,11 @@ class Base(Controller):
             Destination(dest_arg), output_mode  # pyright: ignore
         )
 
-        print({"source": str(source.path), "dest": str(destination.path)})  # pyright: ignore
+        io.render(
+            "backup.jinja2",
+            {
+                "source": str(source.path),
+                "destination": str(destination.path),
+                "destination_content": destination.content,
+            },
+        )

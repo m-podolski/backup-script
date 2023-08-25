@@ -1,11 +1,10 @@
 # Commit
 
-- add media-arg to set destination
+- print destination contents
 
 ## In Progress
 
 - add destination-path (arg and selection)
-  - print destination contents
   - add rescan-option
   - add backup-folder-detection
 

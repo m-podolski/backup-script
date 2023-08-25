@@ -39,6 +39,18 @@ class Location:
     def name(self) -> str:
         return self.__class__.__name__
 
+    @property
+    def content(self) -> list[str]:
+        if self._path is None:
+            return []
+        return [self._add_slash_to_dir(path) for path in self._path.iterdir()]
+
+    def _add_slash_to_dir(self, path: Path) -> str:
+        if path.is_dir():
+            return f"{path.name}/"
+        else:
+            return path.name
+
     MessageType: TypeAlias = Literal["INVALID"]
 
     @property

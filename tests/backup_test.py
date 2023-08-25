@@ -12,17 +12,55 @@ from app.main import ScarabTest
 from tests.conftest import replace_homedir_with_test_parameter
 
 
-def it_outputs_given_path_args(
+def it_prints_the_sourcepath_and_the_destpath_dir_top_level(
     mocker: MockerFixture,
     tmp_path: Path,
 ) -> None:
-    correct_path: str = str(tmp_path.absolute())
-    mock_print: Mock = mocker.patch("builtins.print")
+    valid_path: str = str(tmp_path)
+    dir: Path = tmp_path / "directory"
+    dir.mkdir()
+    file: Path = tmp_path / "file.txt"
+    file.touch()
+    mock_render: Mock = mocker.patch("app.io.render")
 
-    with ScarabTest(argv=["backup", "--source", correct_path, "--dest", correct_path]) as app:
+    with ScarabTest(argv=["backup", "--source", valid_path, "--dest", valid_path]) as app:
         app.run()
 
-        mock_print.assert_called_with({"source": correct_path, "dest": correct_path})
+        mock_render.assert_called_with(
+            "backup.jinja2",
+            {
+                "source": valid_path,
+                "destination": valid_path,
+                "destination_content": ["directory/", "file.txt"],
+            },
+        )
+
+
+def it_uses_the_media_dir_when_set_and_ignores_dest_args(mocker: MockerFixture) -> None:
+    mock_render: Mock = mocker.patch("app.io.render")
+    media_dir: str = f"/media/{os.environ['USER']}"
+
+    def add_slash_to_dir(path: Path) -> str:
+        if path.is_dir():
+            return f"{path.name}/"
+        else:
+            return path.name
+
+    dest_content_with_slashed_dirs: list[str] = [
+        add_slash_to_dir(path) for path in Path(f"/media/{os.environ['USER']}").iterdir()
+    ]
+
+    with ScarabTest(argv=["backup", "--source", "~", "--dest", "~", "--media"]) as app:
+        app.run()
+
+        mock_render.assert_called_with(
+            "backup.jinja2",
+            {
+                "source": os.environ["HOME"],
+                "destination": media_dir,
+                "destination_content": dest_content_with_slashed_dirs,
+            },
+        )
 
 
 @pytest.mark.parametrize(
@@ -80,14 +118,3 @@ def it_raises_in_quiet_mode_when_input_required(
     ):
         with ScarabTest(argv=["-q", "backup", "--source", "invalid"]) as app:
             app.run()
-
-
-def it_uses_the_media_dir_when_set_and_ignores_dest_args(mocker: MockerFixture) -> None:
-    mock_print: Mock = mocker.patch("builtins.print")
-
-    with ScarabTest(argv=["backup", "--source", "~", "--dest", "~", "--media"]) as app:
-        app.run()
-
-        mock_print.assert_called_with(
-            {"source": os.environ["HOME"], "dest": f"/media/{os.environ['USER']}"}
-        )
