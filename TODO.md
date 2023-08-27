@@ -1,11 +1,11 @@
 # Commit
 
-- print destination contents
+- add menu-selection with rescan-option for media-dir
 
 ## In Progress
 
 - add destination-path (arg and selection)
-  - add rescan-option
+  - add dot-path-handling
   - add backup-folder-detection
 
 ## Backlog
@@ -28,6 +28,6 @@
 - ? add rsync-operation
   - add archive-mode-selection
 
-- configure ci and publish
+- configure ci/cd
 
 > 0.6.0

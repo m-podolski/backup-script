@@ -2,8 +2,7 @@ from typing import Any, Literal, TypeAlias
 
 from jinja2 import Environment, PackageLoader, Template
 
-from app.exceptions import ScarabOptionError
-from app.globals import OutputMode
+from app.globals import OutputMode, ScarabOptionError
 
 env = Environment(loader=PackageLoader("app"))
 

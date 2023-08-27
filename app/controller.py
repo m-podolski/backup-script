@@ -4,9 +4,8 @@ from typing import Optional
 
 from cement import Controller, ex, get_version  # pyright: ignore
 
-import app.io as io
-import app.locations as locations
-from app.exceptions import ScarabOptionError  # pyright: ignore
+import app.interactions as interactions
+import app.io as appio
 from app.globals import OutputMode
 from app.locations import Destination, Location, Source
 
@@ -38,19 +37,19 @@ class Base(Controller):
         arguments=[
             (
                 ["-s", "--source"],
-                {"help": "The sourcepath", "action": "store", "dest": "source"},
+                {"help": "The source-path", "action": "store", "dest": "source"},
             ),
             (
                 ["-d", "--dest"],
-                {"help": "The destinationpath", "action": "store", "dest": "dest"},
+                {"help": "The destination-path", "action": "store", "dest": "dest"},
             ),
             (
                 ["-m", "--media"],
                 {
-                    "help": "Select your media directory as destination",
+                    "help": "Select your media-directory as destination",
                     "action": "store_const",
                     "const": f"/media/{os.environ['USER']}",
-                    "dest": "dest",
+                    "dest": "media",
                 },
             ),
             (
@@ -77,22 +76,28 @@ class Base(Controller):
         quiet: bool = self.app.quiet  # pyright: ignore
         source_arg: Optional[str] = self.app.pargs.source  # pyright: ignore
         dest_arg: Optional[str] = self.app.pargs.dest  # pyright: ignore
+        media_arg: Optional[str] = self.app.pargs.media  # pyright: ignore
 
         if quiet:
             output_mode = OutputMode.QUIET
         else:
             output_mode = OutputMode.NORMAL
 
-        source: Location = locations.check_path(Source(source_arg), output_mode)  # pyright: ignore
-        destination: Location = locations.check_path(
+        source: Location = interactions.check_path(
+            Source(source_arg), output_mode  # pyright: ignore
+        )
+        destination: Location = interactions.check_path(
             Destination(dest_arg), output_mode  # pyright: ignore
         )
 
-        io.render(
-            "backup.jinja2",
-            {
-                "source": str(source.path),
-                "destination": str(destination.path),
-                "destination_content": destination.content,
-            },
-        )
+        if destination.is_media_dir:
+            destination = interactions.select_media_dir(source, destination)
+        else:
+            appio.render(
+                "dest_contents.jinja2",
+                {
+                    "source": str(source.path),
+                    "destination": str(destination.path),
+                    "destination_content": destination.content,
+                },
+            )

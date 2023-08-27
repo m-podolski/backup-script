@@ -1,7 +1,7 @@
 from cement import App, CaughtSignal, TestApp, init_defaults  # pyright: ignore
 
 from app.controller import Base
-from app.exceptions import ScarabException
+from app.globals import ScarabException
 
 CONFIG = init_defaults("scarab")  # pyright: ignore
 CONFIG["scarab"]["otherProp"] = "otherValue"

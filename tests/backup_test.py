@@ -1,24 +1,26 @@
 import os
 from pathlib import Path
-from unittest.mock import MagicMock, Mock
+from unittest.mock import MagicMock, Mock, call
 
 import pytest
 from pytest_mock import MockerFixture
 
-import app.locations as locations
-from app.exceptions import ScarabOptionError
-from app.locations import Location, Source
+import app.interactions as interactions
+from app.globals import ScarabOptionError
+from app.locations import Destination, Location, Source
 from app.main import ScarabTest
-from tests.conftest import replace_homedir_with_test_parameter
+from tests.conftest import get_content_with_slashed_dirs
 
 
-def it_prints_the_sourcepath_and_the_destpath_dir_top_level(
+def it_prints_sourcepath_and_destpath_with_sorted_dest_dir_top_level(
     mocker: MockerFixture,
     tmp_path: Path,
 ) -> None:
     valid_path: str = str(tmp_path)
-    dir: Path = tmp_path / "directory"
-    dir.mkdir()
+    dir1: Path = tmp_path / "directory_1"
+    dir1.mkdir()
+    dir2: Path = tmp_path / "directory_2"
+    dir2.mkdir()
     file: Path = tmp_path / "file.txt"
     file.touch()
     mock_render: Mock = mocker.patch("app.io.render")
@@ -27,40 +29,58 @@ def it_prints_the_sourcepath_and_the_destpath_dir_top_level(
         app.run()
 
         mock_render.assert_called_with(
-            "backup.jinja2",
+            "dest_contents.jinja2",
             {
                 "source": valid_path,
                 "destination": valid_path,
-                "destination_content": ["directory/", "file.txt"],
+                "destination_content": ["directory_1/", "directory_2/", "file.txt"],
             },
         )
 
 
-def it_uses_the_media_dir_when_set_and_ignores_dest_args(mocker: MockerFixture) -> None:
-    mock_render: Mock = mocker.patch("app.io.render")
-    media_dir: str = f"/media/{os.environ['USER']}"
-
-    def add_slash_to_dir(path: Path) -> str:
-        if path.is_dir():
-            return f"{path.name}/"
-        else:
-            return path.name
-
-    dest_content_with_slashed_dirs: list[str] = [
-        add_slash_to_dir(path) for path in Path(f"/media/{os.environ['USER']}").iterdir()
+def it_has_dir_selection_menu_with_rescan_option_when_in_media_dir(
+    mocker: MockerFixture,
+    media_dir_fixture: Path,
+) -> None:
+    dest_content: list[str] = [
+        *sorted(get_content_with_slashed_dirs(media_dir_fixture)),
+        "-> Rescan Directory",
     ]
+    dest_content_rescan_option_num: int = len(dest_content)
 
-    with ScarabTest(argv=["backup", "--source", "~", "--dest", "~", "--media"]) as app:
-        app.run()
+    mock_render: Mock = mocker.patch("app.io.render")
+    mock_input: Mock = mocker.patch("builtins.input")
+    mock_input.side_effect = [dest_content_rescan_option_num, 1]
 
-        mock_render.assert_called_with(
-            "backup.jinja2",
-            {
-                "source": os.environ["HOME"],
-                "destination": media_dir,
-                "destination_content": dest_content_with_slashed_dirs,
-            },
-        )
+    destination: Location = interactions.select_media_dir(
+        Source("~"), Destination(str(media_dir_fixture))
+    )
+
+    assert destination.path == media_dir_fixture / "directory_1"
+
+    mock_render.assert_has_calls(
+        [
+            call(
+                "select_directory.jinja2",
+                {
+                    "source": os.environ["HOME"],
+                    "destination": str(media_dir_fixture),
+                    "destination_content": dest_content,
+                },
+            ),
+            call(
+                "select_directory.jinja2",
+                {
+                    "source": os.environ["HOME"],
+                    "destination": str(media_dir_fixture),
+                    "destination_content": dest_content,
+                },
+            ),
+        ]
+    )
+
+    mock_input.assert_called_with("Number: ")
+    assert mock_input.call_count == 2
 
 
 @pytest.mark.parametrize(
@@ -72,15 +92,11 @@ def it_uses_the_media_dir_when_set_and_ignores_dest_args(mocker: MockerFixture) 
     ],
 )
 def it_expands_and_validates_paths(
-    tmp_path: Path,
     path_in: str | None,
 ) -> None:
-    path_in = f"{replace_homedir_with_test_parameter(tmp_path, path_in)}"
-    correct_path: str = str(tmp_path)
+    source: Location = interactions.check_path(Source(path_in))
 
-    source: Location = locations.check_path(Source(path_in))
-
-    assert str(source.path) == correct_path
+    assert str(source.path) == os.environ["HOME"]
 
 
 @pytest.mark.parametrize(
@@ -92,14 +108,13 @@ def it_expands_and_validates_paths(
 )
 def it_gets_paths_from_input_when_arg_is_invalid_or_missing(
     mocker: MockerFixture,
-    tmp_path: Path,
     path_in: str | None,
 ) -> None:
-    correct_path: str = str(tmp_path)
+    correct_path: str = os.environ["HOME"]
     mock_input: MagicMock = mocker.patch("builtins.input")
     mock_input.side_effect = ["", "invalid_again", correct_path]
 
-    source: Location = locations.check_path(Source(path_in))
+    source: Location = interactions.check_path(Source(path_in))
 
     mock_input.assert_called_with("Path: ")
     assert mock_input.call_count == 3
@@ -108,7 +123,6 @@ def it_gets_paths_from_input_when_arg_is_invalid_or_missing(
 
 def it_raises_in_quiet_mode_when_input_required(
     mocker: MockerFixture,
-    tmp_path: Path,
 ) -> None:
     mocker.patch("builtins.input")
 

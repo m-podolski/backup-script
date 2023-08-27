@@ -1,49 +1,58 @@
 import os
+import re
 from pathlib import Path
 from typing import Literal, Optional, TypeAlias
 
-import app.io as io
-from app.globals import OutputMode
-
 
 class Location:
-    _path: Optional[Path]
+    _path: Path
 
     def __init__(self, path_arg: Optional[str]) -> None:
-        self.path = path_arg
+        if path_arg is None:
+            self.path = Path()
+        else:
+            self.path = path_arg
 
     @property
-    def path(self) -> Optional[Path]:
+    def path(self) -> Path:
         return self._path
 
     @path.setter
-    def path(self, path_arg: Optional[str]) -> None:
-        match path_arg:
-            case None:
-                self._path = None
-            case "":
-                # Path converts empty strings to cwd by default
-                self._path = None
-            case _:
-                expanded_user: str = os.path.expanduser(path_arg)
-                expanded_vars: str = os.path.expandvars(expanded_user)
-                self._path = Path(expanded_vars)
+    def path(self, path_arg: str | Path) -> None:
+        expanded_user: str = os.path.expanduser(path_arg)
+        expanded_vars: str = os.path.expandvars(expanded_user)
+        self._path = Path(expanded_vars)
 
     @property
-    def exists(self) -> bool:
-        if self._path is None:
-            return False
-        return self._path.exists()
+    def path_is_initialized(self) -> bool:
+        """For the class to always provide a .path with all of Paths functionality available from the outside its default value has to be managed. This may be used to check if .path is actually set."""
+        return not (str(self._path) == ".")
 
     @property
     def name(self) -> str:
         return self.__class__.__name__
 
     @property
+    def exists(self) -> bool:
+        if not self.path_is_initialized:
+            return False
+        return self._path.exists()
+
+    @property
+    def is_media_dir(self) -> bool:
+        if not self.path_is_initialized:
+            return False
+        is_media_dir: bool = re.match(r"^/media/.+", str(self._path)) is not None
+        is_test_temp_media_dir: bool = (
+            re.match(r"^/tmp/pytest.+media$", str(self._path)) is not None
+        )
+        return is_media_dir or is_test_temp_media_dir
+
+    @property
     def content(self) -> list[str]:
-        if self._path is None:
+        if not self.path_is_initialized:
             return []
-        return [self._add_slash_to_dir(path) for path in self._path.iterdir()]
+        return sorted([self._add_slash_to_dir(path) for path in self._path.iterdir()])
 
     def _add_slash_to_dir(self, path: Path) -> str:
         if path.is_dir():
@@ -54,7 +63,7 @@ class Location:
     MessageType: TypeAlias = Literal["INVALID"]
 
     @property
-    def common_messages(self) -> dict[MessageType, str]:
+    def location_messages(self) -> dict[MessageType, str]:
         return {
             "INVALID": f"Your {self.name.lower()} is not a valid directory! Please check and enter it again."
         }
@@ -72,22 +81,3 @@ class Destination(Location):
     messages: dict[MessageType, str] = {
         "NO_PATH_GIVEN": "Please specify a destination-path to the directory you want to back up to."
     }
-
-
-def check_path(
-    location: Source | Destination, output_mode: OutputMode = OutputMode.NORMAL
-) -> Source | Destination:
-    if location.path is not None:
-        if location.exists:
-            return location
-        else:
-            path_in: str = io.read_path(
-                location.common_messages["INVALID"],
-                output_mode,
-            )
-            location.path = path_in
-            return check_path(location, output_mode)
-    else:
-        path_in = io.read_path(location.messages["NO_PATH_GIVEN"], output_mode)
-        location.path = path_in
-        return check_path(location, output_mode)

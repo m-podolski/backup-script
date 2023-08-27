@@ -1,10 +1,31 @@
 from pathlib import Path
+from typing import Any, Generator
+
+import pytest
 
 
-def replace_homedir_with_test_parameter(tmp_path: Path, path_in: str | None) -> str:
+@pytest.fixture
+def media_dir_fixture(
+    tmp_path: Path,
+) -> Generator[Any, Any, None]:
     """
-    Strips the home-directory (as set in pyproject.toml) and replaces ist with parameters given to the test to enable checking for variable-expansions
+    Provides a location to test media-flag-functionality against. To use it pass it in as argument to --dest. The app will detect the test by matching against "^/tmp/pytest.+media$".
     """
-    temp_dir: str = f"{tmp_path.parts[3]}/{tmp_path.parts[4]}"
-    path: str = f"{path_in}/{temp_dir}"
-    return path
+    media_dir: Path = tmp_path / "media"
+    media_dir.mkdir()
+    dir1: Path = media_dir / "directory_1"
+    dir2: Path = media_dir / "directory_2"
+    dir2.mkdir()
+    dir1.mkdir()
+
+    yield media_dir
+
+
+def get_content_with_slashed_dirs(dir: Path) -> list[str]:
+    def slash(path: Path) -> str:
+        if path.is_dir():
+            return f"{path.name}/"
+        else:
+            return path.name
+
+    return [slash(path) for path in dir.iterdir()]
