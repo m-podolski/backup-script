@@ -1,10 +1,8 @@
 # Commit
 
-- add dot-path-handling
+- add generic input function that raises in quiet mode
 
 ## In Progress
-
-- add generic input function that raises in quiet mode
 
 - add destination-path (arg and selection)
   - add backup-folder-detection

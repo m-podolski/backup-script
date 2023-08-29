@@ -27,11 +27,15 @@ def render(file: str, content: dict[str, Any], style: Style = "NONE") -> None:
     print(styled)
 
 
-def read_path(prompt_message: str, output_mode: OutputMode) -> str:
+def get_input(prompt: str, output_mode: OutputMode) -> str:
     if output_mode is OutputMode.QUIET:
         raise ScarabOptionError("Cannot receive input in quiet mode")
+    return input(prompt)
+
+
+def read_path(prompt_message: str, output_mode: OutputMode) -> str:
     render("input_prompt.jinja2", {"message": prompt_message})
-    return input("Path: ")
+    return get_input("Path: ", output_mode)
 
 
 def _escape_string(content: str, style: Style) -> str:

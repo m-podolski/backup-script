@@ -6,7 +6,7 @@ import pytest
 from pytest_mock import MockerFixture
 
 import app.interactions as interactions
-from app.globals import ScarabOptionError
+from app.globals import OutputMode, ScarabOptionError
 from app.locations import Destination, Location, Source
 from app.main import ScarabTest
 from tests.conftest import get_content_with_slashed_dirs
@@ -53,7 +53,7 @@ def it_has_dir_selection_menu_with_rescan_option_when_in_media_dir(
     mock_input.side_effect = [dest_content_rescan_option_num, 1]
 
     destination: Location = interactions.select_media_dir(
-        Source("~"), Destination(str(media_dir_fixture))
+        Source("~"), Destination(str(media_dir_fixture)), OutputMode.NORMAL
     )
 
     assert destination.path == media_dir_fixture / "directory_1"
@@ -90,13 +90,13 @@ def it_has_dir_selection_menu_with_rescan_option_when_in_media_dir(
 def it_expands_and_validates_paths(
     path_in: str | None,
 ) -> None:
-    source: Location = interactions.check_path(Source(path_in))
+    source: Location = interactions.check_path(Source(path_in), OutputMode.NORMAL)
 
     assert str(source.path) == os.environ["HOME"]
 
 
 def it_normalizes_dot_paths() -> None:
-    source: Location = interactions.check_path(Source("."))
+    source: Location = interactions.check_path(Source("."), OutputMode.NORMAL)
 
     assert source.path == Path(".").resolve()
 
@@ -116,7 +116,7 @@ def it_gets_paths_from_input_when_arg_is_invalid_or_missing(
     mock_input: MagicMock = mocker.patch("builtins.input")
     mock_input.side_effect = ["", "invalid_again", correct_path]
 
-    source: Location = interactions.check_path(Source(path_in))
+    source: Location = interactions.check_path(Source(path_in), OutputMode.NORMAL)
 
     mock_input.assert_called_with("Path: ")
     assert mock_input.call_count == 3

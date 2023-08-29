@@ -3,9 +3,7 @@ from app.globals import OutputMode
 from app.locations import Destination, Location, Source
 
 
-def check_path(
-    location: Source | Destination, output_mode: OutputMode = OutputMode.NORMAL
-) -> Source | Destination:
+def check_path(location: Source | Destination, output_mode: OutputMode) -> Source | Destination:
     if location.path_is_initialized:
         if location.exists:
             return location
@@ -22,7 +20,7 @@ def check_path(
         return check_path(location, output_mode)
 
 
-def select_media_dir(source: Location, destination: Location) -> Location:
+def select_media_dir(source: Location, destination: Location, output_mode: OutputMode) -> Location:
     appio.render(
         "select_directory.jinja2",
         {
@@ -31,11 +29,11 @@ def select_media_dir(source: Location, destination: Location) -> Location:
             "destination_content": [*destination.content, "-> Rescan Directory"],
         },
     )
-    selected_option: int = int(input("Number: "))
+    selected_option: int = int(appio.get_input("Number: ", output_mode))
     selected_option_is_rescan: bool = selected_option == len(destination.content) + 1
 
     if selected_option_is_rescan:
-        return select_media_dir(source, destination)
+        return select_media_dir(source, destination, output_mode)
     else:
         selected_dir: str = destination.content[selected_option - 1]
         destination.path = destination.path / selected_dir

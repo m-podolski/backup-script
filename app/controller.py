@@ -91,7 +91,7 @@ class Base(Controller):
         )
 
         if destination.is_media_dir:
-            destination = interactions.select_media_dir(source, destination)
+            destination = interactions.select_media_dir(source, destination, output_mode)
         else:
             appio.render(
                 "dest_contents.jinja2",
