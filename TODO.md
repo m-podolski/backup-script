@@ -1,11 +1,10 @@
 # Commit
 
-- add generic input function that raises in quiet mode
+- fix incomplete media-dir-selection
 
 ## In Progress
 
-- add destination-path (arg and selection)
-  - add backup-folder-detection
+- add backup-folder-detection
 
 ## Backlog
 

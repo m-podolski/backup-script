@@ -7,7 +7,7 @@ from app.globals import OutputMode, ScarabOptionError
 env = Environment(loader=PackageLoader("app"))
 
 Style: TypeAlias = Literal[
-    "NONE", "OK", "WARN", "ERROR", "HEADING", "EMPHASIS", "INTERACTIVE", "END"
+    "NONE", "OK", "WARN", "ERROR", "HEADING", "EMPH", "OPTION", "OPT_EMPH", "END"
 ]
 STYLES: dict[Style, str] = {
     "NONE": "",
@@ -15,8 +15,9 @@ STYLES: dict[Style, str] = {
     "WARN": "\033[1;33m",
     "ERROR": "\033[1;91m",
     "HEADING": "\033[1m",
-    "EMPHASIS": "\033[1m",
-    "INTERACTIVE": "\033[34m",
+    "EMPH": "\033[1m",
+    "OPTION": "\033[34m",
+    "OPT_EMPH": "\033[1;34m",
     "END": "\033[0m",
 }
 

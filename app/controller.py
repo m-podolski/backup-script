@@ -49,7 +49,7 @@ class Base(Controller):
                     "help": "Select your media-directory as destination",
                     "action": "store_const",
                     "const": f"/media/{os.environ['USER']}",
-                    "dest": "media",
+                    "dest": "dest",
                 },
             ),
             (
@@ -76,7 +76,6 @@ class Base(Controller):
         quiet: bool = self.app.quiet  # pyright: ignore
         source_arg: Optional[str] = self.app.pargs.source  # pyright: ignore
         dest_arg: Optional[str] = self.app.pargs.dest  # pyright: ignore
-        media_arg: Optional[str] = self.app.pargs.media  # pyright: ignore
 
         if quiet:
             output_mode = OutputMode.QUIET
@@ -92,12 +91,12 @@ class Base(Controller):
 
         if destination.is_media_dir:
             destination = interactions.select_media_dir(source, destination, output_mode)
-        else:
-            appio.render(
-                "dest_contents.jinja2",
-                {
-                    "source": str(source.path),
-                    "destination": str(destination.path),
-                    "destination_content": destination.content,
-                },
-            )
+
+        appio.render(
+            "dest_contents.jinja2",
+            {
+                "source": str(source.path),
+                "destination": str(destination.path),
+                "destination_content": destination.content,
+            },
+        )

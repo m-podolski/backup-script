@@ -1,8 +1,9 @@
 
-{{"Source:"|style("EMPHASIS")}} {{ source }}
-{{"Destination:"|style("EMPHASIS")}} {{ destination }}
+{{"Source:"|style("EMPH")}} {{ source }}
+{{"Destination:"|style("EMPH")}} {{ destination }}
 
-Destination Contents:
+Select a Drive:
+
 {% for entry in destination_content -%}
-  {{ entry }}
+{{ loop.index|style("OPT_EMPH") }}{{ "."|style("OPT_EMPH") }} {{ entry|style("OPTION") }}
 {% endfor %}
