@@ -1,11 +1,12 @@
 # Commit
 
-- add menu-selection with rescan-option for media-dir
+- add dot-path-handling
 
 ## In Progress
 
+- add generic input function that raises in quiet mode
+
 - add destination-path (arg and selection)
-  - add dot-path-handling
   - add backup-folder-detection
 
 ## Backlog

@@ -85,11 +85,7 @@ def it_has_dir_selection_menu_with_rescan_option_when_in_media_dir(
 
 @pytest.mark.parametrize(
     "path_in",
-    [
-        os.environ["HOME"],
-        "~",
-        "$HOME",
-    ],
+    [os.environ["HOME"], "~", "$HOME"],
 )
 def it_expands_and_validates_paths(
     path_in: str | None,
@@ -97,6 +93,12 @@ def it_expands_and_validates_paths(
     source: Location = interactions.check_path(Source(path_in))
 
     assert str(source.path) == os.environ["HOME"]
+
+
+def it_normalizes_dot_paths() -> None:
+    source: Location = interactions.check_path(Source("."))
+
+    assert source.path == Path(".").resolve()
 
 
 @pytest.mark.parametrize(

@@ -19,9 +19,12 @@ class Location:
 
     @path.setter
     def path(self, path_arg: str | Path) -> None:
-        expanded_user: str = os.path.expanduser(path_arg)
-        expanded_vars: str = os.path.expandvars(expanded_user)
-        self._path = Path(expanded_vars)
+        if path_arg == ".":
+            self._path = Path(path_arg).resolve()
+        else:
+            expanded_user: str = os.path.expanduser(path_arg)
+            expanded_vars: str = os.path.expandvars(expanded_user)
+            self._path = Path(expanded_vars)
 
     @property
     def path_is_initialized(self) -> bool:
