@@ -12,6 +12,59 @@ from app.main import ScarabTest
 from tests.conftest import get_content_with_slashed_dirs
 
 
+@pytest.mark.parametrize(
+    "path_in",
+    [os.environ["HOME"], "~", "$HOME"],
+)
+def it_expands_and_validates_paths(
+    path_in: str | None,
+) -> None:
+    source: Location = interactions.check_path(Source(path_in), OutputMode.NORMAL)
+
+    assert str(source.path) == os.environ["HOME"]
+
+
+def it_normalizes_dot_paths() -> None:
+    source: Location = interactions.check_path(Source("."), OutputMode.NORMAL)
+
+    assert source.path == Path(".").resolve()
+
+
+@pytest.mark.parametrize(
+    "path_in",
+    [
+        None,
+        "/invalid",
+    ],
+)
+def it_gets_paths_from_input_when_arg_is_invalid_or_missing(
+    mocker: MockerFixture,
+    path_in: str | None,
+) -> None:
+    valid_path: str = os.environ["HOME"]
+    mock_input: MagicMock = mocker.patch("builtins.input")
+    mock_input.side_effect = ["", "invalid_again", valid_path]
+
+    source: Location = interactions.check_path(Source(path_in), OutputMode.NORMAL)
+
+    mock_input.assert_called_with("Path: ")
+    assert mock_input.call_count == 3
+    assert str(source.path) == valid_path
+
+
+def it_raises_in_quiet_mode_when_input_required(
+    mocker: MockerFixture,
+) -> None:
+    mocker.patch("builtins.input")
+
+    with pytest.raises(
+        ScarabOptionError,
+        match=r"^Scarab got wrong or conflicting arguments: Cannot receive input in quiet mode",
+    ):
+        with ScarabTest(argv=["-q", "backup", "--source", "invalid"]) as app:
+            app.run()
+
+
 def it_prints_sourcepath_and_destpath_with_sorted_dest_dir_top_level(
     mocker: MockerFixture,
     tmp_path: Path,
@@ -56,7 +109,7 @@ def it_has_dir_selection_menu_with_rescan_option_when_in_media_dir(
         Source("~"), Destination(str(media_dir_fixture)), OutputMode.NORMAL
     )
 
-    assert destination.path == media_dir_fixture / "directory_1"
+    assert str(destination.path) == str(media_dir_fixture / "directory_1")
 
     mock_render.assert_has_calls(
         [
@@ -83,54 +136,20 @@ def it_has_dir_selection_menu_with_rescan_option_when_in_media_dir(
     assert mock_input.call_count == 2
 
 
-@pytest.mark.parametrize(
-    "path_in",
-    [os.environ["HOME"], "~", "$HOME"],
-)
-def it_expands_and_validates_paths(
-    path_in: str | None,
-) -> None:
-    source: Location = interactions.check_path(Source(path_in), OutputMode.NORMAL)
+def it_selects_dirs_called_backup_if_present_in_dest(tmp_path: Path) -> None:
+    dir0: Path = tmp_path / "Backup"
+    dir0.mkdir()
+    dir1: Path = tmp_path / "Backups"
+    dir1.mkdir()
+    dir2: Path = tmp_path / "backup"
+    dir2.mkdir()
+    dir3: Path = tmp_path / "Backsnup"
+    dir3.mkdir()
+    dir4: Path = tmp_path / "other"
+    dir4.mkdir()
+    file: Path = tmp_path / "Backup.txt"
+    file.touch()
 
-    assert str(source.path) == os.environ["HOME"]
+    destination: Location = Destination(tmp_path)
 
-
-def it_normalizes_dot_paths() -> None:
-    source: Location = interactions.check_path(Source("."), OutputMode.NORMAL)
-
-    assert source.path == Path(".").resolve()
-
-
-@pytest.mark.parametrize(
-    "path_in",
-    [
-        None,
-        "/invalid",
-    ],
-)
-def it_gets_paths_from_input_when_arg_is_invalid_or_missing(
-    mocker: MockerFixture,
-    path_in: str | None,
-) -> None:
-    correct_path: str = os.environ["HOME"]
-    mock_input: MagicMock = mocker.patch("builtins.input")
-    mock_input.side_effect = ["", "invalid_again", correct_path]
-
-    source: Location = interactions.check_path(Source(path_in), OutputMode.NORMAL)
-
-    mock_input.assert_called_with("Path: ")
-    assert mock_input.call_count == 3
-    assert str(source.path) == correct_path
-
-
-def it_raises_in_quiet_mode_when_input_required(
-    mocker: MockerFixture,
-) -> None:
-    mocker.patch("builtins.input")
-
-    with pytest.raises(
-        ScarabOptionError,
-        match=r"^Scarab got wrong or conflicting arguments: Cannot receive input in quiet mode",
-    ):
-        with ScarabTest(argv=["-q", "backup", "--source", "invalid"]) as app:
-            app.run()
+    assert str(destination.path) == str(tmp_path / "Backup")

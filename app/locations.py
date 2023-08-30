@@ -1,13 +1,14 @@
 import os
 import re
 from pathlib import Path
+from re import Match
 from typing import Literal, Optional, TypeAlias
 
 
 class Location:
     _path: Path
 
-    def __init__(self, path_arg: Optional[str]) -> None:
+    def __init__(self, path_arg: Optional[str | Path]) -> None:
         if path_arg is None:
             self.path = Path()
         else:
@@ -84,3 +85,25 @@ class Destination(Location):
     messages: dict[MessageType, str] = {
         "NO_PATH_GIVEN": "Please specify a destination-path to the directory you want to back up to."
     }
+
+    @property
+    def path(self) -> Path:
+        return super().path
+
+    @path.setter
+    def path(self, path_arg: str | Path) -> None:
+        Location.path.fset(self, path_arg)
+        if self.exists:
+            self._path = self._get_contained_backup_dir(self._path)
+
+    def _get_contained_backup_dir(self, path: Path) -> Path:
+        matches: list[str] = sorted(
+            [str(path) for path in path.iterdir() if self._matches_backup_dir(path)]
+        )
+        if len(matches) > 0:
+            return path / matches[0]
+        return path
+
+    def _matches_backup_dir(self, item: Path) -> bool:
+        match: Match[str] | None = re.match(r".+/[Bb]ackup[s]*$", str(item))
+        return match is not None and item.is_dir()

@@ -1,12 +1,18 @@
 # Commit
 
-- fix incomplete media-dir-selection
+- add backup-dir-detection
 
 ## In Progress
 
-- add backup-folder-detection
-
 ## Backlog
+
+- refactor file-creation in tests
+  - remove smoke_test
+
+- rename destination to target
+  - rename read_path to get_path_input
+
+- add handling of relative paths
 
 - add mode-selection (or raise ex)
 
