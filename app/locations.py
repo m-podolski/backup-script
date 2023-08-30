@@ -20,12 +20,21 @@ class Location:
 
     @path.setter
     def path(self, path_arg: str | Path) -> None:
-        if path_arg == ".":
-            self._path = Path(path_arg).resolve()
-        else:
-            expanded_user: str = os.path.expanduser(path_arg)
-            expanded_vars: str = os.path.expandvars(expanded_user)
-            self._path = Path(expanded_vars)
+        if isinstance(path_arg, str):
+            path_exp_user: str = os.path.expanduser(path_arg)
+            path_exp_vars: str = os.path.expandvars(path_exp_user)
+
+            # probably from input, so empty strings must be handled
+            is_longer_0: bool = len(path_exp_vars) > 0
+            starts_with_dot: bool = path_exp_vars[0] == "." if is_longer_0 else False
+
+            if is_longer_0 and starts_with_dot:
+                self._path = Path(path_exp_vars).resolve()
+            else:
+                self._path = Path(path_exp_vars)
+
+        if isinstance(path_arg, Path):
+            self._path = path_arg
 
     @property
     def path_is_initialized(self) -> bool:
@@ -33,10 +42,6 @@ class Location:
         For the class to always provide a .path with all of Paths functionality available from the outside its default value has to be managed. This may be used to check if .path is actually set.
         """
         return not (str(self._path) == ".")
-
-    @property
-    def name(self) -> str:
-        return self.__class__.__name__
 
     @property
     def exists(self) -> bool:
@@ -66,6 +71,10 @@ class Location:
         else:
             return path.name
 
+    @property
+    def name(self) -> str:
+        return self.__class__.__name__
+
     MessageType: TypeAlias = Literal["INVALID"]
 
     @property
@@ -83,11 +92,6 @@ class Source(Location):
 
 
 class Target(Location):
-    MessageType: TypeAlias = Literal["NO_PATH_GIVEN"]
-    messages: dict[MessageType, str] = {
-        "NO_PATH_GIVEN": "Please specify a target-path to the directory you want to back up to."
-    }
-
     @property
     def path(self) -> Path:
         return super().path
@@ -109,3 +113,8 @@ class Target(Location):
     def _matches_backup_dir(self, item: Path) -> bool:
         match: Match[str] | None = re.match(r".+/[Bb]ackup[s]*$", str(item))
         return match is not None and item.is_dir()
+
+    MessageType: TypeAlias = Literal["NO_PATH_GIVEN"]
+    messages: dict[MessageType, str] = {
+        "NO_PATH_GIVEN": "Please specify a target-path to the directory you want to back up to."
+    }

@@ -1,16 +1,16 @@
 # Commit
 
-- rename destination to target
+- fix handling of empty input strings in path-selection
+- add mode-selection
 
 ## In Progress
 
 ## Backlog
 
-- add handling of relative paths
-
-- add mode-selection (or raise ex)
+- make Location an abc
 
 - add target-name-selection
+  - raise if source and target are identical
   - handle target already exists when in create-mode
 
 - add copy-operation

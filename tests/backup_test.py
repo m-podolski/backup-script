@@ -25,9 +25,11 @@ def it_expands_and_validates_paths(
 
 
 def it_normalizes_dot_paths() -> None:
-    source: Location = interactions.check_path(Source("."), OutputMode.NORMAL)
+    source1: Location = Source(".")
+    source2: Location = Source("./test")
 
-    assert source.path == Path(".").resolve()
+    assert str(source1.path) == str(Path(".").resolve())
+    assert str(source2.path) == str(Path("./test").resolve())
 
 
 @pytest.mark.parametrize(
@@ -37,7 +39,7 @@ def it_normalizes_dot_paths() -> None:
         "/invalid",
     ],
 )
-def it_gets_paths_from_input_when_arg_is_invalid_or_missing(
+def it_gets_paths_from_input_if_arg_is_invalid_or_missing(
     mocker: MockerFixture,
     path_in: str | None,
 ) -> None:
@@ -86,7 +88,7 @@ def it_prints_sourcepath_and_targetpath_with_sorted_target_dir_top_level(
         )
 
 
-def it_has_dir_selection_menu_with_rescan_option_when_in_media_dir(
+def it_gets_dir_selection_with_rescan_option_when_in_media_dir(
     mocker: MockerFixture,
     media_dir_fixture: Path,
 ) -> None:
@@ -99,14 +101,13 @@ def it_has_dir_selection_menu_with_rescan_option_when_in_media_dir(
 
     mock_render: Mock = mocker.patch("app.io.render")
     mock_input: Mock = mocker.patch("builtins.input")
-    mock_input.side_effect = [target_content_rescan_option_num, 1]
+    mock_input.side_effect = [target_content_rescan_option_num, "1"]
 
     target: Location = interactions.select_media_dir(
         Source("~"), Target(str(media_dir_fixture)), OutputMode.NORMAL
     )
 
     assert str(target.path) == str(media_dir_fixture / "directory_1")
-
     mock_render.assert_has_calls(
         [
             call(

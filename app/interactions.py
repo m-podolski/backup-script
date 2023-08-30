@@ -8,15 +8,13 @@ def check_path(location: Source | Target, output_mode: OutputMode) -> Source | T
         if location.exists:
             return location
         else:
-            path_in: str = appio.get_path_input(
+            location.path = appio.get_path_input(
                 location.location_messages["INVALID"],
                 output_mode,
             )
-            location.path = path_in
             return check_path(location, output_mode)
     else:
-        path_in = appio.get_path_input(location.messages["NO_PATH_GIVEN"], output_mode)
-        location.path = path_in
+        location.path = appio.get_path_input(location.messages["NO_PATH_GIVEN"], output_mode)
         return check_path(location, output_mode)
 
 
