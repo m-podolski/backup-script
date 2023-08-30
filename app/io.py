@@ -34,7 +34,7 @@ def get_input(prompt: str, output_mode: OutputMode) -> str:
     return input(prompt)
 
 
-def read_path(prompt_message: str, output_mode: OutputMode) -> str:
+def get_path_input(prompt_message: str, output_mode: OutputMode) -> str:
     render("input_prompt.jinja2", {"message": prompt_message})
     return get_input("Path: ", output_mode)
 

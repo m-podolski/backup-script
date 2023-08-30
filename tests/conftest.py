@@ -9,7 +9,7 @@ def media_dir_fixture(
     tmp_path: Path,
 ) -> Generator[Any, Any, None]:
     """
-    Provides a location to test media-flag-functionality against. To use it pass it in as argument to --dest. The app will detect the test by matching against "^/tmp/pytest.+media$".
+    Provides a location to test media-flag-functionality against. To use it pass it in as argument to --target. The app will detect the test by matching against "^/tmp/pytest.+media$".
     """
     media_dir: Path = tmp_path / "media"
     media_dir.mkdir()

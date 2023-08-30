@@ -1,25 +1,22 @@
 # Commit
 
-- refactor file-creation in tests
+- rename destination to target
 
 ## In Progress
 
 ## Backlog
 
-- rename destination to target
-  - rename read_path to get_path_input
-
 - add handling of relative paths
 
 - add mode-selection (or raise ex)
 
-- add destination-name-selection
-  - handle destination already exists when in create-mode
+- add target-name-selection
+  - handle target already exists when in create-mode
 
 - add copy-operation
 
 - add available-space-check
-  - print destination-stats
+  - print target-stats
 
 - add option to target preconfigured profiles
   - add command for generating local config-file

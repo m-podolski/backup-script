@@ -2,8 +2,8 @@
 {{"Source:"|style("EMPH")}} {{ source }}
 {{"Target:"|style("EMPH")}} {{ target }}
 
-Select a Drive:
+{{"Target Contents:"|style("HEADING")}}
 
 {% for entry in target_content -%}
-{{ loop.index|style("OPT_EMPH") }}{{ "."|style("OPT_EMPH") }} {{ entry|style("OPTION") }}
+  {{ entry }}
 {% endfor %}

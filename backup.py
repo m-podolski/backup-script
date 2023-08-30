@@ -1,13 +1,13 @@
 import datetime
 import os
-from pathlib import Path
 import shutil
+from argparse import ArgumentParser, Namespace
+from pathlib import Path
 from typing import Optional, Sequence
-from argparse import Namespace, ArgumentParser
 
 parser = ArgumentParser()
 parser.add_argument(
-    "--dest", help="set the destination root directory. (Will be deleted if it already exists!) "
+    "--target", help="set the target root directory. (Will be deleted if it already exists!) "
 )
 args: Namespace = parser.parse_args()
 
@@ -18,12 +18,12 @@ if env_home is None:
 else:
     source_root: Path = Path(env_home)
 
-destination_root: Path
-if args.dest:
-    destination_root = Path(args.dest)
+target_root: Path
+if args.target:
+    target_root = Path(args.target)
 else:
     date: str = datetime.datetime.today().strftime("%Y-%m-%d")  # pyright: ignore
-    destination_root = Path(f"/media/malte/VIRUS/Backup/{source_root.name}_{date}")
+    target_root = Path(f"/media/malte/VIRUS/Backup/{source_root.name}_{date}")
 
 sources: Sequence[str] = (
     ".config/autokey/data/Keys",
@@ -58,35 +58,35 @@ sources: Sequence[str] = (
     ".rsync-filter",
 )
 
-if destination_root.exists():
-    shutil.rmtree(destination_root)
+if target_root.exists():
+    shutil.rmtree(target_root)
 
-os.mkdir(destination_root)
+os.mkdir(target_root)
 
 for source in sources:
     source_relative_path: Path = Path(source)
     source_path: Path = Path(os.path.join(source_root, source))
-    destination_path: Path = destination_root / source
+    target_path: Path = target_root / source
 
     source_levels: tuple[str, ...] = source_relative_path.parts
     current_level: list[str] = []
 
     for i, level in enumerate(source_levels):
         current_level.append(level)
-        destination_level: Path = destination_root / "/".join(current_level)
+        target_level: Path = target_root / "/".join(current_level)
 
-        dest_level_exists: bool = destination_level.exists()
+        target_level_exists: bool = target_level.exists()
         current_is_last_level: bool = (i + 1) == len(source_levels)
         source_path_is_file: bool = source_path.is_file()
         level_is_file: bool = current_is_last_level and source_path_is_file
 
-        if not dest_level_exists and not level_is_file:
-            os.mkdir(destination_level)
+        if not target_level_exists and not level_is_file:
+            os.mkdir(target_level)
 
     if source_path.is_dir():
-        shutil.copytree(source_path, destination_path, dirs_exist_ok=True)
+        shutil.copytree(source_path, target_path, dirs_exist_ok=True)
     else:
-        shutil.copy(source_path, destination_path)
+        shutil.copy(source_path, target_path)
 
     print(source)
 

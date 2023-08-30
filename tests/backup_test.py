@@ -7,7 +7,7 @@ from pytest_mock import MockerFixture
 
 import app.interactions as interactions
 from app.globals import OutputMode, ScarabOptionError
-from app.locations import Destination, Location, Source
+from app.locations import Location, Source, Target
 from app.main import ScarabTest
 from tests.conftest import create_files_and_dirs, get_content_with_slashed_dirs
 
@@ -65,7 +65,7 @@ def it_raises_in_quiet_mode_when_input_required(
             app.run()
 
 
-def it_prints_sourcepath_and_destpath_with_sorted_dest_dir_top_level(
+def it_prints_sourcepath_and_targetpath_with_sorted_target_dir_top_level(
     mocker: MockerFixture,
     tmp_path: Path,
 ) -> None:
@@ -73,15 +73,15 @@ def it_prints_sourcepath_and_destpath_with_sorted_dest_dir_top_level(
     create_files_and_dirs(tmp_path, ["directory_1/", "directory_2/", "file.txt"])
     mock_render: Mock = mocker.patch("app.io.render")
 
-    with ScarabTest(argv=["backup", "--source", valid_path, "--dest", valid_path]) as app:
+    with ScarabTest(argv=["backup", "--source", valid_path, "--target", valid_path]) as app:
         app.run()
 
         mock_render.assert_called_with(
-            "dest_contents.jinja2",
+            "target_contents.jinja2",
             {
                 "source": valid_path,
-                "destination": valid_path,
-                "destination_content": ["directory_1/", "directory_2/", "file.txt"],
+                "target": valid_path,
+                "target_content": ["directory_1/", "directory_2/", "file.txt"],
             },
         )
 
@@ -91,21 +91,21 @@ def it_has_dir_selection_menu_with_rescan_option_when_in_media_dir(
     media_dir_fixture: Path,
 ) -> None:
     create_files_and_dirs(media_dir_fixture, ["directory_1/", "directory_2/"])
-    dest_content: list[str] = [
+    target_content: list[str] = [
         *sorted(get_content_with_slashed_dirs(media_dir_fixture)),
         "-> Rescan Directory",
     ]
-    dest_content_rescan_option_num: int = len(dest_content)
+    target_content_rescan_option_num: int = len(target_content)
 
     mock_render: Mock = mocker.patch("app.io.render")
     mock_input: Mock = mocker.patch("builtins.input")
-    mock_input.side_effect = [dest_content_rescan_option_num, 1]
+    mock_input.side_effect = [target_content_rescan_option_num, 1]
 
-    destination: Location = interactions.select_media_dir(
-        Source("~"), Destination(str(media_dir_fixture)), OutputMode.NORMAL
+    target: Location = interactions.select_media_dir(
+        Source("~"), Target(str(media_dir_fixture)), OutputMode.NORMAL
     )
 
-    assert str(destination.path) == str(media_dir_fixture / "directory_1")
+    assert str(target.path) == str(media_dir_fixture / "directory_1")
 
     mock_render.assert_has_calls(
         [
@@ -113,16 +113,16 @@ def it_has_dir_selection_menu_with_rescan_option_when_in_media_dir(
                 "select_directory.jinja2",
                 {
                     "source": os.environ["HOME"],
-                    "destination": str(media_dir_fixture),
-                    "destination_content": dest_content,
+                    "target": str(media_dir_fixture),
+                    "target_content": target_content,
                 },
             ),
             call(
                 "select_directory.jinja2",
                 {
                     "source": os.environ["HOME"],
-                    "destination": str(media_dir_fixture),
-                    "destination_content": dest_content,
+                    "target": str(media_dir_fixture),
+                    "target_content": target_content,
                 },
             ),
         ]
@@ -132,11 +132,11 @@ def it_has_dir_selection_menu_with_rescan_option_when_in_media_dir(
     assert mock_input.call_count == 2
 
 
-def it_selects_dirs_called_backup_if_present_in_dest(tmp_path: Path) -> None:
+def it_selects_dirs_called_backup_if_present_in_target(tmp_path: Path) -> None:
     create_files_and_dirs(
         tmp_path, ["Backup/", "Backups/", "backup/", "Backsnup/", "other/", "Backup.txt"]
     )
 
-    destination: Location = Destination(tmp_path)
+    target: Location = Target(tmp_path)
 
-    assert str(destination.path) == str(tmp_path / "Backup")
+    assert str(target.path) == str(tmp_path / "Backup")

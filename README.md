@@ -30,13 +30,13 @@ Put anywhere and run `scarab-backup/scarab.sh`:
 - `-c` create a new backup
 - `-u` update an existing backup
 - `-s` check if there is enough available space for the backup
-- `-b` disbable backup-folder detection at destination
+- `-b` disbable backup-folder detection at target
 
 Note that `-c` and `-u` are only shortcuts. You can start the script without them and will be prompted for the options.
 
 ### Backup Directory Detection
 
-Scarab will in any case look for a directory matching `[Bb]ackup[s]*` at the target drive and use the first match as destination. Otherwise you can enter your own. When updating subdirectories will be presented as a select-list.
+Scarab will in any case look for a directory matching `[Bb]ackup[s]*` at the target drive and use the first match as target. Otherwise you can enter your own. When updating subdirectories will be presented as a select-list.
 
 ### Backup Preparation
 
@@ -68,5 +68,5 @@ All options are configured with extensive logging and progress display.
 - **Custom:** Enter any flags as a string which will be passed directly to the `rsync`-command.
 - **(Dry Run) "Option"** All options can be started as a dry run with extensive logging.
 
-All options delete files from the destination that are not present at the source as well as files which are excluded (if a `.rsync-filter` is used).
+All options delete files from the target that are not present at the source as well as files which are excluded (if a `.rsync-filter` is used).
 

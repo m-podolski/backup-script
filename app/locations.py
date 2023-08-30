@@ -82,10 +82,10 @@ class Source(Location):
     }
 
 
-class Destination(Location):
+class Target(Location):
     MessageType: TypeAlias = Literal["NO_PATH_GIVEN"]
     messages: dict[MessageType, str] = {
-        "NO_PATH_GIVEN": "Please specify a destination-path to the directory you want to back up to."
+        "NO_PATH_GIVEN": "Please specify a target-path to the directory you want to back up to."
     }
 
     @property

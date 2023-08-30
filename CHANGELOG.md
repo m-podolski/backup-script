@@ -15,7 +15,7 @@
 
 ### Fixed
 
-- rename destination only when rsync exited successfully
+- rename target only when rsync exited successfully
 - enable rsync-options to be split
 - prevent renaming when directory name stays the same
 - disk space statistics are not hidden by clearing the screen anymore
@@ -25,7 +25,7 @@
 ### Added
 
 - optional "tree"-support
-- backup-folder-detection at destination
+- backup-folder-detection at target
 - accurate timestamps which are set at the very end
 
 ### Fixed
