@@ -13,12 +13,20 @@ def media_dir_fixture(
     """
     media_dir: Path = tmp_path / "media"
     media_dir.mkdir()
-    dir1: Path = media_dir / "directory_1"
-    dir2: Path = media_dir / "directory_2"
-    dir2.mkdir()
-    dir1.mkdir()
 
     yield media_dir
+
+
+def create_files_and_dirs(path: Path, items: list[str]) -> None:
+    """
+    Populates a given path. To distinguish between files and directories within the items, append a slash to directories (i.e. ["dir/", "file"])
+    """
+    for item in items:
+        path_to_create: Path = path / item
+        if item[len(item) - 1] == "/":
+            path_to_create.mkdir()
+        else:
+            path_to_create.touch()
 
 
 def get_content_with_slashed_dirs(dir: Path) -> list[str]:

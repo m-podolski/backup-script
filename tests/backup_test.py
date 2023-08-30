@@ -9,7 +9,7 @@ import app.interactions as interactions
 from app.globals import OutputMode, ScarabOptionError
 from app.locations import Destination, Location, Source
 from app.main import ScarabTest
-from tests.conftest import get_content_with_slashed_dirs
+from tests.conftest import create_files_and_dirs, get_content_with_slashed_dirs
 
 
 @pytest.mark.parametrize(
@@ -70,12 +70,7 @@ def it_prints_sourcepath_and_destpath_with_sorted_dest_dir_top_level(
     tmp_path: Path,
 ) -> None:
     valid_path: str = str(tmp_path)
-    dir1: Path = tmp_path / "directory_1"
-    dir1.mkdir()
-    dir2: Path = tmp_path / "directory_2"
-    dir2.mkdir()
-    file: Path = tmp_path / "file.txt"
-    file.touch()
+    create_files_and_dirs(tmp_path, ["directory_1/", "directory_2/", "file.txt"])
     mock_render: Mock = mocker.patch("app.io.render")
 
     with ScarabTest(argv=["backup", "--source", valid_path, "--dest", valid_path]) as app:
@@ -95,6 +90,7 @@ def it_has_dir_selection_menu_with_rescan_option_when_in_media_dir(
     mocker: MockerFixture,
     media_dir_fixture: Path,
 ) -> None:
+    create_files_and_dirs(media_dir_fixture, ["directory_1/", "directory_2/"])
     dest_content: list[str] = [
         *sorted(get_content_with_slashed_dirs(media_dir_fixture)),
         "-> Rescan Directory",
@@ -137,18 +133,9 @@ def it_has_dir_selection_menu_with_rescan_option_when_in_media_dir(
 
 
 def it_selects_dirs_called_backup_if_present_in_dest(tmp_path: Path) -> None:
-    dir0: Path = tmp_path / "Backup"
-    dir0.mkdir()
-    dir1: Path = tmp_path / "Backups"
-    dir1.mkdir()
-    dir2: Path = tmp_path / "backup"
-    dir2.mkdir()
-    dir3: Path = tmp_path / "Backsnup"
-    dir3.mkdir()
-    dir4: Path = tmp_path / "other"
-    dir4.mkdir()
-    file: Path = tmp_path / "Backup.txt"
-    file.touch()
+    create_files_and_dirs(
+        tmp_path, ["Backup/", "Backups/", "backup/", "Backsnup/", "other/", "Backup.txt"]
+    )
 
     destination: Location = Destination(tmp_path)
 

@@ -29,7 +29,9 @@ class Location:
 
     @property
     def path_is_initialized(self) -> bool:
-        """For the class to always provide a .path with all of Paths functionality available from the outside its default value has to be managed. This may be used to check if .path is actually set."""
+        """
+        For the class to always provide a .path with all of Paths functionality available from the outside its default value has to be managed. This may be used to check if .path is actually set.
+        """
         return not (str(self._path) == ".")
 
     @property

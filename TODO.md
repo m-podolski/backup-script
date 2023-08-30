@@ -1,13 +1,10 @@
 # Commit
 
-- add backup-dir-detection
+- refactor file-creation in tests
 
 ## In Progress
 
 ## Backlog
-
-- refactor file-creation in tests
-  - remove smoke_test
 
 - rename destination to target
   - rename read_path to get_path_input
