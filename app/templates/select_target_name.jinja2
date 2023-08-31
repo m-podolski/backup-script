@@ -1,0 +1,6 @@
+
+Select the Name-Format for Your Backup:
+
+{% for format in name_formats -%}
+{{ loop.index|style("OPT_EMPH") }}{{ "."|style("OPT_EMPH") }} {{ format|style("OPTION") }}
+{% endfor %}

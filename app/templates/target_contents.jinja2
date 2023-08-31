@@ -2,9 +2,12 @@
 {{"Source:"|style("EMPH")}} {{ source }}
 {{"Target:"|style("EMPH")}} {{ target }}
 {{"Backup Mode:"|style("EMPH")}} {{ backup_mode }}
+{{"Target Name:"|style("EMPH")}} {{ target_name }}
 
+{% if target_content|length > 0 -%}
 {{"Target Contents:"|style("HEADING")}}
 
 {% for entry in target_content -%}
   {{ entry }}
 {% endfor %}
+{% endif -%}

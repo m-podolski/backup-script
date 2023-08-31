@@ -1,4 +1,6 @@
+import datetime
 import os
+import socket
 from pathlib import Path
 from unittest.mock import MagicMock, Mock, call
 
@@ -24,7 +26,7 @@ def it_expands_and_validates_paths(
     assert str(source.path) == os.environ["HOME"]
 
 
-def it_normalizes_dot_paths() -> None:
+def it_normalizes_relative_paths() -> None:
     source1: Location = Source(".")
     source2: Location = Source("./test")
 
@@ -39,7 +41,7 @@ def it_normalizes_dot_paths() -> None:
         "/invalid",
     ],
 )
-def it_gets_paths_from_input_if_arg_is_invalid_or_missing(
+def it_gets_paths_if_arg_is_invalid_or_missing(
     mocker: MockerFixture,
     path_in: str | None,
 ) -> None:
@@ -54,7 +56,10 @@ def it_gets_paths_from_input_if_arg_is_invalid_or_missing(
     assert str(source.path) == valid_path
 
 
-def it_raises_when_source_and_target_paths_are_identical() -> None:
+def it_raises_when_source_and_target_paths_are_identical(mocker: MockerFixture) -> None:
+    mock_input: MagicMock = mocker.patch("builtins.input")
+    mock_input.return_value = "1"
+
     with pytest.raises(
         ScarabOptionError,
         match=r": Source and target are identical$",
@@ -76,23 +81,6 @@ def it_raises_in_quiet_mode_when_input_required(
             app.run()
 
 
-def it_gets_backup_mode_if_not_given(mocker: MockerFixture) -> None:
-    mock_render: Mock = mocker.patch("app.io.render")
-    mock_input: MagicMock = mocker.patch("builtins.input")
-    mock_input.return_value = "2"
-
-    mode: BackupMode = interactions.select_backup_mode(OutputMode.NORMAL)
-
-    assert mode == BackupMode.UPDATE
-    mock_render.assert_called_with(
-        "select_backup_mode.jinja2",
-        {
-            "modes": ["Create New", "Update Existing"],
-        },
-    )
-    mock_input.assert_called_with("Number: ")
-
-
 def it_selects_dirs_called_backup_if_present_in_target(tmp_path: Path) -> None:
     create_files_and_dirs(
         tmp_path, ["Backup/", "Backups/", "backup/", "Backsnup/", "other/", "Backup.txt"]
@@ -101,28 +89,6 @@ def it_selects_dirs_called_backup_if_present_in_target(tmp_path: Path) -> None:
     target: Location = Target(tmp_path)
 
     assert str(target.path) == str(tmp_path / "Backup")
-
-
-def it_prints_backup_information(
-    mocker: MockerFixture,
-    tmp_path: Path,
-) -> None:
-    valid_path: str = str(tmp_path)
-    create_files_and_dirs(tmp_path, ["dir_1/", "dir_2/", "file.txt"])
-    mock_render: Mock = mocker.patch("app.io.render")
-
-    with ScarabTest(argv=["backup", "--source", "/tmp", "--target", valid_path, "--create"]) as app:
-        app.run()
-
-        mock_render.assert_called_with(
-            "target_contents.jinja2",
-            {
-                "source": "/tmp",
-                "target": valid_path,
-                "backup_mode": "Create",
-                "target_content": ["dir_1/", "dir_2/", "file.txt"],
-            },
-        )
 
 
 def it_gets_dir_selection_with_rescan_option_when_in_media_dir(
@@ -167,3 +133,99 @@ def it_gets_dir_selection_with_rescan_option_when_in_media_dir(
     )
     mock_input.assert_called_with("Number: ")
     assert mock_input.call_count == 2
+
+
+def it_gets_backup_mode_if_not_given(mocker: MockerFixture) -> None:
+    mock_render: Mock = mocker.patch("app.io.render")
+    mock_input: MagicMock = mocker.patch("builtins.input")
+    mock_input.return_value = "2"
+
+    mode: BackupMode = interactions.select_backup_mode(OutputMode.NORMAL)
+
+    assert mode == BackupMode.UPDATE
+    mock_render.assert_called_with(
+        "select_backup_mode.jinja2",
+        {
+            "modes": ["Create New", "Update Existing"],
+        },
+    )
+    mock_input.assert_called_with("Number: ")
+
+
+def _make_target_name(path_name: str) -> str:
+    user: str = os.environ["USER"]
+    host: str = socket.gethostname()
+    date_time: str = datetime.datetime.today().strftime("%Y-%m-%d-%H-%M-%S")
+    return f"{user}@{host}_{path_name}_{date_time}"
+
+
+def it_gets_the_target_name_from_a_selection_menu(mocker: MockerFixture, tmp_path: Path) -> None:
+    mock_render: Mock = mocker.patch("app.io.render")
+    mock_input: MagicMock = mocker.patch("builtins.input")
+    mock_input.return_value = "6"
+    create_files_and_dirs(tmp_path, ["test/"])
+    test_path: Path = tmp_path / "test"
+
+    target_name: str = interactions.select_target_name(test_path.name, OutputMode.NORMAL)
+
+    assert target_name == _make_target_name(test_path.name)
+
+    mock_render.assert_called_with(
+        "select_target_name.jinja2",
+        {
+            "name_formats": [
+                "<source-dir>",
+                "<source-dir>_<date>",
+                "<source-dir>_<date-time>",
+                "<user>@<host>_<source-dir>",
+                "<user>@<host>_<source-dir>_<date>",
+                "<user>@<host>_<source-dir>_<date-time>",
+            ],
+        },
+    )
+    mock_input.assert_called_with("Number: ")
+
+
+def it_prints_backup_information(
+    mocker: MockerFixture,
+    tmp_path: Path,
+) -> None:
+    create_files_and_dirs(tmp_path, ["dir_1/", "dir_2/", "file.txt"])
+    source_path: Path = Path(f"/home/{os.environ['USER']}")
+
+    mock_render: Mock = mocker.patch("app.io.render")
+    mock_input: MagicMock = mocker.patch("builtins.input")
+    mock_input.return_value = "6"
+
+    with ScarabTest(
+        argv=["backup", "--source", str(source_path), "--target", str(tmp_path), "--create"]
+    ) as app:
+        app.run()
+
+        mock_render.assert_has_calls(
+            [
+                call(
+                    "select_target_name.jinja2",
+                    {
+                        "name_formats": [
+                            "<source-dir>",
+                            "<source-dir>_<date>",
+                            "<source-dir>_<date-time>",
+                            "<user>@<host>_<source-dir>",
+                            "<user>@<host>_<source-dir>_<date>",
+                            "<user>@<host>_<source-dir>_<date-time>",
+                        ],
+                    },
+                ),
+                call(
+                    "target_contents.jinja2",
+                    {
+                        "source": str(source_path),
+                        "target": str(tmp_path),
+                        "backup_mode": "Create",
+                        "target_name": _make_target_name(source_path.name),
+                        "target_content": ["dir_1/", "dir_2/", "file.txt"],
+                    },
+                ),
+            ]
+        )

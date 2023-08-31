@@ -1,3 +1,7 @@
+import datetime
+import os
+import socket
+
 import app.io as appio
 from app.globals import BackupMode, OutputMode
 from app.locations import Location, Source, Target
@@ -47,3 +51,27 @@ def select_backup_mode(output_mode: OutputMode) -> BackupMode:
     )
     selected_option: int = int(appio.get_input("Number: ", output_mode))
     return [mode for mode in BackupMode][selected_option - 1]
+
+
+def select_target_name(source_dir: str, output_mode: OutputMode) -> str:
+    user: str = os.environ["USER"]
+    host: str = socket.gethostname()
+    date: str = datetime.datetime.today().strftime("%Y-%m-%d")
+    time: str = datetime.datetime.today().strftime("%H-%M-%S")
+
+    name_formats: dict[str, str] = {
+        "<source-dir>": source_dir,
+        "<source-dir>_<date>": f"{source_dir}_{date}",
+        "<source-dir>_<date-time>": f"{source_dir}_{date}-{time}",
+        "<user>@<host>_<source-dir>": f"{user}@{host}_{source_dir}",
+        "<user>@<host>_<source-dir>_<date>": f"{user}@{host}_{source_dir}_{date}",
+        "<user>@<host>_<source-dir>_<date-time>": f"{user}@{host}_{source_dir}_{date}-{time}",
+    }
+    appio.render(
+        "select_target_name.jinja2",
+        {
+            "name_formats": [format for format in name_formats.keys()],
+        },
+    )
+    selected_option: int = int(appio.get_input("Number: ", output_mode))
+    return list(name_formats.values())[selected_option - 1]

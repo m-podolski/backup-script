@@ -87,11 +87,13 @@ class Base(Controller):
         if target.is_media_dir:
             target = interactions.select_media_dir(source, target, output_mode)
 
-        if source.path == target.path:
-            raise ScarabOptionError("Source and target are identical")
-
         if backup_mode is None:  # pyright: ignore [reportUnnecessaryComparison]
             backup_mode: BackupMode = interactions.select_backup_mode(output_mode)
+
+        target_name: str = interactions.select_target_name(source.path.name, output_mode)
+
+        if source.path == target.path:
+            raise ScarabOptionError("Source and target are identical")
 
         appio.render(
             "target_contents.jinja2",
@@ -99,6 +101,7 @@ class Base(Controller):
                 "source": str(source.path),
                 "target": str(target.path),
                 "backup_mode": backup_mode.value.title(),
+                "target_name": target_name,
                 "target_content": target.content,
             },
         )
