@@ -1,11 +1,15 @@
 import os
 import re
+from abc import ABC, abstractmethod
 from pathlib import Path
 from re import Match
 from typing import Literal, Optional, TypeAlias
 
+LocationMessageType: TypeAlias = Literal["INVALID"]
+MessageType: TypeAlias = Literal["NO_PATH_GIVEN"]
 
-class Location:
+
+class Location(ABC):
     _path: Path
 
     def __init__(self, path_arg: Optional[str | Path]) -> None:
@@ -75,20 +79,24 @@ class Location:
     def name(self) -> str:
         return self.__class__.__name__
 
-    MessageType: TypeAlias = Literal["INVALID"]
-
     @property
-    def location_messages(self) -> dict[MessageType, str]:
+    def location_messages(self) -> dict[LocationMessageType, str]:
         return {
             "INVALID": f"Your {self.name.lower()} is not a valid directory! Please check and enter it again."
         }
 
+    @property
+    @abstractmethod
+    def messages(self) -> dict[MessageType, str]:
+        ...
+
 
 class Source(Location):
-    MessageType: TypeAlias = Literal["NO_PATH_GIVEN"]
-    messages: dict[MessageType, str] = {
-        "NO_PATH_GIVEN": "Please specify a source-path to the directory you want backed up."
-    }
+    @property
+    def messages(self) -> dict[MessageType, str]:
+        return {
+            "NO_PATH_GIVEN": "Please specify a source-path to the directory you want backed up."
+        }
 
 
 class Target(Location):
@@ -114,7 +122,8 @@ class Target(Location):
         match: Match[str] | None = re.match(r".+/[Bb]ackup[s]*$", str(item))
         return match is not None and item.is_dir()
 
-    MessageType: TypeAlias = Literal["NO_PATH_GIVEN"]
-    messages: dict[MessageType, str] = {
-        "NO_PATH_GIVEN": "Please specify a target-path to the directory you want to back up to."
-    }
+    @property
+    def messages(self) -> dict[MessageType, str]:
+        return {
+            "NO_PATH_GIVEN": "Please specify a target-path to the directory you want to back up to."
+        }

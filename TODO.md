@@ -1,12 +1,10 @@
 # Commit
 
-- add backup-mode-selection
+- make Location an abc
 
 ## In Progress
 
 ## Backlog
-
-- make Location an abc
 
 - add target-name-selection
   - raise if source and target are identical
