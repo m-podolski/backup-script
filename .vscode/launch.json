@@ -11,13 +11,13 @@
       "args": ["--debug"]
     },
     {
-      "name": "app.main backup --source /path",
+      "name": "backup -s ~ -t ~",
       "type": "python",
       "request": "launch",
       "module": "app.main",
       "console": "integratedTerminal",
       "justMyCode": true,
-      "args": ["backup", "--source", "/path"]
+      "args": ["backup", "--source", "~", "--target", "~"]
     },
     {
       "name": "Current File",

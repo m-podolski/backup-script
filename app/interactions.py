@@ -1,5 +1,5 @@
 import app.io as appio
-from app.globals import OutputMode
+from app.globals import BackupMode, OutputMode
 from app.locations import Location, Source, Target
 
 
@@ -36,3 +36,14 @@ def select_media_dir(source: Location, target: Location, output_mode: OutputMode
         selected_dir: str = target.content[selected_option - 1]
         target.path = target.path / selected_dir
         return target
+
+
+def select_backup_mode(output_mode: OutputMode) -> BackupMode:
+    appio.render(
+        "select_backup_mode.jinja2",
+        {
+            "modes": ["Create New", "Update Existing"],
+        },
+    )
+    selected_option: int = int(appio.get_input("Number: ", output_mode))
+    return [mode for mode in BackupMode][selected_option - 1]

@@ -6,7 +6,7 @@ import pytest
 from pytest_mock import MockerFixture
 
 import app.interactions as interactions
-from app.globals import OutputMode, ScarabOptionError
+from app.globals import BackupMode, OutputMode, ScarabOptionError
 from app.locations import Location, Source, Target
 from app.main import ScarabTest
 from tests.conftest import create_files_and_dirs, get_content_with_slashed_dirs
@@ -54,6 +54,33 @@ def it_gets_paths_from_input_if_arg_is_invalid_or_missing(
     assert str(source.path) == valid_path
 
 
+def it_gets_backup_mode_if_not_given(mocker: MockerFixture) -> None:
+    mock_render: Mock = mocker.patch("app.io.render")
+    mock_input: MagicMock = mocker.patch("builtins.input")
+    mock_input.return_value = "2"
+
+    mode: BackupMode = interactions.select_backup_mode(OutputMode.NORMAL)
+
+    assert mode == BackupMode.UPDATE
+    mock_render.assert_called_with(
+        "select_backup_mode.jinja2",
+        {
+            "modes": ["Create New", "Update Existing"],
+        },
+    )
+    mock_input.assert_called_with("Number: ")
+
+
+def it_selects_dirs_called_backup_if_present_in_target(tmp_path: Path) -> None:
+    create_files_and_dirs(
+        tmp_path, ["Backup/", "Backups/", "backup/", "Backsnup/", "other/", "Backup.txt"]
+    )
+
+    target: Location = Target(tmp_path)
+
+    assert str(target.path) == str(tmp_path / "Backup")
+
+
 def it_raises_in_quiet_mode_when_input_required(
     mocker: MockerFixture,
 ) -> None:
@@ -67,7 +94,7 @@ def it_raises_in_quiet_mode_when_input_required(
             app.run()
 
 
-def it_prints_sourcepath_and_targetpath_with_sorted_target_dir_top_level(
+def it_prints_backup_information(
     mocker: MockerFixture,
     tmp_path: Path,
 ) -> None:
@@ -75,7 +102,9 @@ def it_prints_sourcepath_and_targetpath_with_sorted_target_dir_top_level(
     create_files_and_dirs(tmp_path, ["directory_1/", "directory_2/", "file.txt"])
     mock_render: Mock = mocker.patch("app.io.render")
 
-    with ScarabTest(argv=["backup", "--source", valid_path, "--target", valid_path]) as app:
+    with ScarabTest(
+        argv=["backup", "--source", valid_path, "--target", valid_path, "--create"]
+    ) as app:
         app.run()
 
         mock_render.assert_called_with(
@@ -83,6 +112,7 @@ def it_prints_sourcepath_and_targetpath_with_sorted_target_dir_top_level(
             {
                 "source": valid_path,
                 "target": valid_path,
+                "backup_mode": "Create",
                 "target_content": ["directory_1/", "directory_2/", "file.txt"],
             },
         )
@@ -128,16 +158,5 @@ def it_gets_dir_selection_with_rescan_option_when_in_media_dir(
             ),
         ]
     )
-
     mock_input.assert_called_with("Number: ")
     assert mock_input.call_count == 2
-
-
-def it_selects_dirs_called_backup_if_present_in_target(tmp_path: Path) -> None:
-    create_files_and_dirs(
-        tmp_path, ["Backup/", "Backups/", "backup/", "Backsnup/", "other/", "Backup.txt"]
-    )
-
-    target: Location = Target(tmp_path)
-
-    assert str(target.path) == str(tmp_path / "Backup")

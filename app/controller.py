@@ -1,12 +1,11 @@
 import os
-from enum import Enum
 from typing import Optional
 
 from cement import Controller, ex, get_version  # pyright: ignore
 
 import app.interactions as interactions
 import app.io as appio
-from app.globals import OutputMode
+from app.globals import BackupMode, OutputMode
 from app.locations import Location, Source, Target
 
 VERSION: tuple[int, int, int, str, int] = (0, 5, 0, "alpha", 0)
@@ -15,11 +14,6 @@ scarab-backup v%s
 """ % get_version(
     VERSION
 )
-
-
-class BackupMode(Enum):
-    CREATE = 1
-    UPDATE = 2
 
 
 class Base(Controller):
@@ -40,7 +34,7 @@ class Base(Controller):
                 {"help": "The source-path", "action": "store", "dest": "source"},
             ),
             (
-                ["-d", "--target"],
+                ["-t", "--target"],
                 {"help": "The target-path", "action": "store", "dest": "target"},
             ),
             (
@@ -76,6 +70,7 @@ class Base(Controller):
         quiet: bool = self.app.quiet  # pyright: ignore
         source_arg: Optional[str] = self.app.pargs.source  # pyright: ignore
         target_arg: Optional[str] = self.app.pargs.target  # pyright: ignore
+        backup_mode: Optional[BackupMode] = self.app.pargs.backup_mode  # pyright: ignore
 
         if quiet:
             output_mode = OutputMode.QUIET
@@ -92,11 +87,15 @@ class Base(Controller):
         if target.is_media_dir:
             target = interactions.select_media_dir(source, target, output_mode)
 
+        if backup_mode is None:  # pyright: ignore [reportUnnecessaryComparison]
+            backup_mode: BackupMode = interactions.select_backup_mode(output_mode)
+
         appio.render(
             "target_contents.jinja2",
             {
                 "source": str(source.path),
                 "target": str(target.path),
+                "backup_mode": backup_mode.value.title(),
                 "target_content": target.content,
             },
         )

@@ -1,7 +1,6 @@
 # Commit
 
-- fix handling of empty input strings in path-selection
-- add mode-selection
+- add backup-mode-selection
 
 ## In Progress
 
