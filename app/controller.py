@@ -5,7 +5,7 @@ from cement import Controller, ex, get_version  # pyright: ignore
 
 import app.interactions as interactions
 import app.io as appio
-from app.globals import BackupMode, OutputMode
+from app.globals import BackupMode, OutputMode, ScarabOptionError
 from app.locations import Location, Source, Target
 
 VERSION: tuple[int, int, int, str, int] = (0, 5, 0, "alpha", 0)
@@ -86,6 +86,9 @@ class Base(Controller):
 
         if target.is_media_dir:
             target = interactions.select_media_dir(source, target, output_mode)
+
+        if source.path == target.path:
+            raise ScarabOptionError("Source and target are identical")
 
         if backup_mode is None:  # pyright: ignore [reportUnnecessaryComparison]
             backup_mode: BackupMode = interactions.select_backup_mode(output_mode)

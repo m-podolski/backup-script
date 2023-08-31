@@ -1,5 +1,6 @@
 from cement import App, CaughtSignal, TestApp, init_defaults  # pyright: ignore
 
+import app.io as appio
 from app.controller import Base
 from app.globals import ScarabException
 
@@ -10,17 +11,17 @@ CONFIG["scarab"]["otherProp"] = "otherValue"
 class Scarab(App):
     class Meta:  # pyright: ignore
         label: str = "scarab"
-        handlers = [
+        handlers: list[type[Base]] = [
             Base,
         ]
-        extensions = [
+        extensions: list[str] = [
             "yaml",
             "colorlog",
         ]
         config_defaults = CONFIG  # pyright: ignore
-        config_handler = "yaml"
-        config_file_suffix = ".yml"
-        log_handler = "colorlog"
+        config_handler: str = "yaml"
+        config_file_suffix: str = ".yml"
+        log_handler: str = "colorlog"
         close_on_exit = True
 
 
@@ -35,7 +36,7 @@ def main() -> None:
             app.run()
 
         except ScarabException as e:
-            print("\n%s" % e)
+            appio.print_styled(str(e), "ERROR")
             app.exit_code = 0
 
         except AssertionError as e:

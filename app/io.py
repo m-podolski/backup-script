@@ -28,6 +28,10 @@ def render(file: str, content: dict[str, Any], style: Style = "NONE") -> None:
     print(styled)
 
 
+def print_styled(content: str, style: Style) -> None:
+    print(_escape_string(content, style))
+
+
 def get_input(prompt: str, output_mode: OutputMode) -> str:
     if output_mode is OutputMode.QUIET:
         raise ScarabOptionError("Cannot receive input in quiet mode")
@@ -43,11 +47,4 @@ def _escape_string(content: str, style: Style) -> str:
     return f"{STYLES[style]}{content}{STYLES['END']}"
 
 
-# Template Filters
-
-
-def _style(value: str, style: Style) -> str:
-    return _escape_string(value, style)
-
-
-env.filters["style"] = _style  # pyright: ignore
+env.filters["style"] = _escape_string  # pyright: ignore

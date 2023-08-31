@@ -1,19 +1,18 @@
 # Commit
 
-- make Location an abc
+- raise if source and target are identical
 
 ## In Progress
 
-## Backlog
-
 - add target-name-selection
-  - raise if source and target are identical
   - handle target already exists when in create-mode
 
-- add copy-operation
+## Backlog
 
 - add available-space-check
   - print target-stats
+
+- add copy-operation
 
 - add option to target preconfigured profiles
   - add command for generating local config-file

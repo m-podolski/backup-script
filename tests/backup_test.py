@@ -54,6 +54,28 @@ def it_gets_paths_from_input_if_arg_is_invalid_or_missing(
     assert str(source.path) == valid_path
 
 
+def it_raises_when_source_and_target_paths_are_identical() -> None:
+    with pytest.raises(
+        ScarabOptionError,
+        match=r": Source and target are identical$",
+    ):
+        with ScarabTest(argv=["backup", "--source", "~", "--target", "~"]) as app:
+            app.run()
+
+
+def it_raises_in_quiet_mode_when_input_required(
+    mocker: MockerFixture,
+) -> None:
+    mocker.patch("builtins.input")
+
+    with pytest.raises(
+        ScarabOptionError,
+        match=r": Cannot receive input in quiet mode$",
+    ):
+        with ScarabTest(argv=["-q", "backup", "--source", "invalid"]) as app:
+            app.run()
+
+
 def it_gets_backup_mode_if_not_given(mocker: MockerFixture) -> None:
     mock_render: Mock = mocker.patch("app.io.render")
     mock_input: MagicMock = mocker.patch("builtins.input")
@@ -81,39 +103,24 @@ def it_selects_dirs_called_backup_if_present_in_target(tmp_path: Path) -> None:
     assert str(target.path) == str(tmp_path / "Backup")
 
 
-def it_raises_in_quiet_mode_when_input_required(
-    mocker: MockerFixture,
-) -> None:
-    mocker.patch("builtins.input")
-
-    with pytest.raises(
-        ScarabOptionError,
-        match=r"^Scarab got wrong or conflicting arguments: Cannot receive input in quiet mode",
-    ):
-        with ScarabTest(argv=["-q", "backup", "--source", "invalid"]) as app:
-            app.run()
-
-
 def it_prints_backup_information(
     mocker: MockerFixture,
     tmp_path: Path,
 ) -> None:
     valid_path: str = str(tmp_path)
-    create_files_and_dirs(tmp_path, ["directory_1/", "directory_2/", "file.txt"])
+    create_files_and_dirs(tmp_path, ["dir_1/", "dir_2/", "file.txt"])
     mock_render: Mock = mocker.patch("app.io.render")
 
-    with ScarabTest(
-        argv=["backup", "--source", valid_path, "--target", valid_path, "--create"]
-    ) as app:
+    with ScarabTest(argv=["backup", "--source", "/tmp", "--target", valid_path, "--create"]) as app:
         app.run()
 
         mock_render.assert_called_with(
             "target_contents.jinja2",
             {
-                "source": valid_path,
+                "source": "/tmp",
                 "target": valid_path,
                 "backup_mode": "Create",
-                "target_content": ["directory_1/", "directory_2/", "file.txt"],
+                "target_content": ["dir_1/", "dir_2/", "file.txt"],
             },
         )
 
