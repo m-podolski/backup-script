@@ -1,6 +1,7 @@
 import datetime
 import os
 import socket
+from pathlib import Path
 
 import app.io as appio
 from app.globals import BackupMode, OutputMode
@@ -51,6 +52,18 @@ def select_backup_mode(output_mode: OutputMode) -> BackupMode:
     )
     selected_option: int = int(appio.get_input("Number: ", output_mode))
     return [mode for mode in BackupMode][selected_option - 1]
+
+
+def select_target_directory(target: Location, output_mode: OutputMode) -> Path:
+    appio.render(
+        "select_target_directory.jinja2",
+        {
+            "target_content": target.content_dirs,
+        },
+    )
+    selected_option: int = int(appio.get_input("Number: ", output_mode))
+    selected_dir: str = target.content_dirs[selected_option - 1]
+    return target.path / selected_dir
 
 
 def select_target_name(source_dir: str, output_mode: OutputMode) -> str:

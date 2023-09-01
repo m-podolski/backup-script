@@ -91,7 +91,7 @@ def it_selects_dirs_called_backup_if_present_in_target(tmp_path: Path) -> None:
     assert str(target.path) == str(tmp_path / "Backup")
 
 
-def it_gets_dir_selection_with_rescan_option_when_in_media_dir(
+def it_gets_existing_selection_with_rescan_option_when_in_media_dir(
     mocker: MockerFixture,
     media_dir_fixture: Path,
 ) -> None:
@@ -152,23 +152,66 @@ def it_gets_backup_mode_if_not_given(mocker: MockerFixture) -> None:
     mock_input.assert_called_with("Number: ")
 
 
-def _make_target_name(path_name: str) -> str:
-    user: str = os.environ["USER"]
-    host: str = socket.gethostname()
-    date_time: str = datetime.datetime.today().strftime("%Y-%m-%d-%H-%M-%S")
-    return f"{user}@{host}_{path_name}_{date_time}"
+def it_gets_dir_at_target_when_in_update_mode(mocker: MockerFixture, tmp_path: Path) -> None:
+    create_files_and_dirs(tmp_path, ["backup_1/", "backup_2/", "file.txt"])
+    test_path: Path = tmp_path / "backup_2"
+    create_files_and_dirs(test_path, ["dir_1/", "dir_2/"])
+
+    mock_render: Mock = mocker.patch("app.io.render")
+    mock_input: MagicMock = mocker.patch("builtins.input")
+    mock_input.side_effect = ["2", "1"]  # second is the target-name-selection
+
+    with ScarabTest(
+        argv=["backup", "--source", "/tmp", "--target", str(tmp_path), "--update"]
+    ) as app:
+        app.run()
+
+        mock_render.assert_has_calls(
+            [
+                call(
+                    "select_target_directory.jinja2",
+                    {
+                        "target_content": ["backup_1/", "backup_2/"],
+                    },
+                ),
+                call(
+                    "select_target_name.jinja2",
+                    {
+                        "name_formats": [
+                            "<source-dir>",
+                            "<source-dir>_<date>",
+                            "<source-dir>_<date-time>",
+                            "<user>@<host>_<source-dir>",
+                            "<user>@<host>_<source-dir>_<date>",
+                            "<user>@<host>_<source-dir>_<date-time>",
+                        ],
+                    },
+                ),
+                call(
+                    "target_contents.jinja2",
+                    {
+                        "source": "/tmp",
+                        "target": str(test_path),
+                        "backup_mode": "Update",
+                        "target_name": "tmp",
+                        "target_content": ["dir_1/", "dir_2/"],
+                    },
+                ),
+            ]
+        )
+        mock_input.assert_called_with("Number: ")
 
 
 def it_gets_the_target_name_from_a_selection_menu(mocker: MockerFixture, tmp_path: Path) -> None:
+    create_files_and_dirs(tmp_path, ["test/"])
+    test_path: Path = tmp_path / "test"
     mock_render: Mock = mocker.patch("app.io.render")
     mock_input: MagicMock = mocker.patch("builtins.input")
     mock_input.return_value = "6"
-    create_files_and_dirs(tmp_path, ["test/"])
-    test_path: Path = tmp_path / "test"
 
     target_name: str = interactions.select_target_name(test_path.name, OutputMode.NORMAL)
 
-    assert target_name == _make_target_name(test_path.name)
+    assert target_name == _make_target_name("test")
 
     mock_render.assert_called_with(
         "select_target_name.jinja2",
@@ -190,7 +233,7 @@ def it_prints_backup_information(
     mocker: MockerFixture,
     tmp_path: Path,
 ) -> None:
-    create_files_and_dirs(tmp_path, ["dir_1/", "dir_2/", "file.txt"])
+    create_files_and_dirs(tmp_path, ["existing_1/", "existing_2/", "file.txt"])
     source_path: Path = Path(f"/home/{os.environ['USER']}")
 
     mock_render: Mock = mocker.patch("app.io.render")
@@ -205,27 +248,21 @@ def it_prints_backup_information(
         mock_render.assert_has_calls(
             [
                 call(
-                    "select_target_name.jinja2",
-                    {
-                        "name_formats": [
-                            "<source-dir>",
-                            "<source-dir>_<date>",
-                            "<source-dir>_<date-time>",
-                            "<user>@<host>_<source-dir>",
-                            "<user>@<host>_<source-dir>_<date>",
-                            "<user>@<host>_<source-dir>_<date-time>",
-                        ],
-                    },
-                ),
-                call(
                     "target_contents.jinja2",
                     {
                         "source": str(source_path),
                         "target": str(tmp_path),
                         "backup_mode": "Create",
                         "target_name": _make_target_name(source_path.name),
-                        "target_content": ["dir_1/", "dir_2/", "file.txt"],
+                        "target_content": ["existing_1/", "existing_2/", "file.txt"],
                     },
                 ),
             ]
         )
+
+
+def _make_target_name(path_name: str) -> str:
+    user: str = os.environ["USER"]
+    host: str = socket.gethostname()
+    date_time: str = datetime.datetime.today().strftime("%Y-%m-%d-%H-%M-%S")
+    return f"{user}@{host}_{path_name}_{date_time}"

@@ -90,6 +90,9 @@ class Base(Controller):
         if backup_mode is None:  # pyright: ignore [reportUnnecessaryComparison]
             backup_mode: BackupMode = interactions.select_backup_mode(output_mode)
 
+        if backup_mode is BackupMode.UPDATE:
+            target.path = interactions.select_target_directory(target, output_mode)
+
         target_name: str = interactions.select_target_name(source.path.name, output_mode)
 
         if source.path == target.path:

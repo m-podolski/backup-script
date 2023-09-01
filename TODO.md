@@ -1,6 +1,6 @@
 # Commit
 
-- add target-content-selection
+- add target-content-selection when in update-mode
 
 ## In Progress
 

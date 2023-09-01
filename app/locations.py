@@ -69,6 +69,12 @@ class Location(ABC):
             return []
         return sorted([self._add_slash_to_dir(path) for path in self._path.iterdir()])
 
+    @property
+    def content_dirs(self) -> list[str]:
+        if not self.path_is_initialized:
+            return []
+        return sorted([f"{path.name}/" for path in self._path.iterdir() if path.is_dir()])
+
     def _add_slash_to_dir(self, path: Path) -> str:
         if path.is_dir():
             return f"{path.name}/"

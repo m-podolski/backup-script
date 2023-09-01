@@ -1,8 +1,5 @@
 
-{{"Source:"|style("EMPH")}} {{ source }}
-{{"Target:"|style("EMPH")}} {{ target }}
-
-Select a Drive:
+Select an existing backup-directory that you want to update:
 
 {% for entry in target_content -%}
 {{ loop.index|style("OPT_EMPH") }}{{ "."|style("OPT_EMPH") }} {{ entry|style("OPTION") }}
