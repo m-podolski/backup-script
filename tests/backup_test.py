@@ -173,10 +173,10 @@ def it_gets_dir_at_target_when_in_update_mode(mocker: MockerFixture, tmp_path: P
 
     mock_render: Mock = mocker.patch("app.io.render")
     mock_input: MagicMock = mocker.patch("builtins.input")
-    mock_input.side_effect = ["2", "1"]
+    mock_input.return_value = "2"
 
     with ScarabTest(
-        argv=["backup", "--source", "/tmp", "--target", str(tmp_path), "--update"]
+        argv=["backup", "--source", "/tmp", "--target", str(tmp_path), "--update", "--name", "1"]
     ) as app:
         app.run()
 
@@ -186,19 +186,6 @@ def it_gets_dir_at_target_when_in_update_mode(mocker: MockerFixture, tmp_path: P
                     "select_target_directory.jinja2",
                     {
                         "target_content": ["backup_1/", "backup_2/"],
-                    },
-                ),
-                call(
-                    "select_target_name.jinja2",
-                    {
-                        "name_formats": [
-                            "<source-dir>",
-                            "<source-dir>_<date>",
-                            "<source-dir>_<date-time>",
-                            "<user>@<host>_<source-dir>",
-                            "<user>@<host>_<source-dir>_<date>",
-                            "<user>@<host>_<source-dir>_<date-time>",
-                        ],
                     },
                 ),
                 call(

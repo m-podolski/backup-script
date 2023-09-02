@@ -1,11 +1,10 @@
 # Commit
 
-- fix iteration-error due to path not being a dir
+- add flag for name-selection
 
 ## In Progress
 
 - add target-name-selection
-  - add flag for name-selection
   - handle target-name already exists when in create-mode
   - add error for target contained within source and vice-versa
 

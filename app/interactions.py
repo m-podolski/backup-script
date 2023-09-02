@@ -2,6 +2,7 @@ import datetime
 import os
 import socket
 from pathlib import Path
+from typing import Optional
 
 import app.io as appio
 from app.globals import BackupMode, OutputMode
@@ -67,7 +68,9 @@ def select_target_directory(target: Location, output_mode: OutputMode) -> Path:
     return target.path / selected_dir
 
 
-def select_target_name(source_dir: str, output_mode: OutputMode) -> str:
+def select_target_name(
+    source_dir: str, output_mode: OutputMode, name_arg: Optional[str] = None
+) -> str:
     user: str = os.environ["USER"]
     host: str = socket.gethostname()
     date: str = datetime.datetime.today().strftime("%Y-%m-%d")
@@ -81,11 +84,15 @@ def select_target_name(source_dir: str, output_mode: OutputMode) -> str:
         "<user>@<host>_<source-dir>_<date>": f"{user}@{host}_{source_dir}_{date}",
         "<user>@<host>_<source-dir>_<date-time>": f"{user}@{host}_{source_dir}_{date}-{time}",
     }
-    appio.render(
-        "select_target_name.jinja2",
-        {
-            "name_formats": [format for format in name_formats.keys()],
-        },
-    )
-    selected_option: int = int(appio.get_input("Number: ", output_mode))
-    return list(name_formats.values())[selected_option - 1]
+
+    if name_arg is None:
+        appio.render(
+            "select_target_name.jinja2",
+            {
+                "name_formats": [format for format in name_formats.keys()],
+            },
+        )
+        selected_option: int = int(appio.get_input("Number: ", output_mode))
+        return list(name_formats.values())[selected_option - 1]
+
+    return list(name_formats.values())[int(name_arg) - 1]

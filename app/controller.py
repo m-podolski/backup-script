@@ -64,6 +64,20 @@ class Base(Controller):
                     "dest": "backup_mode",
                 },
             ),
+            (
+                ["-n", "--name"],
+                {
+                    "help": """The name-format for your backup (1..6)
+                        1: <source-dir>,
+                        2: <source-dir>_<date>
+                        3: <source-dir>_<date-time>
+                        4: <user>@<host>_<source-dir>
+                        5: <user>@<host>_<source-dir>_<date>
+                        6: <user>@<host>_<source-dir>_<date-time>""",
+                    "action": "store",
+                    "dest": "name",
+                },
+            ),
         ],
     )  # pyright: ignore
     def backup(self) -> None:
@@ -71,6 +85,7 @@ class Base(Controller):
         source_arg: Optional[str] = self.app.pargs.source  # pyright: ignore
         target_arg: Optional[str] = self.app.pargs.target  # pyright: ignore
         backup_mode: Optional[BackupMode] = self.app.pargs.backup_mode  # pyright: ignore
+        name_arg: Optional[str] = self.app.pargs.name  # pyright: ignore
 
         if quiet:
             output_mode = OutputMode.QUIET
@@ -93,7 +108,9 @@ class Base(Controller):
         if backup_mode is BackupMode.UPDATE:
             target.path = interactions.select_target_directory(target, output_mode)
 
-        target_name: str = interactions.select_target_name(source.path.name, output_mode)
+        target_name: str = interactions.select_target_name(
+            source.path.name, output_mode, name_arg  # pyright: ignore
+        )
 
         if source.path == target.path:
             raise ScarabArgumentError(
