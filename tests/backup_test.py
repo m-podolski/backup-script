@@ -8,7 +8,7 @@ import pytest
 from pytest_mock import MockerFixture
 
 import app.interactions as interactions
-from app.globals import BackupMode, OutputMode, ScarabOptionError
+from app.globals import BackupMode, OutputMode, ScarabArgumentError, ScarabOptionError
 from app.locations import Location, Source, Target
 from app.main import ScarabTest
 from tests.conftest import create_files_and_dirs, get_content_with_slashed_dirs
@@ -18,7 +18,7 @@ from tests.conftest import create_files_and_dirs, get_content_with_slashed_dirs
     "path_in",
     [os.environ["HOME"], "~", "$HOME"],
 )
-def it_expands_and_validates_paths(
+def it_expands_paths(
     path_in: str | None,
 ) -> None:
     source: Location = interactions.check_path(Source(path_in), OutputMode.NORMAL)
@@ -41,7 +41,7 @@ def it_normalizes_relative_paths() -> None:
         "/invalid",
     ],
 )
-def it_gets_paths_if_arg_is_invalid_or_missing(
+def it_gets_paths_if_arg_is_missing_invalid_or_not_a_directory(
     mocker: MockerFixture,
     path_in: str | None,
 ) -> None:
@@ -56,13 +56,27 @@ def it_gets_paths_if_arg_is_invalid_or_missing(
     assert str(source.path) == valid_path
 
 
+def it_raises_when_a_filepath_is_set(tmp_path: Path) -> None:
+    create_files_and_dirs(tmp_path, [".file"])
+    test_path: Path = tmp_path / ".file"
+
+    with pytest.raises(
+        ScarabArgumentError,
+        match="Scarab got invalid or conflicting arguments: Source is a file, must be a directory\n'source' is '%s'"
+        % str(test_path),
+    ):
+        with ScarabTest(argv=["backup", "--source", str(test_path)]) as app:
+            app.run()
+
+
 def it_raises_when_source_and_target_paths_are_identical(mocker: MockerFixture) -> None:
     mock_input: MagicMock = mocker.patch("builtins.input")
     mock_input.return_value = "1"
 
     with pytest.raises(
-        ScarabOptionError,
-        match=r": Source and target are identical$",
+        ScarabArgumentError,
+        match=r": Source and target are identical\n'source and target' is '%s'$"
+        % os.environ["HOME"],
     ):
         with ScarabTest(argv=["backup", "--source", "~", "--target", "~"]) as app:
             app.run()
@@ -153,13 +167,13 @@ def it_gets_backup_mode_if_not_given(mocker: MockerFixture) -> None:
 
 
 def it_gets_dir_at_target_when_in_update_mode(mocker: MockerFixture, tmp_path: Path) -> None:
-    create_files_and_dirs(tmp_path, ["backup_1/", "backup_2/", "file.txt"])
+    create_files_and_dirs(tmp_path, [".file_at_the_top", "backup_1/", "backup_2/", "file_2.txt"])
     test_path: Path = tmp_path / "backup_2"
     create_files_and_dirs(test_path, ["dir_1/", "dir_2/"])
 
     mock_render: Mock = mocker.patch("app.io.render")
     mock_input: MagicMock = mocker.patch("builtins.input")
-    mock_input.side_effect = ["2", "1"]  # second is the target-name-selection
+    mock_input.side_effect = ["2", "1"]
 
     with ScarabTest(
         argv=["backup", "--source", "/tmp", "--target", str(tmp_path), "--update"]

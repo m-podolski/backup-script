@@ -5,6 +5,8 @@ from pathlib import Path
 from re import Match
 from typing import Literal, Optional, TypeAlias
 
+from app.globals import ScarabArgumentError
+
 LocationMessageType: TypeAlias = Literal["INVALID"]
 MessageType: TypeAlias = Literal["NO_PATH_GIVEN"]
 
@@ -24,6 +26,7 @@ class Location(ABC):
 
     @path.setter
     def path(self, path_arg: str | Path) -> None:
+        path_to_set: Path
         if isinstance(path_arg, str):
             path_exp_user: str = os.path.expanduser(path_arg)
             path_exp_vars: str = os.path.expandvars(path_exp_user)
@@ -33,12 +36,23 @@ class Location(ABC):
             starts_with_dot: bool = path_exp_vars[0] == "." if is_longer_0 else False
 
             if is_longer_0 and starts_with_dot:
-                self._path = Path(path_exp_vars).resolve()
+                path_to_set = Path(path_exp_vars).resolve()
             else:
-                self._path = Path(path_exp_vars)
+                path_to_set = Path(path_exp_vars)
+
+            self._path = self._raise_if_is_file(path_to_set)
 
         if isinstance(path_arg, Path):
-            self._path = path_arg
+            path_to_set = path_arg
+
+            self._path = self._raise_if_is_file(path_to_set)
+
+    def _raise_if_is_file(self, path: Path) -> Path:
+        if path.is_file():
+            raise ScarabArgumentError(
+                f"{self.name} is a file, must be a directory", self.name.lower(), str(path)
+            )
+        return path
 
     @property
     def path_is_initialized(self) -> bool:

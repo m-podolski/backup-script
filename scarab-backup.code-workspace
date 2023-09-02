@@ -3,5 +3,6 @@
     {
       "path": "."
     }
-  ]
+  ],
+  "settings": { "python.testing.pytestArgs": ["-v"] }
 }

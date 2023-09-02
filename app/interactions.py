@@ -62,6 +62,7 @@ def select_target_directory(target: Location, output_mode: OutputMode) -> Path:
         },
     )
     selected_option: int = int(appio.get_input("Number: ", output_mode))
+    # selected_dir: str = target.content_dirs[selected_option - 1]
     selected_dir: str = target.content_dirs[selected_option - 1]
     return target.path / selected_dir
 

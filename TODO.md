@@ -1,10 +1,11 @@
 # Commit
 
-- add target-content-selection when in update-mode
+- fix iteration-error due to path not being a dir
 
 ## In Progress
 
 - add target-name-selection
+  - add flag for name-selection
   - handle target-name already exists when in create-mode
   - add error for target contained within source and vice-versa
 
@@ -15,6 +16,8 @@
 - add available-space-check
   - print target-stats
 
+- update README
+
 - add copy-operation
 
 - add option to target preconfigured profiles
@@ -23,7 +26,7 @@
 - add tree-diff for incremental backup
 
 - ? add rsync-operation
-  - add archive-mode-selection
+  - add archive-mode-config
 
 - configure ci/cd
 

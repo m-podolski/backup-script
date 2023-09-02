@@ -5,7 +5,7 @@ from cement import Controller, ex, get_version  # pyright: ignore
 
 import app.interactions as interactions
 import app.io as appio
-from app.globals import BackupMode, OutputMode, ScarabOptionError
+from app.globals import BackupMode, OutputMode, ScarabArgumentError
 from app.locations import Location, Source, Target
 
 VERSION: tuple[int, int, int, str, int] = (0, 5, 0, "alpha", 0)
@@ -96,7 +96,9 @@ class Base(Controller):
         target_name: str = interactions.select_target_name(source.path.name, output_mode)
 
         if source.path == target.path:
-            raise ScarabOptionError("Source and target are identical")
+            raise ScarabArgumentError(
+                "Source and target are identical", "source and target", str(source.path)
+            )
 
         appio.render(
             "target_contents.jinja2",
