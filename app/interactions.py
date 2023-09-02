@@ -9,7 +9,9 @@ from app.globals import BackupMode, OutputMode
 from app.locations import Location, Source, Target
 
 
-def check_path(location: Source | Target, output_mode: OutputMode) -> Source | Target:
+def check_path(
+    location: Source | Target, output_mode: OutputMode = OutputMode.NORMAL
+) -> Source | Target:
     if location.path_is_initialized:
         if location.exists:
             return location
@@ -24,7 +26,9 @@ def check_path(location: Source | Target, output_mode: OutputMode) -> Source | T
         return check_path(location, output_mode)
 
 
-def select_media_dir(source: Location, target: Location, output_mode: OutputMode) -> Location:
+def select_media_dir(
+    source: Location, target: Location, output_mode: OutputMode = OutputMode.NORMAL
+) -> Location:
     appio.render(
         "select_directory.jinja2",
         {
@@ -44,7 +48,7 @@ def select_media_dir(source: Location, target: Location, output_mode: OutputMode
         return target
 
 
-def select_backup_mode(output_mode: OutputMode) -> BackupMode:
+def select_backup_mode(output_mode: OutputMode = OutputMode.NORMAL) -> BackupMode:
     appio.render(
         "select_backup_mode.jinja2",
         {
@@ -55,7 +59,7 @@ def select_backup_mode(output_mode: OutputMode) -> BackupMode:
     return [mode for mode in BackupMode][selected_option - 1]
 
 
-def select_target_directory(target: Location, output_mode: OutputMode) -> Path:
+def select_target_directory(target: Location, output_mode: OutputMode = OutputMode.NORMAL) -> Path:
     appio.render(
         "select_target_directory.jinja2",
         {
@@ -63,13 +67,16 @@ def select_target_directory(target: Location, output_mode: OutputMode) -> Path:
         },
     )
     selected_option: int = int(appio.get_input("Number: ", output_mode))
-    # selected_dir: str = target.content_dirs[selected_option - 1]
     selected_dir: str = target.content_dirs[selected_option - 1]
     return target.path / selected_dir
 
 
 def select_target_name(
-    source_dir: str, output_mode: OutputMode, name_arg: Optional[str] = None
+    source_dir: str,
+    target: Target,
+    backup_mode: BackupMode,
+    name_arg: Optional[str] = None,
+    output_mode: OutputMode = OutputMode.NORMAL,
 ) -> str:
     user: str = os.environ["USER"]
     host: str = socket.gethostname()
@@ -93,6 +100,15 @@ def select_target_name(
             },
         )
         selected_option: int = int(appio.get_input("Number: ", output_mode))
-        return list(name_formats.values())[selected_option - 1]
+    else:
+        selected_option: int = int(name_arg)
 
-    return list(name_formats.values())[int(name_arg) - 1]
+    selected_format: str = list(name_formats.values())[selected_option - 1]
+    selected_name_already_exists: bool = selected_format in [
+        entry[0 : len(entry) - 1 :] for entry in target.content
+    ]
+
+    if backup_mode is BackupMode.CREATE and selected_name_already_exists:
+        return select_target_name(source_dir, target, backup_mode, name_arg, output_mode)
+
+    return selected_format

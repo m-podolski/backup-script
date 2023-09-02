@@ -109,7 +109,11 @@ class Base(Controller):
             target.path = interactions.select_target_directory(target, output_mode)
 
         target_name: str = interactions.select_target_name(
-            source.path.name, output_mode, name_arg  # pyright: ignore
+            source.path.name,
+            target,  # pyright: ignore
+            backup_mode,
+            name_arg,  # pyright: ignore
+            output_mode,
         )
 
         if source.path == target.path:

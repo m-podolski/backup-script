@@ -8,7 +8,7 @@ import pytest
 from pytest_mock import MockerFixture
 
 import app.interactions as interactions
-from app.globals import BackupMode, OutputMode, ScarabArgumentError, ScarabOptionError
+from app.globals import BackupMode, ScarabArgumentError, ScarabOptionError
 from app.locations import Location, Source, Target
 from app.main import ScarabTest
 from tests.conftest import create_files_and_dirs, get_content_with_slashed_dirs
@@ -21,7 +21,7 @@ from tests.conftest import create_files_and_dirs, get_content_with_slashed_dirs
 def it_expands_paths(
     path_in: str | None,
 ) -> None:
-    source: Location = interactions.check_path(Source(path_in), OutputMode.NORMAL)
+    source: Location = interactions.check_path(Source(path_in))
 
     assert str(source.path) == os.environ["HOME"]
 
@@ -49,7 +49,7 @@ def it_gets_paths_if_arg_is_missing_invalid_or_not_a_directory(
     mock_input: MagicMock = mocker.patch("builtins.input")
     mock_input.side_effect = ["", "invalid_again", valid_path]
 
-    source: Location = interactions.check_path(Source(path_in), OutputMode.NORMAL)
+    source: Location = interactions.check_path(Source(path_in))
 
     mock_input.assert_called_with("Path: ")
     assert mock_input.call_count == 3
@@ -120,9 +120,7 @@ def it_gets_existing_selection_with_rescan_option_when_in_media_dir(
     mock_input: Mock = mocker.patch("builtins.input")
     mock_input.side_effect = [target_content_rescan_option_num, "1"]
 
-    target: Location = interactions.select_media_dir(
-        Source("~"), Target(str(media_dir_fixture)), OutputMode.NORMAL
-    )
+    target: Location = interactions.select_media_dir(Source("~"), Target(str(media_dir_fixture)))
 
     assert str(target.path) == str(media_dir_fixture / "directory_1")
     mock_render.assert_has_calls(
@@ -154,7 +152,7 @@ def it_gets_backup_mode_if_not_given(mocker: MockerFixture) -> None:
     mock_input: MagicMock = mocker.patch("builtins.input")
     mock_input.return_value = "2"
 
-    mode: BackupMode = interactions.select_backup_mode(OutputMode.NORMAL)
+    mode: BackupMode = interactions.select_backup_mode()
 
     assert mode == BackupMode.UPDATE
     mock_render.assert_called_with(
@@ -205,12 +203,14 @@ def it_gets_dir_at_target_when_in_update_mode(mocker: MockerFixture, tmp_path: P
 
 def it_gets_the_target_name_from_a_selection_menu(mocker: MockerFixture, tmp_path: Path) -> None:
     create_files_and_dirs(tmp_path, ["test/"])
-    test_path: Path = tmp_path / "test"
+    test_source_path: Path = tmp_path / "test"
     mock_render: Mock = mocker.patch("app.io.render")
     mock_input: MagicMock = mocker.patch("builtins.input")
-    mock_input.return_value = "6"
+    mock_input.return_value = "5"
 
-    target_name: str = interactions.select_target_name(test_path.name, OutputMode.NORMAL)
+    target_name: str = interactions.select_target_name(
+        test_source_path.name, Target(None), BackupMode.UPDATE
+    )
 
     assert target_name == _make_target_name("test")
 
@@ -230,6 +230,54 @@ def it_gets_the_target_name_from_a_selection_menu(mocker: MockerFixture, tmp_pat
     mock_input.assert_called_with("Number: ")
 
 
+def it_gets_the_target_name_again_in_create_mode_if_it_already_exists(
+    mocker: MockerFixture, tmp_path: Path
+) -> None:
+    create_files_and_dirs(tmp_path, ["target/"])
+    test_target_path: Path = tmp_path / "target"
+    create_files_and_dirs(test_target_path, ["directory/"])
+
+    mock_render: Mock = mocker.patch("app.io.render")
+    mock_input: MagicMock = mocker.patch("builtins.input")
+    mock_input.side_effect = ["1", "5"]
+
+    target_name: str = interactions.select_target_name(
+        "directory", Target(test_target_path), BackupMode.CREATE
+    )
+
+    assert target_name == _make_target_name("directory")
+    mock_render.assert_has_calls(
+        [
+            call(
+                "select_target_name.jinja2",
+                {
+                    "name_formats": [
+                        "<source-dir>",
+                        "<source-dir>_<date>",
+                        "<source-dir>_<date-time>",
+                        "<user>@<host>_<source-dir>",
+                        "<user>@<host>_<source-dir>_<date>",
+                        "<user>@<host>_<source-dir>_<date-time>",
+                    ],
+                },
+            ),
+            call(
+                "select_target_name.jinja2",
+                {
+                    "name_formats": [
+                        "<source-dir>",
+                        "<source-dir>_<date>",
+                        "<source-dir>_<date-time>",
+                        "<user>@<host>_<source-dir>",
+                        "<user>@<host>_<source-dir>_<date>",
+                        "<user>@<host>_<source-dir>_<date-time>",
+                    ],
+                },
+            ),
+        ]
+    )
+
+
 def it_prints_backup_information(
     mocker: MockerFixture,
     tmp_path: Path,
@@ -239,7 +287,7 @@ def it_prints_backup_information(
 
     mock_render: Mock = mocker.patch("app.io.render")
     mock_input: MagicMock = mocker.patch("builtins.input")
-    mock_input.return_value = "6"
+    mock_input.return_value = "5"
 
     with ScarabTest(
         argv=["backup", "--source", str(source_path), "--target", str(tmp_path), "--create"]
@@ -265,5 +313,5 @@ def it_prints_backup_information(
 def _make_target_name(path_name: str) -> str:
     user: str = os.environ["USER"]
     host: str = socket.gethostname()
-    date_time: str = datetime.datetime.today().strftime("%Y-%m-%d-%H-%M-%S")
+    date_time: str = datetime.datetime.today().strftime("%Y-%m-%d")
     return f"{user}@{host}_{path_name}_{date_time}"

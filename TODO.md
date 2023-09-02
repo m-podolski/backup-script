@@ -1,16 +1,16 @@
 # Commit
 
-- add flag for name-selection
+- handle target-name already exists when in create-mode
 
 ## In Progress
 
 - add target-name-selection
-  - handle target-name already exists when in create-mode
   - add error for target contained within source and vice-versa
 
 ## Backlog
 
 - handle None and empty string input before initializing locations
+- ? replace enums with classes
 
 - add available-space-check
   - print target-stats
