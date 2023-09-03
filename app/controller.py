@@ -6,7 +6,7 @@ from cement import Controller, ex, get_version  # pyright: ignore
 import app.interactions as interactions
 import app.io as appio
 from app.globals import BackupMode, OutputMode
-from app.locations import Location, Source, Target
+from app.locations import Source, Target
 
 VERSION: tuple[int, int, int, str, int] = (0, 5, 0, "alpha", 0)
 VERSION_BANNER: str = """
@@ -92,12 +92,8 @@ class Base(Controller):
         else:
             output_mode = OutputMode.NORMAL
 
-        source: Location = interactions.check_path(
-            Source(source_arg), output_mode  # pyright: ignore
-        )
-        target: Location = interactions.check_path(
-            Target(target_arg), output_mode  # pyright: ignore
-        )
+        source: Source = interactions.check_path(Source(source_arg), output_mode)  # pyright: ignore
+        target: Target = interactions.check_path(Target(target_arg), output_mode)  # pyright: ignore
 
         if target.is_media_dir:
             target = interactions.select_media_dir(source, target, output_mode)
@@ -106,9 +102,9 @@ class Base(Controller):
             backup_mode: BackupMode = interactions.select_backup_mode(output_mode)
 
         if backup_mode is BackupMode.UPDATE:
-            target.path = interactions.select_target_directory(target, output_mode)
+            target.existing_backup = interactions.select_backup_directory(target, output_mode)
 
-        target_name: str = interactions.select_target_name(
+        target.backup_name = interactions.select_backup_name(
             source.path.name,
             target,  # pyright: ignore
             backup_mode,
@@ -119,10 +115,11 @@ class Base(Controller):
         appio.render(
             "target_contents.jinja2",
             {
+                "backup_mode": backup_mode.value.title(),
                 "source": str(source.path),
                 "target": str(target.path),
-                "backup_mode": backup_mode.value.title(),
-                "target_name": target_name,
+                "existing_backup": target.existing_backup.name if target.existing_backup else None,
+                "backup_name": target.backup_name,
                 "target_content": target.content,
             },
         )

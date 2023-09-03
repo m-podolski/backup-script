@@ -170,16 +170,17 @@ def it_gets_dir_at_target_when_in_update_mode(mocker: MockerFixture, tmp_path: P
                 call(
                     "select_target_directory.jinja2",
                     {
-                        "target_content": ["backup_1/", "backup_2/"],
+                        "target_content": ["backup_1", "backup_2"],
                     },
                 ),
                 call(
                     "target_contents.jinja2",
                     {
-                        "source": "/tmp",
-                        "target": str(test_path),
                         "backup_mode": "Update",
-                        "target_name": "tmp",
+                        "source": "/tmp",
+                        "target": str(tmp_path),
+                        "existing_backup": "backup_2",
+                        "backup_name": "tmp",
                         "target_content": ["dir_1/", "dir_2/"],
                     },
                 ),
@@ -195,11 +196,11 @@ def it_gets_the_target_name_from_a_selection_menu(mocker: MockerFixture, tmp_pat
     mock_input: MagicMock = mocker.patch("builtins.input")
     mock_input.return_value = "5"
 
-    target_name: str = interactions.select_target_name(
+    target_name: str = interactions.select_backup_name(
         test_source_path.name, Target(None), BackupMode.UPDATE
     )
 
-    assert target_name == _make_target_name("test")
+    assert target_name == _make_backup_name("test")
 
     mock_render.assert_called_with(
         "select_target_name.jinja2",
@@ -228,11 +229,11 @@ def it_gets_the_target_name_again_in_create_mode_if_it_already_exists(
     mock_input: MagicMock = mocker.patch("builtins.input")
     mock_input.side_effect = ["1", "5"]
 
-    target_name: str = interactions.select_target_name(
+    target_name: str = interactions.select_backup_name(
         "directory", Target(test_target_path), BackupMode.CREATE
     )
 
-    assert target_name == _make_target_name("directory")
+    assert target_name == _make_backup_name("directory")
     mock_render.assert_has_calls(
         [
             call(
@@ -286,10 +287,11 @@ def it_prints_backup_information(
                 call(
                     "target_contents.jinja2",
                     {
+                        "backup_mode": "Create",
                         "source": str(source_path),
                         "target": str(tmp_path),
-                        "backup_mode": "Create",
-                        "target_name": _make_target_name(source_path.name),
+                        "existing_backup": None,
+                        "backup_name": _make_backup_name(source_path.name),
                         "target_content": ["existing_1/", "existing_2/", "file.txt"],
                     },
                 ),
@@ -297,7 +299,7 @@ def it_prints_backup_information(
         )
 
 
-def _make_target_name(path_name: str) -> str:
+def _make_backup_name(path_name: str) -> str:
     user: str = os.environ["USER"]
     host: str = socket.gethostname()
     date_time: str = datetime.datetime.today().strftime("%Y-%m-%d")

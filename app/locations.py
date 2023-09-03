@@ -78,24 +78,6 @@ class Location(ABC):
         return is_media_dir or is_test_temp_media_dir
 
     @property
-    def content(self) -> list[str]:
-        if not self.path_is_initialized:
-            return []
-        return sorted([self._add_slash_to_dir(path) for path in self._path.iterdir()])
-
-    @property
-    def content_dirs(self) -> list[str]:
-        if not self.path_is_initialized:
-            return []
-        return sorted([f"{path.name}/" for path in self._path.iterdir() if path.is_dir()])
-
-    def _add_slash_to_dir(self, path: Path) -> str:
-        if path.is_dir():
-            return f"{path.name}/"
-        else:
-            return path.name
-
-    @property
     def name(self) -> str:
         return self.__class__.__name__
 
@@ -141,6 +123,35 @@ class Target(Location):
     def _matches_backup_dir(self, item: Path) -> bool:
         match: Match[str] | None = re.match(r".+/[Bb]ackup[s]*$", str(item))
         return match is not None and item.is_dir()
+
+    existing_backup: Optional[Path] = None
+
+    backup_name: Optional[str] = None
+
+    @property
+    def content(self) -> list[str]:
+        if not self.path_is_initialized:
+            return []
+        directory: Path
+        if self.existing_backup is not None:
+            directory = self.existing_backup
+        else:
+            directory = self._path
+        return sorted([self._add_slash_to_dir(path) for path in directory.iterdir()])
+
+    def _add_slash_to_dir(self, path: Path) -> str:
+        if path.is_dir():
+            return f"{path.name}/"
+        else:
+            return path.name
+
+    @property
+    def content_dirs(self) -> list[str]:
+        if not self.path_is_initialized:
+            return []
+        return sorted(
+            [item[0 : len(item) - 1 :] for item in self.content if item[len(item) - 1] == "/"]
+        )
 
     @property
     def messages(self) -> dict[MessageType, str]:

@@ -6,7 +6,7 @@ from typing import Optional
 
 import app.io as appio
 from app.globals import BackupMode, OutputMode
-from app.locations import Location, Source, Target
+from app.locations import Source, Target
 
 
 def check_path(
@@ -27,8 +27,8 @@ def check_path(
 
 
 def select_media_dir(
-    source: Location, target: Location, output_mode: OutputMode = OutputMode.NORMAL
-) -> Location:
+    source: Source, target: Target, output_mode: OutputMode = OutputMode.NORMAL
+) -> Target:
     appio.render(
         "select_directory.jinja2",
         {
@@ -59,7 +59,8 @@ def select_backup_mode(output_mode: OutputMode = OutputMode.NORMAL) -> BackupMod
     return [mode for mode in BackupMode][selected_option - 1]
 
 
-def select_target_directory(target: Location, output_mode: OutputMode = OutputMode.NORMAL) -> Path:
+# def select_target_directory(target: Location, output_mode: OutputMode = OutputMode.NORMAL) -> Path:
+def select_backup_directory(target: Target, output_mode: OutputMode = OutputMode.NORMAL) -> Path:
     appio.render(
         "select_target_directory.jinja2",
         {
@@ -71,7 +72,7 @@ def select_target_directory(target: Location, output_mode: OutputMode = OutputMo
     return target.path / selected_dir
 
 
-def select_target_name(
+def select_backup_name(
     source_dir: str,
     target: Target,
     backup_mode: BackupMode,
@@ -109,6 +110,6 @@ def select_target_name(
     ]
 
     if backup_mode is BackupMode.CREATE and selected_name_already_exists:
-        return select_target_name(source_dir, target, backup_mode, name_arg, output_mode)
+        return select_backup_name(source_dir, target, backup_mode, name_arg, output_mode)
 
     return selected_format

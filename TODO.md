@@ -1,17 +1,16 @@
 # Commit
 
-- remove error for identical paths
-- put selected/new backup in a seperate property
+- add seperate properties for existing and new backup-names
 
 ## In Progress
 
 ## Backlog
 
+- make interactions-signatures more similar (preserve objects)
 - handle None and empty string input before initializing locations
   - narrow to source/target-types
 - replace bu-mode-enum parameters with functions
   - replace source_dir with source
-  - remove slashes from content_dirs
 
 - add available-space-check
   - print target-stats
