@@ -105,7 +105,7 @@ class Base(Controller):
             target.existing_backup = interactions.select_backup_directory(target, output_mode)
 
         target.backup_name = interactions.select_backup_name(
-            source.path.name,
+            source,
             target,  # pyright: ignore
             backup_mode,
             name_arg,  # pyright: ignore

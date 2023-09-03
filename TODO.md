@@ -1,16 +1,14 @@
 # Commit
 
-- add seperate properties for existing and new backup-names
+- refactor select_backup_name parameter-list
 
 ## In Progress
 
+
 ## Backlog
 
-- make interactions-signatures more similar (preserve objects)
 - handle None and empty string input before initializing locations
   - narrow to source/target-types
-- replace bu-mode-enum parameters with functions
-  - replace source_dir with source
 
 - add available-space-check
   - print target-stats

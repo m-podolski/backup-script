@@ -197,7 +197,7 @@ def it_gets_the_target_name_from_a_selection_menu(mocker: MockerFixture, tmp_pat
     mock_input.return_value = "5"
 
     target_name: str = interactions.select_backup_name(
-        test_source_path.name, Target(None), BackupMode.UPDATE
+        Source(test_source_path), Target(None), BackupMode.UPDATE
     )
 
     assert target_name == _make_backup_name("test")
@@ -224,13 +224,14 @@ def it_gets_the_target_name_again_in_create_mode_if_it_already_exists(
     create_files_and_dirs(tmp_path, ["target/"])
     test_target_path: Path = tmp_path / "target"
     create_files_and_dirs(test_target_path, ["directory/"])
+    test_target_sub_path: Path = test_target_path / "directory"
 
     mock_render: Mock = mocker.patch("app.io.render")
     mock_input: MagicMock = mocker.patch("builtins.input")
     mock_input.side_effect = ["1", "5"]
 
     target_name: str = interactions.select_backup_name(
-        "directory", Target(test_target_path), BackupMode.CREATE
+        Source(test_target_sub_path), Target(test_target_path), BackupMode.CREATE
     )
 
     assert target_name == _make_backup_name("directory")

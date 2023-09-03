@@ -59,7 +59,6 @@ def select_backup_mode(output_mode: OutputMode = OutputMode.NORMAL) -> BackupMod
     return [mode for mode in BackupMode][selected_option - 1]
 
 
-# def select_target_directory(target: Location, output_mode: OutputMode = OutputMode.NORMAL) -> Path:
 def select_backup_directory(target: Target, output_mode: OutputMode = OutputMode.NORMAL) -> Path:
     appio.render(
         "select_target_directory.jinja2",
@@ -73,7 +72,7 @@ def select_backup_directory(target: Target, output_mode: OutputMode = OutputMode
 
 
 def select_backup_name(
-    source_dir: str,
+    source: Source,
     target: Target,
     backup_mode: BackupMode,
     name_arg: Optional[str] = None,
@@ -85,12 +84,12 @@ def select_backup_name(
     time: str = datetime.datetime.today().strftime("%H-%M-%S")
 
     name_formats: dict[str, str] = {
-        "<source-dir>": source_dir,
-        "<source-dir>_<date>": f"{source_dir}_{date}",
-        "<source-dir>_<date-time>": f"{source_dir}_{date}-{time}",
-        "<user>@<host>_<source-dir>": f"{user}@{host}_{source_dir}",
-        "<user>@<host>_<source-dir>_<date>": f"{user}@{host}_{source_dir}_{date}",
-        "<user>@<host>_<source-dir>_<date-time>": f"{user}@{host}_{source_dir}_{date}-{time}",
+        "<source-dir>": source.path.name,
+        "<source-dir>_<date>": f"{source.path.name}_{date}",
+        "<source-dir>_<date-time>": f"{source.path.name}_{date}-{time}",
+        "<user>@<host>_<source-dir>": f"{user}@{host}_{source.path.name}",
+        "<user>@<host>_<source-dir>_<date>": f"{user}@{host}_{source.path.name}_{date}",
+        "<user>@<host>_<source-dir>_<date-time>": f"{user}@{host}_{source.path.name}_{date}-{time}",
     }
 
     if name_arg is None:
@@ -110,6 +109,6 @@ def select_backup_name(
     ]
 
     if backup_mode is BackupMode.CREATE and selected_name_already_exists:
-        return select_backup_name(source_dir, target, backup_mode, name_arg, output_mode)
+        return select_backup_name(source, target, backup_mode, name_arg, output_mode)
 
     return selected_format
