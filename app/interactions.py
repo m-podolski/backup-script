@@ -105,7 +105,7 @@ def select_target_name(
 
     selected_format: str = list(name_formats.values())[selected_option - 1]
     selected_name_already_exists: bool = selected_format in [
-        entry[0 : len(entry) - 1 :] for entry in target.content
+        item[0 : len(item) - 1 :] for item in target.content
     ]
 
     if backup_mode is BackupMode.CREATE and selected_name_already_exists:

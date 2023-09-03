@@ -69,19 +69,6 @@ def it_raises_when_a_filepath_is_set(tmp_path: Path) -> None:
             app.run()
 
 
-def it_raises_when_source_and_target_paths_are_identical(mocker: MockerFixture) -> None:
-    mock_input: MagicMock = mocker.patch("builtins.input")
-    mock_input.return_value = "1"
-
-    with pytest.raises(
-        ScarabArgumentError,
-        match=r": Source and target are identical\n'source and target' is '%s'$"
-        % os.environ["HOME"],
-    ):
-        with ScarabTest(argv=["backup", "--source", "~", "--target", "~"]) as app:
-            app.run()
-
-
 def it_raises_in_quiet_mode_when_input_required(
     mocker: MockerFixture,
 ) -> None:
