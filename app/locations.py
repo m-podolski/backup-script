@@ -1,76 +1,47 @@
 import os
 import re
-from abc import ABC, abstractmethod
 from pathlib import Path
 from re import Match
-from typing import Literal, Optional, TypeAlias
-
-from app.globals import ScarabArgumentError
-
-LocationMessageType: TypeAlias = Literal["INVALID"]
-MessageType: TypeAlias = Literal["NO_PATH_GIVEN"]
+from typing import Optional
 
 
-class Location(ABC):
+class Location:
     _path: Path
 
-    def __init__(self, path_arg: Optional[str | Path]) -> None:
-        if path_arg is None:
-            self.path = Path()
-        else:
-            self.path = path_arg
+    def __init__(self, path_arg: str | Path) -> None:
+        self.path = path_arg
 
     @property
     def path(self) -> Path:
+        assert self.is_valid
         return self._path
 
     @path.setter
     def path(self, path_arg: str | Path) -> None:
-        path_to_set: Path
         if isinstance(path_arg, str):
+            if path_arg == "":
+                self._path = Path()
+                return
+
             path_exp_user: str = os.path.expanduser(path_arg)
             path_exp_vars: str = os.path.expandvars(path_exp_user)
 
-            # probably from input, so empty strings must be handled
-            is_longer_0: bool = len(path_exp_vars) > 0
-            starts_with_dot: bool = path_exp_vars[0] == "." if is_longer_0 else False
-
-            if is_longer_0 and starts_with_dot:
-                path_to_set = Path(path_exp_vars).resolve()
-            else:
-                path_to_set = Path(path_exp_vars)
-
-            self._path = self._raise_if_is_file(path_to_set)
+            self._path = Path(path_exp_vars).resolve()
 
         if isinstance(path_arg, Path):
-            path_to_set = path_arg
-
-            self._path = self._raise_if_is_file(path_to_set)
-
-    def _raise_if_is_file(self, path: Path) -> Path:
-        if path.is_file():
-            raise ScarabArgumentError(
-                f"{self.name} is a file, must be a directory", self.name.lower(), str(path)
-            )
-        return path
+            self._path = path_arg
 
     @property
-    def path_is_initialized(self) -> bool:
+    def is_valid(self) -> bool:
         """
-        For the class to always provide a .path with all of Paths functionality available from the outside its default value has to be managed. This may be used to check if .path is actually set.
+        Checks if ._path is initialized properly and not using its default value (i.e. for empty strings).
         """
-        return not (str(self._path) == ".")
-
-    @property
-    def exists(self) -> bool:
-        if not self.path_is_initialized:
+        if str(self._path) == ".":
             return False
-        return self._path.exists()
+        return self._path.is_dir()
 
     @property
     def is_media_dir(self) -> bool:
-        if not self.path_is_initialized:
-            return False
         is_media_dir: bool = re.match(r"^/media/.+", str(self._path)) is not None
         is_test_temp_media_dir: bool = (
             re.match(r"^/tmp/pytest.+media$", str(self._path)) is not None
@@ -81,27 +52,16 @@ class Location(ABC):
     def name(self) -> str:
         return self.__class__.__name__
 
-    @property
-    def location_messages(self) -> dict[LocationMessageType, str]:
-        return {
-            "INVALID": f"Your {self.name.lower()} is not a valid directory! Please check and enter it again."
-        }
-
-    @property
-    @abstractmethod
-    def messages(self) -> dict[MessageType, str]:
-        ...
-
 
 class Source(Location):
-    @property
-    def messages(self) -> dict[MessageType, str]:
-        return {
-            "NO_PATH_GIVEN": "Please specify a source-path to the directory you want backed up."
-        }
+    pass
 
 
 class Target(Location):
+    existing_backup: Optional[Path] = None
+
+    backup_name: Optional[str] = None
+
     @property
     def path(self) -> Path:
         return super().path
@@ -109,7 +69,7 @@ class Target(Location):
     @path.setter
     def path(self, path_arg: str | Path) -> None:
         Location.path.fset(self, path_arg)
-        if self.exists:
+        if self.is_valid:
             self._path = self._get_contained_backup_dir(self._path)
 
     def _get_contained_backup_dir(self, path: Path) -> Path:
@@ -124,14 +84,8 @@ class Target(Location):
         match: Match[str] | None = re.match(r".+/[Bb]ackup[s]*$", str(item))
         return match is not None and item.is_dir()
 
-    existing_backup: Optional[Path] = None
-
-    backup_name: Optional[str] = None
-
     @property
     def content(self) -> list[str]:
-        if not self.path_is_initialized:
-            return []
         directory: Path
         if self.existing_backup is not None:
             directory = self.existing_backup
@@ -147,14 +101,6 @@ class Target(Location):
 
     @property
     def content_dirs(self) -> list[str]:
-        if not self.path_is_initialized:
-            return []
         return sorted(
             [item[0 : len(item) - 1 :] for item in self.content if item[len(item) - 1] == "/"]
         )
-
-    @property
-    def messages(self) -> dict[MessageType, str]:
-        return {
-            "NO_PATH_GIVEN": "Please specify a target-path to the directory you want to back up to."
-        }

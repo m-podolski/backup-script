@@ -2,34 +2,58 @@ import datetime
 import os
 import socket
 from pathlib import Path
-from typing import Optional
+from typing import Literal, Optional, TypeAlias, TypeVar
 
-import app.io as appio
+import app.io as io
 from app.globals import BackupMode, OutputMode
 from app.locations import Source, Target
 
+T = TypeVar("T", Source, Target)
 
-def check_path(
-    location: Source | Target, output_mode: OutputMode = OutputMode.NORMAL
-) -> Source | Target:
-    if location.path_is_initialized:
-        if location.exists:
-            return location
-        else:
-            location.path = appio.get_path_input(
-                location.location_messages["INVALID"],
-                output_mode,
-            )
-            return check_path(location, output_mode)
+
+def init_location(
+    path_arg: Optional[str],
+    location: type[T],
+    output_mode: OutputMode = OutputMode.NORMAL,
+) -> T:
+    path_input: str = _check_for_empty_arg(path_arg, location.__name__, output_mode)
+    return _check_path(location(path_input), output_mode)
+
+
+def _check_for_empty_arg(path_arg: Optional[str], name: str, output_mode: OutputMode) -> str:
+    if path_arg is None or path_arg == "":
+        arg: str = io.get_path_input(_get_message("NO_PATH_GIVEN", name), output_mode)
+        return _check_for_empty_arg(arg, name, output_mode)
     else:
-        location.path = appio.get_path_input(location.messages["NO_PATH_GIVEN"], output_mode)
-        return check_path(location, output_mode)
+        return path_arg
+
+
+def _check_path(location: T, output_mode: OutputMode = OutputMode.NORMAL) -> T:
+    if location.is_valid:
+        return location
+    else:
+        location.path = io.get_path_input(
+            _get_message("INVALID_PATH", location.name),
+            output_mode,
+        )
+        return _check_path(location, output_mode)
+
+
+MessageType: TypeAlias = Literal["INVALID_PATH", "NO_PATH_GIVEN"]
+
+
+def _get_message(key: MessageType, name: str) -> str:
+    messages: dict[MessageType, str] = {
+        "INVALID_PATH": f"Your {name.lower()} is not a valid directory! Please check and enter it again.",
+        "NO_PATH_GIVEN": f"Please specify a {name}-path to the directory you want {'backed up' if name == 'source' else 'to back up to'}.",
+    }
+    return messages[key]
 
 
 def select_media_dir(
     source: Source, target: Target, output_mode: OutputMode = OutputMode.NORMAL
 ) -> Target:
-    appio.render(
+    io.render(
         "select_directory.jinja2",
         {
             "source": str(source.path),
@@ -37,7 +61,7 @@ def select_media_dir(
             "target_content": [*target.content, "-> Rescan Directory"],
         },
     )
-    selected_option: int = int(appio.get_input("Number: ", output_mode))
+    selected_option: int = int(io.get_input("Number: ", output_mode))
     selected_option_is_rescan: bool = selected_option == len(target.content) + 1
 
     if selected_option_is_rescan:
@@ -49,24 +73,24 @@ def select_media_dir(
 
 
 def select_backup_mode(output_mode: OutputMode = OutputMode.NORMAL) -> BackupMode:
-    appio.render(
+    io.render(
         "select_backup_mode.jinja2",
         {
             "modes": ["Create New", "Update Existing"],
         },
     )
-    selected_option: int = int(appio.get_input("Number: ", output_mode))
+    selected_option: int = int(io.get_input("Number: ", output_mode))
     return [mode for mode in BackupMode][selected_option - 1]
 
 
 def select_backup_directory(target: Target, output_mode: OutputMode = OutputMode.NORMAL) -> Path:
-    appio.render(
+    io.render(
         "select_target_directory.jinja2",
         {
             "target_content": target.content_dirs,
         },
     )
-    selected_option: int = int(appio.get_input("Number: ", output_mode))
+    selected_option: int = int(io.get_input("Number: ", output_mode))
     selected_dir: str = target.content_dirs[selected_option - 1]
     return target.path / selected_dir
 
@@ -93,13 +117,13 @@ def select_backup_name(
     }
 
     if name_arg is None:
-        appio.render(
+        io.render(
             "select_target_name.jinja2",
             {
                 "name_formats": [format for format in name_formats.keys()],
             },
         )
-        selected_option: int = int(appio.get_input("Number: ", output_mode))
+        selected_option: int = int(io.get_input("Number: ", output_mode))
     else:
         selected_option: int = int(name_arg)
 

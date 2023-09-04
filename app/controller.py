@@ -4,7 +4,7 @@ from typing import Optional
 from cement import Controller, ex, get_version  # pyright: ignore
 
 import app.interactions as interactions
-import app.io as appio
+import app.io as io
 from app.globals import BackupMode, OutputMode, ScarabArgumentError
 from app.locations import Source, Target
 
@@ -92,8 +92,12 @@ class Base(Controller):
         else:
             output_mode = OutputMode.NORMAL
 
-        source: Source = interactions.check_path(Source(source_arg), output_mode)  # pyright: ignore
-        target: Target = interactions.check_path(Target(target_arg), output_mode)  # pyright: ignore
+        source: Source = interactions.init_location(
+            source_arg, Source, output_mode  # pyright: ignore
+        )
+        target: Target = interactions.init_location(
+            target_arg, Target, output_mode  # pyright: ignore
+        )
 
         if target.is_media_dir:
             target = interactions.select_media_dir(source, target, output_mode)
@@ -104,20 +108,20 @@ class Base(Controller):
         if backup_mode is BackupMode.UPDATE:
             target.existing_backup = interactions.select_backup_directory(target, output_mode)
 
-        target.backup_name = interactions.select_backup_name(
-            source,
-            target,  # pyright: ignore
-            backup_mode,
-            name_arg,  # pyright: ignore
-            output_mode,
-        )
-
         if source.path == target.existing_backup:
             raise ScarabArgumentError(
                 "Source is the selected existing backup-directory", "source", str(source.path)
             )
 
-        appio.render(
+        target.backup_name = interactions.select_backup_name(
+            source,
+            target,
+            backup_mode,
+            name_arg,  # pyright: ignore
+            output_mode,
+        )
+
+        io.render(
             "target_contents.jinja2",
             {
                 "backup_mode": backup_mode.value.title(),

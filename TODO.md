@@ -1,13 +1,8 @@
 # Commit
 
-- add error for backup-dir identical with source
+- make initialization generic
 
 ## In Progress
-
-- refactor to handle controller-logic outside of Location
-  - handle None and empty string input before initializing locations
-  - introduce special-case-path-object
-  - narrow to source/target-types
 
 ## Backlog
 

@@ -1,6 +1,6 @@
 from cement import App, CaughtSignal, TestApp, init_defaults  # pyright: ignore
 
-import app.io as appio
+import app.io as io
 from app.controller import Base
 from app.globals import ScarabException
 
@@ -36,7 +36,7 @@ def main() -> None:
             app.run()
 
         except ScarabException as e:
-            appio.print_styled(str(e), "ERROR")
+            io.print_styled(str(e), "ERROR")
             app.exit_code = 0
 
         except AssertionError as e:

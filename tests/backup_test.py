@@ -21,17 +21,19 @@ from tests.conftest import create_files_and_dirs, get_content_with_slashed_dirs
 def it_expands_paths(
     path_in: str | None,
 ) -> None:
-    source: Location = interactions.check_path(Source(path_in))
+    source: Source = interactions.init_location(path_in, Source)
 
     assert str(source.path) == os.environ["HOME"]
 
 
-def it_normalizes_relative_paths() -> None:
-    source1: Location = Source(".")
-    source2: Location = Source("./test")
+def it_normalizes_relative_paths(tmp_path: Path) -> None:
+    create_files_and_dirs(tmp_path, ["dir/"])
+    os.chdir(tmp_path)
+    source1: Source = Source(".")
+    source2: Source = Source("./dir")
 
     assert str(source1.path) == str(Path(".").resolve())
-    assert str(source2.path) == str(Path("./test").resolve())
+    assert str(source2.path) == str(Path("./dir").resolve())
 
 
 @pytest.mark.parametrize(
@@ -41,7 +43,7 @@ def it_normalizes_relative_paths() -> None:
         "/invalid",
     ],
 )
-def it_gets_paths_if_arg_is_missing_invalid_or_not_a_directory(
+def it_gets_paths_if_arg_is_missing_empty_or_invalid(
     mocker: MockerFixture,
     path_in: str | None,
 ) -> None:
@@ -49,7 +51,7 @@ def it_gets_paths_if_arg_is_missing_invalid_or_not_a_directory(
     mock_input: MagicMock = mocker.patch("builtins.input")
     mock_input.side_effect = ["", "invalid_again", valid_path]
 
-    source: Location = interactions.check_path(Source(path_in))
+    source: Source = interactions.init_location(path_in, Source)
 
     mock_input.assert_called_with("Path: ")
     assert mock_input.call_count == 3
@@ -66,18 +68,6 @@ def it_raises_in_quiet_mode_when_input_required(
         match=r": Cannot receive input in quiet mode$",
     ):
         with ScarabTest(argv=["-q", "backup", "--source", "invalid"]) as app:
-            app.run()
-
-
-def it_raises_when_a_filepath_is_set(tmp_path: Path) -> None:
-    create_files_and_dirs(tmp_path, [".file"])
-    test_path: Path = tmp_path / ".file"
-
-    with pytest.raises(
-        ScarabArgumentError,
-        match=f"Scarab got invalid or conflicting arguments: Source is a file, must be a directory\n'source' is '{str(test_path)}'",
-    ):
-        with ScarabTest(argv=["backup", "--source", str(test_path)]) as app:
             app.run()
 
 
@@ -133,7 +123,7 @@ def it_gets_existing_selection_with_rescan_option_when_in_media_dir(
     mock_input: Mock = mocker.patch("builtins.input")
     mock_input.side_effect = [target_content_rescan_option_num, "1"]
 
-    target: Location = interactions.select_media_dir(Source("~"), Target(str(media_dir_fixture)))
+    target: Location = interactions.select_media_dir(Source("~"), Target(media_dir_fixture))
 
     assert str(target.path) == str(media_dir_fixture / "directory_1")
     mock_render.assert_has_calls(
@@ -223,7 +213,7 @@ def it_gets_the_target_name_from_a_selection_menu(mocker: MockerFixture, tmp_pat
     mock_input.return_value = "5"
 
     target_name: str = interactions.select_backup_name(
-        Source(test_source_path), Target(None), BackupMode.UPDATE
+        Source(test_source_path), Target("~"), BackupMode.UPDATE
     )
 
     assert target_name == _make_backup_name("test")
