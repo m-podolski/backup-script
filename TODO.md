@@ -1,14 +1,15 @@
 # Commit
 
-- refactor select_backup_name parameter-list
+- add error for backup-dir identical with source
 
 ## In Progress
 
+- refactor to handle controller-logic outside of Location
+  - handle None and empty string input before initializing locations
+  - introduce special-case-path-object
+  - narrow to source/target-types
 
 ## Backlog
-
-- handle None and empty string input before initializing locations
-  - narrow to source/target-types
 
 - add available-space-check
   - print target-stats

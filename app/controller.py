@@ -5,7 +5,7 @@ from cement import Controller, ex, get_version  # pyright: ignore
 
 import app.interactions as interactions
 import app.io as appio
-from app.globals import BackupMode, OutputMode
+from app.globals import BackupMode, OutputMode, ScarabArgumentError
 from app.locations import Source, Target
 
 VERSION: tuple[int, int, int, str, int] = (0, 5, 0, "alpha", 0)
@@ -111,6 +111,11 @@ class Base(Controller):
             name_arg,  # pyright: ignore
             output_mode,
         )
+
+        if source.path == target.existing_backup:
+            raise ScarabArgumentError(
+                "Source is the selected existing backup-directory", "source", str(source.path)
+            )
 
         appio.render(
             "target_contents.jinja2",

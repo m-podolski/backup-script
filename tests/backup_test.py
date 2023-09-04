@@ -56,19 +56,6 @@ def it_gets_paths_if_arg_is_missing_invalid_or_not_a_directory(
     assert str(source.path) == valid_path
 
 
-def it_raises_when_a_filepath_is_set(tmp_path: Path) -> None:
-    create_files_and_dirs(tmp_path, [".file"])
-    test_path: Path = tmp_path / ".file"
-
-    with pytest.raises(
-        ScarabArgumentError,
-        match="Scarab got invalid or conflicting arguments: Source is a file, must be a directory\n'source' is '%s'"
-        % str(test_path),
-    ):
-        with ScarabTest(argv=["backup", "--source", str(test_path)]) as app:
-            app.run()
-
-
 def it_raises_in_quiet_mode_when_input_required(
     mocker: MockerFixture,
 ) -> None:
@@ -79,6 +66,45 @@ def it_raises_in_quiet_mode_when_input_required(
         match=r": Cannot receive input in quiet mode$",
     ):
         with ScarabTest(argv=["-q", "backup", "--source", "invalid"]) as app:
+            app.run()
+
+
+def it_raises_when_a_filepath_is_set(tmp_path: Path) -> None:
+    create_files_and_dirs(tmp_path, [".file"])
+    test_path: Path = tmp_path / ".file"
+
+    with pytest.raises(
+        ScarabArgumentError,
+        match=f"Scarab got invalid or conflicting arguments: Source is a file, must be a directory\n'source' is '{str(test_path)}'",
+    ):
+        with ScarabTest(argv=["backup", "--source", str(test_path)]) as app:
+            app.run()
+
+
+def it_raises_when_source_is_the_selected_existing_backup_dir(
+    mocker: MockerFixture, tmp_path: Path
+) -> None:
+    create_files_and_dirs(tmp_path, ["dir_2023-09-04/"])
+    test_path: Path = tmp_path / "dir_2023-09-04"
+    mock_input: Mock = mocker.patch("builtins.input")
+    mock_input.return_value = "1"
+
+    with pytest.raises(
+        ScarabArgumentError,
+        match=f"Scarab got invalid or conflicting arguments: Source is the selected existing backup-directory\n'source' is '{str(test_path)}'",
+    ):
+        with ScarabTest(
+            argv=[
+                "backup",
+                "--source",
+                str(test_path),
+                "--target",
+                str(tmp_path),
+                "--update",
+                "--name",
+                "1",
+            ]
+        ) as app:
             app.run()
 
 
