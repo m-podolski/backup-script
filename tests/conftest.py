@@ -1,5 +1,7 @@
+import os
+import shutil
 from pathlib import Path
-from typing import Any, Generator
+from typing import Generator
 
 import pytest
 
@@ -7,7 +9,7 @@ import pytest
 @pytest.fixture
 def media_dir_fixture(
     tmp_path: Path,
-) -> Generator[Any, Any, None]:
+) -> Generator[Path, None, None]:
     """
     Provides a location to test media-flag-functionality against. To use it pass it in as argument to --target. The app will detect the test by matching against "^/tmp/pytest.+media$".
     """
@@ -18,14 +20,18 @@ def media_dir_fixture(
 
 
 @pytest.fixture
-def config_example_fixture() -> Generator[Any, Any, None]:
+def config_example_fixture() -> Generator[Path, None, None]:
     """
     Sets up and tears down a config-file based on the example-file provided to users.
     """
-    media_dir: Path = tmp_path / "media"
-    media_dir.mkdir()
+    source_path: Path = Path(__file__).resolve()
+    config_file_example: str = f"{source_path.parent.parent}/assets/example-config.scarab.yml"
+    config_file: Path = Path(f"{os.environ['HOME']}/.scarab.yml")
+    shutil.copyfile(config_file_example, config_file)
 
-    yield media_dir
+    yield config_file
+
+    config_file.unlink()
 
 
 def create_files_and_dirs(path: Path, items: list[str]) -> None:

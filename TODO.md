@@ -1,25 +1,24 @@
 # Commit
 
-- add command for generating local config-file
+- add option to ignore existing file
 
 ## In Progress
 
 - add option to target preconfigured profiles
-  - add fixture
-  - add basic configuration for existing flags
+  - restructure to stacked add-controller
+  - add basic configuration for existing flags under profile "basic"
+  - add backup-option to use profile
 
 ## Backlog
 
+- restructure to stacked create/update-controllers
+
 - add copy-operation
   - add basic backup-strategy
-  - add display of data transferred (with path.lstat().st_size)
-  - add selective backup with config
-  - add incremental backup-strategy
   - add logging
-
-- ? add rsync-backup-strategy
-  - add command to generate an example .rsync-file
-  - add archive-mode-config
+  - add display of data transferred (with path.lstat().st_size)
+  - add source-tree-generation for selective backup
+  - add incremental backup-strategy
 
 - configure ci/cd and publish
 

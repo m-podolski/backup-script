@@ -1,10 +1,9 @@
 import os
-import shutil
-from pathlib import Path
 from typing import Optional
 
 from cement import Controller, ex, get_version  # pyright: ignore
 
+import app.config as config
 import app.interactions as interactions
 import app.io as io
 from app.globals import BackupMode, OutputMode, ScarabArgumentError
@@ -139,23 +138,17 @@ class Base(Controller):
         help="Configure scarab",
         arguments=[
             (
-                ["-c", "--create"],
+                ["-p", "--put"],
                 {
                     "help": "Create an example config-file at ~/.scarab.yml",
                     "action": "store_true",
-                    "dest": "create",
+                    "dest": "put",
                 },
             ),
         ],
     )  # pyright: ignore
     def config(self) -> None:
-        create: bool = self.app.pargs.create  # pyright: ignore
+        put: bool = self.app.pargs.put  # pyright: ignore
 
-        if create:
-            source_path: Path = Path(__file__).resolve()
-            config_file_example: str = (
-                f"{source_path.parent.parent}/assets/example-config.scarab.yml"
-            )
-            config_file: str = f"{os.environ['HOME']}/.scarab.yml"
-
-            shutil.copyfile(config_file_example, config_file)
+        if put:
+            config.put_example()
