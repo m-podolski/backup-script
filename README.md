@@ -1,72 +1,54 @@
 # Scarab Backup
 
-This is a simple BASH utility script to copy files from your machine to an external drive. It is an attempt to take most of the pain and risk out of manual backups. It is intended for personal use with local drives in a desktop-setup. Its main purpose is to add some CLI-UX to the tools involved by presenting a nice flow with menus and results displayed.
+This is a tool to copy backups easily from the command line. It is an attempt to take most of the pain and risk out of manual backups. It is intended for use with local drives in a desktop-setup. Its main purpose is to make it easy to select and transfer data by offering different options for usage. Those are (1) argument-configured commands, (2) simple select-menus for any arguments missing and (3) a configuration file which can be set up with any arguments under different profiles so running your backup becomes a easy as remembering the names of your own profiles. This also enables selective backups from certain directories which transfer only the paths you configure but keep the original directory structure (useful e.g. for quickly backing up the configuration-files of your user-home).
 
-## Additional Features
+## Features
 
-- Path validation
-- Drive listing and selection
+- Early path-validation
+- Drive-listing and -selection
 - Auto-detection of backup-folders
-- Precise check for available space
 - Easily selectable name formats (with source, timestamps, user/host)
-- Preconfigured Rsync options
-- Execution of a custom script before backing up
+- Profile-based YAML-config-file with optional list of selected sub-directories per source-location
 
 ## Dependencies
 
-- BASH
-- GNU Coreutils
-- [Rsync](https://rsync.samba.org/)
-- [Tree (optional)](https://ubuntu.pkgs.org/22.04/ubuntu-universe-amd64/tree_2.0.2-1_amd64.deb.html)
+- Python >= 3.10
+
+## Installation
 
 ## Usage
 
-Put anywhere and run `scarab-backup/scarab.sh`:
-
-```bash
-./scarab.sh [-c | -u <source-path>] [-s] [-b]
+```txt
+scarab backup [--help] [--source <path>] [--target <path> | --media] [--create | --update]  [--name]
 ```
 
-- `-c` create a new backup
-- `-u` update an existing backup
-- `-s` check if there is enough available space for the backup
-- `-b` disbable backup-folder detection at target
+### Options
 
-Note that `-c` and `-u` are only shortcuts. You can start the script without them and will be prompted for the options.
+| Short | Long | Description |
+| - | - | - |
+| -h | --help | show help message and exit |
+| -s SOURCE | --source SOURCE | The source-path |
+| -t TARGET | --target TARGET | The target-path |
+| -m | --media | Select your media-directory as target |
+| -c | --create | Create a new backup |
+| -u | --update | Update an existing backup |
+| -n 1..6 | --name 1..6 | The name-format for your backup |
+
+### Name Formats
+
+```txt
+1. <source-dir>
+2. <source-dir>_<date>
+3. <source-dir>_<date-time>
+4. <user>@<host>_<source-dir>
+5. <user>@<host>_<source-dir>_<date>
+6. <user>@<host>_<source-dir>_<date-time>
+```
+
+Note that you can start the script without any arguments and will be prompted for input afterwards.
 
 ### Backup Directory Detection
 
-Scarab will in any case look for a directory matching `[Bb]ackup[s]*` at the target drive and use the first match as target. Otherwise you can enter your own. When updating subdirectories will be presented as a select-list.
+Scarab will in any case look for a directory matching `[Bb]ackup[s]*` at the target location and use the first match. When updating subdirectories at the target-location will be presented as a select-list.
 
-### Backup Preparation
-
-Before the actual backup process starts the script will look for a file at the source root called `.scarabprepare.sh` and execute it. This is a good way to avoid using links when you want to backup certain files from outside your source directory but not the entire other directories. Just add some copy-instructions and you're done.
-
-### Excluding Files
-
-`.rsync-filter-example` gives an example for backing up selected parts of your home-directory.
-All archive options  support **rsync-filter-files** by looking for a file in every directory named `.rsync-filter`. This file is fed into rsync's `--filter` option ([see Docs](https://download.samba.org/pub/rsync/rsync.1#opt--filter)). You can check out the rules for the ignorefile [here](https://download.samba.org/pub/rsync/rsync.1#FILTER_RULES) and specific information on pattern matching [here](https://download.samba.org/pub/rsync/rsync.1#PATTERN_MATCHING_RULES).
-
-**Note that the first matching rule will always take effect!** Besides the most important differences to the .gitignore-syntax are that rules for exclusions from transfer are prefixed with `- `(minus space) while inclusions are prefixed `+ `(plus space) and that rules to **include certain files from otherwise excluded locations** have to come **before** the respective exclude-rule.
-
-#### Examples
-
-- `- *.o` would exclude all filenames ending with .o
-- `- /foo` would exclude a file (or directory) named foo in the transfer-root directory
-- `- foo/` would exclude any directory named foo
-- `- foo/*/bar` would exclude any file/dir named bar which is at two levels below a directory named foo (if foo is in the transfer)
-- `- /foo/**/bar` would exclude any file/dir named bar that was two or more levels below a top-level directory named foo (note that /foo/bar is not excluded by this)
-- `+ */` `+ *.c` `- *` would include all directories and .c source files but nothing else
-- `+ foo/` `+ foo/bar.c` `- *` would include only the foo directory and foo/bar.c (the foo directory must be explicitly included or it would be excluded by the "- *")
-
-### Archive Configurations
-
-All options are configured with extensive logging and progress display.
-
-- **Scarab Archive:** Non-existing files at the source will be deleted from an existing backup. Works recursively. Keeps symlinks, permissions, modification-times, access times, groups, owner, device properties and special files. Files can be excluded with `.rsync-filter`.
-- **Scarab Archive with hardlinks:** Also keeps hardlinks. May be slower
-- **Custom:** Enter any flags as a string which will be passed directly to the `rsync`-command.
-- **(Dry Run) "Option"** All options can be started as a dry run with extensive logging.
-
-All options delete files from the target that are not present at the source as well as files which are excluded (if a `.rsync-filter` is used).
-
+### Using the configuration file

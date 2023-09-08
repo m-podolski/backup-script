@@ -1,12 +1,10 @@
 # Commit
 
-- refactor tests which assert on calls to io.render
+- update README
 
 ## In Progress
 
 ## Backlog
-
-- update README
 
 - add option to target preconfigured profiles
   - add command for generating local config-file
