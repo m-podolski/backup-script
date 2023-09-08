@@ -1,26 +1,26 @@
 # Commit
 
-- make initialization generic
+- refactor tests which assert on calls to io.render
 
 ## In Progress
 
 ## Backlog
 
-- add available-space-check
-  - print target-stats
-
 - update README
-
-- add copy-operation
 
 - add option to target preconfigured profiles
   - add command for generating local config-file
+  - add basic configuration for existing flags
 
-- add tree-diff for incremental backup
+- add copy-operation
+  - add basic backup-startegy
+  - add display of data transferred (with path.lstat().st_size)
+  - add incremental backup-strategy
 
-- ? add rsync-operation
+- ? add rsync-backup-strategy
+  - add command to generate an example .rsync-file
   - add archive-mode-config
 
-- configure ci/cd
+- configure ci/cd and publish
 
 > 0.6.0

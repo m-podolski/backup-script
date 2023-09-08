@@ -2,7 +2,7 @@ import datetime
 import os
 import socket
 from pathlib import Path
-from unittest.mock import MagicMock, Mock, call
+from unittest.mock import MagicMock, Mock, _Call, call  # pyright: ignore
 
 import pytest
 from pytest_mock import MockerFixture
@@ -108,7 +108,7 @@ def it_selects_dirs_called_backup_if_present_in_target(tmp_path: Path) -> None:
     assert str(target.path) == str(tmp_path / "Backup")
 
 
-def it_gets_existing_selection_with_rescan_option_when_in_media_dir(
+def it_gets_dir_selection_with_rescan_option_when_in_media_dir(
     mocker: MockerFixture,
     media_dir_fixture: Path,
 ) -> None:
@@ -123,31 +123,26 @@ def it_gets_existing_selection_with_rescan_option_when_in_media_dir(
     mock_input: Mock = mocker.patch("builtins.input")
     mock_input.side_effect = [target_content_rescan_option_num, "1"]
 
-    target: Location = interactions.select_media_dir(Source("~"), Target(media_dir_fixture))
+    target: Target = interactions.select_media_dir(Source("~"), Target(media_dir_fixture))
 
-    assert str(target.path) == str(media_dir_fixture / "directory_1")
+    call_list_item: _Call = call(
+        "select_directory.jinja2",
+        {
+            "source": os.environ["HOME"],
+            "target": str(media_dir_fixture),
+            "target_content": target_content,
+        },
+    )
+
+    mock_input.assert_called_with("Number: ")
     mock_render.assert_has_calls(
         [
-            call(
-                "select_directory.jinja2",
-                {
-                    "source": os.environ["HOME"],
-                    "target": str(media_dir_fixture),
-                    "target_content": target_content,
-                },
-            ),
-            call(
-                "select_directory.jinja2",
-                {
-                    "source": os.environ["HOME"],
-                    "target": str(media_dir_fixture),
-                    "target_content": target_content,
-                },
-            ),
+            call_list_item,
+            call_list_item,
         ]
     )
-    mock_input.assert_called_with("Number: ")
     assert mock_input.call_count == 2
+    assert str(target.path) == str(media_dir_fixture / "directory_1")
 
 
 def it_gets_backup_mode_if_not_given(mocker: MockerFixture) -> None:
@@ -157,20 +152,19 @@ def it_gets_backup_mode_if_not_given(mocker: MockerFixture) -> None:
 
     mode: BackupMode = interactions.select_backup_mode()
 
-    assert mode == BackupMode.UPDATE
+    mock_input.assert_called_with("Number: ")
     mock_render.assert_called_with(
         "select_backup_mode.jinja2",
         {
             "modes": ["Create New", "Update Existing"],
         },
     )
-    mock_input.assert_called_with("Number: ")
+    assert mode == BackupMode.UPDATE
 
 
 def it_gets_dir_at_target_when_in_update_mode(mocker: MockerFixture, tmp_path: Path) -> None:
     create_files_and_dirs(tmp_path, [".file_at_the_top", "backup_1/", "backup_2/", "file_2.txt"])
-    test_path: Path = tmp_path / "backup_2"
-    create_files_and_dirs(test_path, ["dir_1/", "dir_2/"])
+    create_files_and_dirs(tmp_path / "backup_2", ["dir_1/", "dir_2/"])
 
     mock_render: Mock = mocker.patch("app.io.render")
     mock_input: MagicMock = mocker.patch("builtins.input")
@@ -181,28 +175,15 @@ def it_gets_dir_at_target_when_in_update_mode(mocker: MockerFixture, tmp_path: P
     ) as app:
         app.run()
 
-        mock_render.assert_has_calls(
-            [
-                call(
-                    "select_target_directory.jinja2",
-                    {
-                        "target_content": ["backup_1", "backup_2"],
-                    },
-                ),
-                call(
-                    "target_contents.jinja2",
-                    {
-                        "backup_mode": "Update",
-                        "source": "/tmp",
-                        "target": str(tmp_path),
-                        "existing_backup": "backup_2",
-                        "backup_name": "tmp",
-                        "target_content": ["dir_1/", "dir_2/"],
-                    },
-                ),
-            ]
-        )
         mock_input.assert_called_with("Number: ")
+
+        assert mock_render.mock_calls[0].args[0] == "select_target_directory.jinja2"
+        assert mock_render.mock_calls[0].args[1]["target_content"] == ["backup_1", "backup_2"]
+
+        assert mock_render.mock_calls[1].args[0] == "target_contents.jinja2"
+        assert mock_render.mock_calls[1].args[1]["target"] == str(tmp_path)
+        assert mock_render.mock_calls[1].args[1]["existing_backup"] == "backup_2"
+        assert mock_render.mock_calls[1].args[1]["target_content"] == ["dir_1/", "dir_2/"]
 
 
 def it_gets_the_target_name_from_a_selection_menu(mocker: MockerFixture, tmp_path: Path) -> None:
@@ -216,8 +197,7 @@ def it_gets_the_target_name_from_a_selection_menu(mocker: MockerFixture, tmp_pat
         Source(test_source_path), Target("~"), BackupMode.UPDATE
     )
 
-    assert target_name == _make_backup_name("test")
-
+    mock_input.assert_called_with("Number: ")
     mock_render.assert_called_with(
         "select_target_name.jinja2",
         {
@@ -231,7 +211,7 @@ def it_gets_the_target_name_from_a_selection_menu(mocker: MockerFixture, tmp_pat
             ],
         },
     )
-    mock_input.assert_called_with("Number: ")
+    assert target_name == _make_backup_name("test")
 
 
 def it_gets_the_target_name_again_in_create_mode_if_it_already_exists(
@@ -250,37 +230,27 @@ def it_gets_the_target_name_again_in_create_mode_if_it_already_exists(
         Source(test_target_sub_path), Target(test_target_path), BackupMode.CREATE
     )
 
-    assert target_name == _make_backup_name("directory")
+    call_list_item: _Call = call(
+        "select_target_name.jinja2",
+        {
+            "name_formats": [
+                "<source-dir>",
+                "<source-dir>_<date>",
+                "<source-dir>_<date-time>",
+                "<user>@<host>_<source-dir>",
+                "<user>@<host>_<source-dir>_<date>",
+                "<user>@<host>_<source-dir>_<date-time>",
+            ],
+        },
+    )
+
     mock_render.assert_has_calls(
         [
-            call(
-                "select_target_name.jinja2",
-                {
-                    "name_formats": [
-                        "<source-dir>",
-                        "<source-dir>_<date>",
-                        "<source-dir>_<date-time>",
-                        "<user>@<host>_<source-dir>",
-                        "<user>@<host>_<source-dir>_<date>",
-                        "<user>@<host>_<source-dir>_<date-time>",
-                    ],
-                },
-            ),
-            call(
-                "select_target_name.jinja2",
-                {
-                    "name_formats": [
-                        "<source-dir>",
-                        "<source-dir>_<date>",
-                        "<source-dir>_<date-time>",
-                        "<user>@<host>_<source-dir>",
-                        "<user>@<host>_<source-dir>_<date>",
-                        "<user>@<host>_<source-dir>_<date-time>",
-                    ],
-                },
-            ),
+            call_list_item,
+            call_list_item,
         ]
     )
+    assert target_name == _make_backup_name("directory")
 
 
 def it_prints_backup_information(

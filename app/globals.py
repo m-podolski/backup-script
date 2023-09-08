@@ -15,6 +15,11 @@ class ScarabException(Exception):
     pass
 
 
+class ScarabError(ScarabException):
+    def __init__(self, message: str) -> None:
+        super().__init__(message)
+
+
 class ScarabOptionError(ScarabException):
     def __init__(self, message: str) -> None:
         super().__init__(f"Scarab got wrong or conflicting options: {message}")
