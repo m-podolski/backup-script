@@ -17,6 +17,17 @@ def media_dir_fixture(
     yield media_dir
 
 
+@pytest.fixture
+def config_example_fixture() -> Generator[Any, Any, None]:
+    """
+    Sets up and tears down a config-file based on the example-file provided to users.
+    """
+    media_dir: Path = tmp_path / "media"
+    media_dir.mkdir()
+
+    yield media_dir
+
+
 def create_files_and_dirs(path: Path, items: list[str]) -> None:
     """
     Populates a given path. To distinguish between files and directories within the items, append a slash to directories (i.e. ["dir/", "file"])

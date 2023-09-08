@@ -1,4 +1,6 @@
 import os
+import shutil
+from pathlib import Path
 from typing import Optional
 
 from cement import Controller, ex, get_version  # pyright: ignore
@@ -132,3 +134,28 @@ class Base(Controller):
                 "target_content": target.content,
             },
         )
+
+    @ex(
+        help="Configure scarab",
+        arguments=[
+            (
+                ["-c", "--create"],
+                {
+                    "help": "Create an example config-file at ~/.scarab.yml",
+                    "action": "store_true",
+                    "dest": "create",
+                },
+            ),
+        ],
+    )  # pyright: ignore
+    def config(self) -> None:
+        create: bool = self.app.pargs.create  # pyright: ignore
+
+        if create:
+            source_path: Path = Path(__file__).resolve()
+            config_file_example: str = (
+                f"{source_path.parent.parent}/assets/example-config.scarab.yml"
+            )
+            config_file: str = f"{os.environ['HOME']}/.scarab.yml"
+
+            shutil.copyfile(config_file_example, config_file)

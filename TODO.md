@@ -1,19 +1,21 @@
 # Commit
 
-- update README
+- add command for generating local config-file
 
 ## In Progress
 
-## Backlog
-
 - add option to target preconfigured profiles
-  - add command for generating local config-file
+  - add fixture
   - add basic configuration for existing flags
 
+## Backlog
+
 - add copy-operation
-  - add basic backup-startegy
+  - add basic backup-strategy
   - add display of data transferred (with path.lstat().st_size)
+  - add selective backup with config
   - add incremental backup-strategy
+  - add logging
 
 - ? add rsync-backup-strategy
   - add command to generate an example .rsync-file

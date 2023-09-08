@@ -4,9 +4,6 @@ import app.io as io
 from app.controller import Base
 from app.globals import ScarabException
 
-CONFIG = init_defaults("scarab")  # pyright: ignore
-CONFIG["scarab"]["otherProp"] = "otherValue"
-
 
 class Scarab(App):
     class Meta:  # pyright: ignore
@@ -18,7 +15,7 @@ class Scarab(App):
             "yaml",
             "colorlog",
         ]
-        config_defaults = CONFIG  # pyright: ignore
+        config_defaults = {"scarab": {}}  # pyright: ignore
         config_handler: str = "yaml"
         config_file_suffix: str = ".yml"
         log_handler: str = "colorlog"
