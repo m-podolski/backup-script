@@ -145,10 +145,19 @@ class Base(Controller):
                     "dest": "put",
                 },
             ),
+            (
+                ["-f", "--force"],
+                {
+                    "help": "Override existing config file at ~/.scarab.yml",
+                    "action": "store_true",
+                    "dest": "force",
+                },
+            ),
         ],
     )  # pyright: ignore
     def config(self) -> None:
         put: bool = self.app.pargs.put  # pyright: ignore
+        force: bool = self.app.pargs.force  # pyright: ignore
 
         if put:
-            config.put_example()
+            config.put_example(force)  # pyright: ignore
