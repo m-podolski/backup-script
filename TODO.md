@@ -1,11 +1,10 @@
 # Commit
 
-- add option to ignore existing file
+- restructure to stacked config-controller
 
 ## In Progress
 
 - add option to target preconfigured profiles
-  - restructure to stacked add-controller
   - add basic configuration for existing flags under profile "basic"
   - add backup-option to use profile
 

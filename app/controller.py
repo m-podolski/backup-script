@@ -134,17 +134,16 @@ class Base(Controller):
             },
         )
 
+
+class Config(Controller):
+    class Meta:  # pyright: ignore
+        label: str = "config"
+        stacked_on: str = "base"
+        stacked_type: str = "nested"
+
     @ex(
-        help="Configure scarab",
+        help="Create an example config-file at ~/.scarab.yml",
         arguments=[
-            (
-                ["-p", "--put"],
-                {
-                    "help": "Create an example config-file at ~/.scarab.yml",
-                    "action": "store_true",
-                    "dest": "put",
-                },
-            ),
             (
                 ["-f", "--force"],
                 {
@@ -155,9 +154,7 @@ class Base(Controller):
             ),
         ],
     )  # pyright: ignore
-    def config(self) -> None:
-        put: bool = self.app.pargs.put  # pyright: ignore
+    def put(self) -> None:
         force: bool = self.app.pargs.force  # pyright: ignore
 
-        if put:
-            config.put_example(force)  # pyright: ignore
+        config.put_example(force)  # pyright: ignore

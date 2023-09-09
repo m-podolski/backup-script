@@ -1,15 +1,17 @@
-from cement import App, CaughtSignal, TestApp, init_defaults  # pyright: ignore
+from cement import init_defaults  # pyright: ignore
+from cement import App, CaughtSignal, Controller, TestApp  # pyright: ignore
 
 import app.io as io
-from app.controller import Base
+from app.controller import Base, Config
 from app.globals import ScarabException
 
 
 class Scarab(App):
     class Meta:  # pyright: ignore
         label: str = "scarab"
-        handlers: list[type[Base]] = [
+        handlers: list[type[Controller]] = [
             Base,
+            Config,
         ]
         extensions: list[str] = [
             "yaml",

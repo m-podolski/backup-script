@@ -14,7 +14,7 @@ config_file_example: str = f"{source_path.parent.parent}/assets/example-config.s
 def it_copies_the_example_config_file_to_user_home() -> None:
     config_file: Path = Path(f"{os.environ['HOME']}/.scarab.yml")
 
-    with ScarabTest(argv=["config", "--put"]) as app:
+    with ScarabTest(argv=["config", "put"]) as app:
         app.run()
 
         assert filecmp.cmp(config_file, config_file_example, shallow=False)
@@ -29,7 +29,7 @@ def it_does_not_copy_the_example_file_and_raises_if_a_config_file_is_present(
         ScarabError,
         match="A configuration-file is already present at the home-directory",
     ):
-        with ScarabTest(argv=["config", "--put"]) as app:
+        with ScarabTest(argv=["config", "put"]) as app:
             app.run()
 
 
@@ -38,7 +38,7 @@ def it_overrides_existing_file_with_force_option(
 ) -> None:
     config_file: Path = Path(f"{os.environ['HOME']}/.scarab.yml")
 
-    with ScarabTest(argv=["config", "--put", "--force"]) as app:
+    with ScarabTest(argv=["config", "put", "--force"]) as app:
         app.run()
 
         assert filecmp.cmp(config_file, config_file_example, shallow=False)
