@@ -8,7 +8,7 @@ import pytest
 from pytest_mock import MockerFixture
 
 import app.interactions as interactions
-from app.globals import BackupMode, ScarabArgumentError, ScarabOptionError
+from app.globals import ScarabArgumentError, ScarabOptionError
 from app.locations import Location, Source, Target
 from app.main import ScarabTest
 from tests.conftest import create_files_and_dirs, get_content_with_slashed_dirs
@@ -67,7 +67,7 @@ def it_raises_in_quiet_mode_when_input_required(
         ScarabOptionError,
         match=r": Cannot receive input in quiet mode$",
     ):
-        with ScarabTest(argv=["-q", "backup", "--source", "invalid"]) as app:
+        with ScarabTest(argv=["-q", "backup", "create", "--source", "invalid"]) as app:
             app.run()
 
 
@@ -86,11 +86,12 @@ def it_raises_when_source_is_the_selected_existing_backup_dir(
         with ScarabTest(
             argv=[
                 "backup",
+                "update",
                 "--source",
                 str(test_path),
                 "--target",
                 str(tmp_path),
-                "--update",
+                # "--update",
                 "--name",
                 "1",
             ]
@@ -145,23 +146,6 @@ def it_gets_dir_selection_with_rescan_option_when_in_media_dir(
     assert str(target.path) == str(media_dir_fixture / "directory_1")
 
 
-def it_gets_backup_mode_if_not_given(mocker: MockerFixture) -> None:
-    mock_render: Mock = mocker.patch("app.io.render")
-    mock_input: MagicMock = mocker.patch("builtins.input")
-    mock_input.return_value = "2"
-
-    mode: BackupMode = interactions.select_backup_mode()
-
-    mock_input.assert_called_with("Number: ")
-    mock_render.assert_called_with(
-        "select_backup_mode.jinja2",
-        {
-            "modes": ["Create New", "Update Existing"],
-        },
-    )
-    assert mode == BackupMode.UPDATE
-
-
 def it_gets_dir_at_target_when_in_update_mode(mocker: MockerFixture, tmp_path: Path) -> None:
     create_files_and_dirs(tmp_path, [".file_at_the_top", "backup_1/", "backup_2/", "file_2.txt"])
     create_files_and_dirs(tmp_path / "backup_2", ["dir_1/", "dir_2/"])
@@ -171,7 +155,7 @@ def it_gets_dir_at_target_when_in_update_mode(mocker: MockerFixture, tmp_path: P
     mock_input.return_value = "2"
 
     with ScarabTest(
-        argv=["backup", "--source", "/tmp", "--target", str(tmp_path), "--update", "--name", "1"]
+        argv=["backup", "update", "--source", "/tmp", "--target", str(tmp_path), "--name", "1"]
     ) as app:
         app.run()
 
@@ -194,7 +178,7 @@ def it_gets_the_target_name_from_a_selection_menu(mocker: MockerFixture, tmp_pat
     mock_input.return_value = "5"
 
     target_name: str = interactions.select_backup_name(
-        Source(test_source_path), Target("~"), BackupMode.UPDATE
+        Source(test_source_path), Target("~"), is_update=True
     )
 
     mock_input.assert_called_with("Number: ")
@@ -227,7 +211,7 @@ def it_gets_the_target_name_again_in_create_mode_if_it_already_exists(
     mock_input.side_effect = ["1", "5"]
 
     target_name: str = interactions.select_backup_name(
-        Source(test_target_sub_path), Target(test_target_path), BackupMode.CREATE
+        Source(test_target_sub_path), Target(test_target_path), is_update=True
     )
 
     call_list_item: _Call = call(
@@ -265,7 +249,7 @@ def it_prints_backup_information(
     mock_input.return_value = "5"
 
     with ScarabTest(
-        argv=["backup", "--source", str(source_path), "--target", str(tmp_path), "--create"]
+        argv=["backup", "create", "--source", str(source_path), "--target", str(tmp_path)]
     ) as app:
         app.run()
 

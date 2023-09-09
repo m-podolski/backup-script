@@ -6,11 +6,6 @@ class OutputMode(Enum):
     NORMAL = 2
 
 
-class BackupMode(Enum):
-    CREATE = "create"
-    UPDATE = "update"
-
-
 class ScarabException(Exception):
     pass
 

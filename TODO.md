@@ -1,6 +1,6 @@
 # Commit
 
-- restructure to stacked config-controller
+- restructure to stacked create/update-controllers
 
 ## In Progress
 
@@ -9,8 +9,6 @@
   - add backup-option to use profile
 
 ## Backlog
-
-- restructure to stacked create/update-controllers
 
 - add copy-operation
   - add basic backup-strategy

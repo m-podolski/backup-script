@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import Literal, Optional, TypeAlias, TypeVar
 
 import app.io as io
-from app.globals import BackupMode, OutputMode
+from app.globals import OutputMode
 from app.locations import Source, Target
 
 T = TypeVar("T", Source, Target)
@@ -72,17 +72,6 @@ def select_media_dir(
         return target
 
 
-def select_backup_mode(output_mode: OutputMode = OutputMode.NORMAL) -> BackupMode:
-    io.render(
-        "select_backup_mode.jinja2",
-        {
-            "modes": ["Create New", "Update Existing"],
-        },
-    )
-    selected_option: int = int(io.get_input("Number: ", output_mode))
-    return [mode for mode in BackupMode][selected_option - 1]
-
-
 def select_backup_directory(target: Target, output_mode: OutputMode = OutputMode.NORMAL) -> Path:
     io.render(
         "select_target_directory.jinja2",
@@ -98,9 +87,9 @@ def select_backup_directory(target: Target, output_mode: OutputMode = OutputMode
 def select_backup_name(
     source: Source,
     target: Target,
-    backup_mode: BackupMode,
     name_arg: Optional[str] = None,
     output_mode: OutputMode = OutputMode.NORMAL,
+    is_update: bool = False,
 ) -> str:
     user: str = os.environ["USER"]
     host: str = socket.gethostname()
@@ -132,7 +121,7 @@ def select_backup_name(
         item[0 : len(item) - 1 :] for item in target.content
     ]
 
-    if backup_mode is BackupMode.CREATE and selected_name_already_exists:
-        return select_backup_name(source, target, backup_mode, name_arg, output_mode)
+    if is_update and selected_name_already_exists:
+        return select_backup_name(source, target, name_arg, output_mode, is_update)
 
     return selected_format

@@ -2,7 +2,7 @@ from cement import init_defaults  # pyright: ignore
 from cement import App, CaughtSignal, Controller, TestApp  # pyright: ignore
 
 import app.io as io
-from app.controller import Base, Config
+from app.controller import Backup, Base, Config
 from app.globals import ScarabException
 
 
@@ -11,6 +11,7 @@ class Scarab(App):
         label: str = "scarab"
         handlers: list[type[Controller]] = [
             Base,
+            Backup,
             Config,
         ]
         extensions: list[str] = [

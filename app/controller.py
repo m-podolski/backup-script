@@ -1,12 +1,12 @@
 import os
-from typing import Optional
+from typing import Optional, Tuple
 
 from cement import Controller, ex, get_version  # pyright: ignore
 
 import app.config as config
 import app.interactions as interactions
 import app.io as io
-from app.globals import BackupMode, OutputMode, ScarabArgumentError
+from app.globals import OutputMode, ScarabArgumentError
 from app.locations import Source, Target
 
 VERSION: tuple[int, int, int, str, int] = (0, 5, 0, "alpha", 0)
@@ -27,65 +27,129 @@ class Base(Controller):
     def _default(self) -> None:
         self.app.args.print_help()  # pyright: ignore
 
+
+backup_controller_args: list[tuple[list[str], dict[str, str]]] = [
+    (
+        ["-s", "--source"],
+        {"help": "The source-path", "action": "store", "dest": "source"},
+    ),
+    (
+        ["-t", "--target"],
+        {"help": "The target-path", "action": "store", "dest": "target"},
+    ),
+    (
+        ["-m", "--media"],
+        {
+            "help": "Select your media-directory as target",
+            "action": "store_const",
+            "const": f"/media/{os.environ['USER']}",
+            "dest": "target",
+        },
+    ),
+    (
+        ["-n", "--name"],
+        {
+            "help": """The name-format for your backup (1..6)
+                1: <source-dir>,
+                2: <source-dir>_<date>
+                3: <source-dir>_<date-time>
+                4: <user>@<host>_<source-dir>
+                5: <user>@<host>_<source-dir>_<date>
+                6: <user>@<host>_<source-dir>_<date-time>""",
+            "action": "store",
+            "dest": "name",
+        },
+    ),
+]
+
+
+class Backup(Controller):
+    class Meta:  # pyright: ignore
+        label: str = "backup"
+        stacked_on: str = "base"
+        stacked_type: str = "nested"
+        help: str = "Back up from from a sourcepath to a targetpath"
+
     @ex(
-        help="Back up from from a sourcepath to an external drive",
-        arguments=[
-            (
-                ["-s", "--source"],
-                {"help": "The source-path", "action": "store", "dest": "source"},
-            ),
-            (
-                ["-t", "--target"],
-                {"help": "The target-path", "action": "store", "dest": "target"},
-            ),
-            (
-                ["-m", "--media"],
-                {
-                    "help": "Select your media-directory as target",
-                    "action": "store_const",
-                    "const": f"/media/{os.environ['USER']}",
-                    "dest": "target",
-                },
-            ),
-            (
-                ["-c", "--create"],
-                {
-                    "help": "Create a new backup",
-                    "action": "store_const",
-                    "const": BackupMode.CREATE,
-                    "dest": "backup_mode",
-                },
-            ),
-            (
-                ["-u", "--update"],
-                {
-                    "help": "Update an existing backup",
-                    "action": "store_const",
-                    "const": BackupMode.UPDATE,
-                    "dest": "backup_mode",
-                },
-            ),
-            (
-                ["-n", "--name"],
-                {
-                    "help": """The name-format for your backup (1..6)
-                        1: <source-dir>,
-                        2: <source-dir>_<date>
-                        3: <source-dir>_<date-time>
-                        4: <user>@<host>_<source-dir>
-                        5: <user>@<host>_<source-dir>_<date>
-                        6: <user>@<host>_<source-dir>_<date-time>""",
-                    "action": "store",
-                    "dest": "name",
-                },
-            ),
-        ],
+        help="Create a new backup",
+        arguments=backup_controller_args,
     )  # pyright: ignore
-    def backup(self) -> None:
+    def create(self) -> None:
+        source: Source
+        target: Target
+        name_arg: Optional[str]
+        output_mode: OutputMode
+
+        source, target, name_arg, output_mode = self._initialize()
+
+        if target.is_media_dir:
+            target = interactions.select_media_dir(source, target, output_mode)
+
+        target.backup_name = interactions.select_backup_name(
+            source,
+            target,
+            name_arg,  # pyright: ignore
+            output_mode,
+        )
+
+        io.render(
+            "target_contents.jinja2",
+            {
+                "backup_mode": "Create",
+                "source": str(source.path),
+                "target": str(target.path),
+                "existing_backup": target.existing_backup.name if target.existing_backup else None,
+                "backup_name": target.backup_name,
+                "target_content": target.content,
+            },
+        )
+
+    @ex(
+        help="Update an existing backup",
+        arguments=backup_controller_args,
+    )  # pyright: ignore
+    def update(self) -> None:
+        source: Source
+        target: Target
+        name_arg: Optional[str]
+        output_mode: OutputMode
+
+        source, target, name_arg, output_mode = self._initialize()
+
+        if target.is_media_dir:
+            target = interactions.select_media_dir(source, target, output_mode)
+
+        target.existing_backup = interactions.select_backup_directory(target, output_mode)
+
+        if source.path == target.existing_backup:
+            raise ScarabArgumentError(
+                "Source is the selected existing backup-directory", "source", str(source.path)
+            )
+
+        target.backup_name = interactions.select_backup_name(
+            source,
+            target,
+            name_arg,  # pyright: ignore
+            output_mode,
+            is_update=True,
+        )
+
+        io.render(
+            "target_contents.jinja2",
+            {
+                "backup_mode": "Update",
+                "source": str(source.path),
+                "target": str(target.path),
+                "existing_backup": target.existing_backup.name if target.existing_backup else None,
+                "backup_name": target.backup_name,
+                "target_content": target.content,
+            },
+        )
+
+    def _initialize(self) -> Tuple[Source, Target, Optional[str], OutputMode]:
         quiet: bool = self.app.quiet  # pyright: ignore
         source_arg: Optional[str] = self.app.pargs.source  # pyright: ignore
         target_arg: Optional[str] = self.app.pargs.target  # pyright: ignore
-        backup_mode: Optional[BackupMode] = self.app.pargs.backup_mode  # pyright: ignore
         name_arg: Optional[str] = self.app.pargs.name  # pyright: ignore
 
         if quiet:
@@ -100,39 +164,7 @@ class Base(Controller):
             target_arg, Target, output_mode  # pyright: ignore
         )
 
-        if target.is_media_dir:
-            target = interactions.select_media_dir(source, target, output_mode)
-
-        if backup_mode is None:  # pyright: ignore [reportUnnecessaryComparison]
-            backup_mode: BackupMode = interactions.select_backup_mode(output_mode)
-
-        if backup_mode is BackupMode.UPDATE:
-            target.existing_backup = interactions.select_backup_directory(target, output_mode)
-
-        if source.path == target.existing_backup:
-            raise ScarabArgumentError(
-                "Source is the selected existing backup-directory", "source", str(source.path)
-            )
-
-        target.backup_name = interactions.select_backup_name(
-            source,
-            target,
-            backup_mode,
-            name_arg,  # pyright: ignore
-            output_mode,
-        )
-
-        io.render(
-            "target_contents.jinja2",
-            {
-                "backup_mode": backup_mode.value.title(),
-                "source": str(source.path),
-                "target": str(target.path),
-                "existing_backup": target.existing_backup.name if target.existing_backup else None,
-                "backup_name": target.backup_name,
-                "target_content": target.content,
-            },
-        )
+        return source, target, name_arg, output_mode  # pyright: ignore[reportUnknownVariableType]
 
 
 class Config(Controller):
