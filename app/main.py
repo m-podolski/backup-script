@@ -18,7 +18,7 @@ class Scarab(App):
             "yaml",
             "colorlog",
         ]
-        config_defaults = {"scarab": {}}  # pyright: ignore
+        # config_defaults = {"scarab": {}}  # pyright: ignore
         config_handler: str = "yaml"
         config_file_suffix: str = ".yml"
         log_handler: str = "colorlog"
@@ -28,6 +28,7 @@ class Scarab(App):
 class ScarabTest(TestApp, Scarab):  # pyright: ignore
     class Meta:  # pyright: ignore
         label: str = "scarabTest"
+        config_section: str = "scarab"
 
 
 def main() -> None:

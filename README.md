@@ -54,6 +54,15 @@ scarab config [--help] [put] [--force]
 | - | - |
 | put | Create a new example-config-file at ~/.scarab.yml (This does not override an existing config by default) |
 
+#### Configuration Load Order
+
+While the put-command only uses the last location you can also move the file to one of the others.
+
+1. /etc/scarab/scarab.yml
+1. ~/.config/scarab/scarab.yml
+1. ~/.scarab/config/scarab.yml
+1. ~/.scarab.yml
+
 #### Options
 
 | Short | Long | Description |

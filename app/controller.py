@@ -6,7 +6,7 @@ from cement import Controller, ex, get_version  # pyright: ignore
 import app.config as config
 import app.interactions as interactions
 import app.io as io
-from app.globals import OutputMode, ScarabArgumentError
+from app.globals import OutputMode, ScarabArgumentError, ScarabProfile
 from app.locations import Source, Target
 
 VERSION: tuple[int, int, int, str, int] = (0, 5, 0, "alpha", 0)
@@ -69,18 +69,53 @@ class Backup(Controller):
         stacked_on: str = "base"
         stacked_type: str = "nested"
         help: str = "Back up from from a sourcepath to a targetpath"
+        arguments: list[tuple[list[str], dict[str, str]]] = [
+            (
+                ["-p", "--profile"],
+                {
+                    "help": "Use a profile form your config-file",
+                    "action": "store",
+                    "dest": "profile",
+                },
+            ),
+        ]
+
+    def _post_argument_parsing(self) -> None:
+        profile_arg: Optional[str]
+        try:
+            profile_arg = self.app.pargs.profile  # pyright: ignore
+        except AttributeError:
+            profile_arg = None
+
+        if profile_arg is not None:
+            profiles: list[ScarabProfile] = self.app.config.get(  # pyright: ignore
+                "scarab", "profiles"
+            )
+
+            def find_profile(profile: ScarabProfile) -> bool:
+                return profile["profile"] == profile_arg  # pyright: ignore
+
+            profile: ScarabProfile = list(filter(find_profile, profiles))[0]  # pyright: ignore
+
+            match profile["mode"]:
+                case "create":
+                    self.create(profile)
+                case "update":
+                    self.update(profile)
+                case _:
+                    pass
 
     @ex(
         help="Create a new backup",
         arguments=backup_controller_args,
     )  # pyright: ignore
-    def create(self) -> None:
+    def create(self, profile: Optional[ScarabProfile] = None) -> None:
         source: Source
         target: Target
         name_arg: Optional[str]
         output_mode: OutputMode
 
-        source, target, name_arg, output_mode = self._initialize()
+        source, target, name_arg, output_mode = self._initialize(profile)
 
         if target.is_media_dir:
             target = interactions.select_media_dir(source, target, output_mode)
@@ -108,13 +143,13 @@ class Backup(Controller):
         help="Update an existing backup",
         arguments=backup_controller_args,
     )  # pyright: ignore
-    def update(self) -> None:
+    def update(self, profile: Optional[ScarabProfile] = None) -> None:
         source: Source
         target: Target
         name_arg: Optional[str]
         output_mode: OutputMode
 
-        source, target, name_arg, output_mode = self._initialize()
+        source, target, name_arg, output_mode = self._initialize(profile)
 
         if target.is_media_dir:
             target = interactions.select_media_dir(source, target, output_mode)
@@ -146,11 +181,19 @@ class Backup(Controller):
             },
         )
 
-    def _initialize(self) -> Tuple[Source, Target, Optional[str], OutputMode]:
+    def _initialize(
+        self, profile: Optional[ScarabProfile] = None
+    ) -> Tuple[Source, Target, Optional[str], OutputMode]:
         quiet: bool = self.app.quiet  # pyright: ignore
-        source_arg: Optional[str] = self.app.pargs.source  # pyright: ignore
-        target_arg: Optional[str] = self.app.pargs.target  # pyright: ignore
-        name_arg: Optional[str] = self.app.pargs.name  # pyright: ignore
+        source_arg: Optional[str] = (
+            self.app.pargs.source if profile is None else profile["source"]  # pyright: ignore
+        )
+        target_arg: Optional[str] = (
+            self.app.pargs.target if profile is None else profile["target"]  # pyright: ignore
+        )
+        name_arg: Optional[str] = (
+            self.app.pargs.name if profile is None else profile["name"]  # pyright: ignore
+        )
 
         if quiet:
             output_mode = OutputMode.QUIET

@@ -1,6 +1,4 @@
-import datetime
 import os
-import socket
 from pathlib import Path
 from unittest.mock import MagicMock, Mock, _Call, call  # pyright: ignore
 
@@ -11,7 +9,11 @@ import app.interactions as interactions
 from app.globals import ScarabArgumentError, ScarabOptionError
 from app.locations import Location, Source, Target
 from app.main import ScarabTest
-from tests.conftest import create_files_and_dirs, get_content_with_slashed_dirs
+from tests.conftest import (
+    create_files_and_dirs,
+    get_content_with_slashed_dirs,
+    make_backup_name,
+)
 
 
 @pytest.mark.parametrize(
@@ -195,7 +197,7 @@ def it_gets_the_target_name_from_a_selection_menu(mocker: MockerFixture, tmp_pat
             ],
         },
     )
-    assert target_name == _make_backup_name("test")
+    assert target_name == make_backup_name("test")
 
 
 def it_gets_the_target_name_again_in_create_mode_if_it_already_exists(
@@ -234,7 +236,7 @@ def it_gets_the_target_name_again_in_create_mode_if_it_already_exists(
             call_list_item,
         ]
     )
-    assert target_name == _make_backup_name("directory")
+    assert target_name == make_backup_name("directory")
 
 
 def it_prints_backup_information(
@@ -245,11 +247,18 @@ def it_prints_backup_information(
     source_path: Path = Path(f"/home/{os.environ['USER']}")
 
     mock_render: Mock = mocker.patch("app.io.render")
-    mock_input: MagicMock = mocker.patch("builtins.input")
-    mock_input.return_value = "5"
 
     with ScarabTest(
-        argv=["backup", "create", "--source", str(source_path), "--target", str(tmp_path)]
+        argv=[
+            "backup",
+            "create",
+            "--source",
+            str(source_path),
+            "--target",
+            str(tmp_path),
+            "--name",
+            "5",
+        ]
     ) as app:
         app.run()
 
@@ -262,16 +271,9 @@ def it_prints_backup_information(
                         "source": str(source_path),
                         "target": str(tmp_path),
                         "existing_backup": None,
-                        "backup_name": _make_backup_name(source_path.name),
+                        "backup_name": make_backup_name(source_path.name),
                         "target_content": ["existing_1/", "existing_2/", "file.txt"],
                     },
                 ),
             ]
         )
-
-
-def _make_backup_name(path_name: str) -> str:
-    user: str = os.environ["USER"]
-    host: str = socket.gethostname()
-    date_time: str = datetime.datetime.today().strftime("%Y-%m-%d")
-    return f"{user}@{host}_{path_name}_{date_time}"

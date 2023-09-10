@@ -1,4 +1,18 @@
-# Put under ~/.scarab.yml
+# This file will be picked up under the following locations
+# /etc/scarab/scarab.yml
+# ~/.config/scarab/scarab.yml
+# ~/.scarab/config/scarab.yml
+# ~/.scarab.yml
 
 scarab:
-  prop: value
+  profiles:
+    - basic
+      # "create" or "update"
+      mode: create
+
+      # backup-paths (absolute paths, "~" will be expanded)
+      source: /source/path
+      target: /target/path
+
+      # name-format 1..6 (see README)
+      name: 5

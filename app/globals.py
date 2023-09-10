@@ -1,4 +1,8 @@
 from enum import Enum
+from typing import TypeAlias
+
+ScarabProfile: TypeAlias = dict[str, str | int]
+ScarabConfig: TypeAlias = dict[str, list[ScarabProfile]]
 
 
 class OutputMode(Enum):

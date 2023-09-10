@@ -1,12 +1,10 @@
 # Commit
 
-- restructure to stacked create/update-controllers
+- add basic configuration for existing flags under profile
 
 ## In Progress
 
-- add option to target preconfigured profiles
-  - add basic configuration for existing flags under profile "basic"
-  - add backup-option to use profile
+- pipeline-lib
 
 ## Backlog
 

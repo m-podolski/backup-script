@@ -1,5 +1,8 @@
+import datetime
 import os
 import shutil
+import socket
+from io import TextIOWrapper
 from pathlib import Path
 from typing import Generator
 
@@ -34,6 +37,20 @@ def config_example_fixture() -> Generator[Path, None, None]:
     config_file.unlink()
 
 
+@pytest.fixture
+def empty_config_fixture() -> Generator[TextIOWrapper, None, None]:
+    """
+    Sets up and tears down an empty config-file.
+    """
+    config_file: Path = Path(f"{os.environ['HOME']}/.scarab.yml")
+    config_file.touch()
+
+    with open(config_file, "w") as file:
+        yield file
+
+    config_file.unlink()
+
+
 def create_files_and_dirs(path: Path, items: list[str]) -> None:
     """
     Populates a given path. To distinguish between files and directories within the items, append a slash to directories (i.e. ["dir/", "file"])
@@ -54,3 +71,10 @@ def get_content_with_slashed_dirs(dir: Path) -> list[str]:
             return path.name
 
     return [slash(path) for path in dir.iterdir()]
+
+
+def make_backup_name(path_name: str) -> str:
+    user: str = os.environ["USER"]
+    host: str = socket.gethostname()
+    date_time: str = datetime.datetime.today().strftime("%Y-%m-%d")
+    return f"{user}@{host}_{path_name}_{date_time}"
