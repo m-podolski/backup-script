@@ -19,7 +19,7 @@ config_file_example: str = f"{source_path.parent.parent}/assets/example-config.s
 def it_copies_the_example_config_file_to_user_home() -> None:
     config_file: Path = Path(f"{os.environ['HOME']}/.scarab.yml")
 
-    with Scarab(argv=["config", "put"]) as app:
+    with ScarabTest(argv=["config", "put"]) as app:
         app.run()
 
         assert filecmp.cmp(config_file, config_file_example, shallow=False)
@@ -77,7 +77,7 @@ def it_uses_the_config_file_if_an_existing_profile_is_given(
 
     mock_render: Mock = mocker.patch("app.io.render")
 
-    with Scarab(argv=["backup", "--profile", "basic"]) as app:
+    with Scarab(argv=["backup", "profile", "basic"]) as app:
         app.run()
         mock_render.assert_has_calls(
             [

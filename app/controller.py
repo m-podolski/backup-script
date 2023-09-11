@@ -68,24 +68,21 @@ class Backup(Controller):
         label: str = "backup"
         stacked_on: str = "base"
         stacked_type: str = "nested"
-        help: str = "Back up from from a sourcepath to a targetpath"
-        arguments: list[tuple[list[str], dict[str, str]]] = [
+        description: str = "Back up from from a sourcepath to a targetpath"
+
+    @ex(
+        help="Use a profile from your config-file",
+        arguments=[
             (
-                ["-p", "--profile"],
+                ["profile_name"],
                 {
-                    "help": "Use a profile form your config-file",
-                    "action": "store",
-                    "dest": "profile",
+                    "help": "Use a profile from your config-file",
                 },
             ),
-        ]
-
-    def _post_argument_parsing(self) -> None:
-        profile_arg: Optional[str]
-        try:
-            profile_arg = self.app.pargs.profile  # pyright: ignore
-        except AttributeError:
-            profile_arg = None
+        ],
+    )  # pyright: ignore
+    def profile(self) -> None:
+        profile_arg: Optional[str] = self.app.pargs.profile_name  # pyright: ignore
 
         if profile_arg is not None:
             profiles: list[ScarabProfile] = self.app.config.get(  # pyright: ignore

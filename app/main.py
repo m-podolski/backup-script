@@ -18,7 +18,6 @@ class Scarab(App):
             "yaml",
             "colorlog",
         ]
-        # config_defaults = {"scarab": {}}  # pyright: ignore
         config_handler: str = "yaml"
         config_file_suffix: str = ".yml"
         log_handler: str = "colorlog"

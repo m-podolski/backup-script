@@ -1,11 +1,10 @@
 # Commit
 
-- split target-contents from backup-params-display in create
+- change profile-arg from controller- to command-level
 
 ## In Progress
 
-- add update-with-config-test
-  - check use of ScarabTest
+- add updating with config
   - type config-profile keys
   - implement selection of existing backup by name-format
   - update README
