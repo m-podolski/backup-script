@@ -125,6 +125,7 @@ class Backup(Controller):
             target,
             name_arg,  # pyright: ignore
             output_mode,
+            is_create=True,
         )
 
         io.render(
@@ -166,7 +167,6 @@ class Backup(Controller):
             target,
             name_arg,  # pyright: ignore
             output_mode,
-            is_update=True,
         )
 
         io.render(

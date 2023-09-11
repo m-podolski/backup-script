@@ -89,7 +89,7 @@ def select_backup_name(
     target: Target,
     name_arg: Optional[str] = None,
     output_mode: OutputMode = OutputMode.NORMAL,
-    is_update: bool = False,
+    is_create: bool = False,
 ) -> str:
     user: str = os.environ["USER"]
     host: str = socket.gethostname()
@@ -121,7 +121,7 @@ def select_backup_name(
         item[0 : len(item) - 1 :] for item in target.content
     ]
 
-    if is_update and selected_name_already_exists:
-        return select_backup_name(source, target, name_arg, output_mode, is_update)
+    if is_create and selected_name_already_exists:
+        return select_backup_name(source, target, name_arg, output_mode, is_create)
 
     return selected_format

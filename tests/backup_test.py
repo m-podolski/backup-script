@@ -179,9 +179,7 @@ def it_gets_the_target_name_from_a_selection_menu(mocker: MockerFixture, tmp_pat
     mock_input: MagicMock = mocker.patch("builtins.input")
     mock_input.return_value = "5"
 
-    target_name: str = interactions.select_backup_name(
-        Source(test_source_path), Target("~"), is_update=True
-    )
+    target_name: str = interactions.select_backup_name(Source(test_source_path), Target("~"))
 
     mock_input.assert_called_with("Number: ")
     mock_render.assert_called_with(
@@ -213,7 +211,7 @@ def it_gets_the_target_name_again_in_create_mode_if_it_already_exists(
     mock_input.side_effect = ["1", "5"]
 
     target_name: str = interactions.select_backup_name(
-        Source(test_target_sub_path), Target(test_target_path), is_update=True
+        Source(test_target_sub_path), Target(test_target_path), is_create=True
     )
 
     call_list_item: _Call = call(
