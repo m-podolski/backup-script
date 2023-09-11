@@ -120,6 +120,13 @@ class Backup(Controller):
         if target.is_media_dir:
             target = interactions.select_media_dir(source, target, output_mode)
 
+        io.render(
+            "target_contents.jinja2",
+            {
+                "target_content": target.content,
+            },
+        )
+
         target.backup_name = interactions.select_backup_name(
             source,
             target,
@@ -129,14 +136,13 @@ class Backup(Controller):
         )
 
         io.render(
-            "target_contents.jinja2",
+            "backup_params.jinja2",
             {
                 "backup_mode": "Create",
                 "source": str(source.path),
                 "target": str(target.path),
                 "existing_backup": target.existing_backup.name if target.existing_backup else None,
                 "backup_name": target.backup_name,
-                "target_content": target.content,
             },
         )
 
@@ -170,14 +176,13 @@ class Backup(Controller):
         )
 
         io.render(
-            "target_contents.jinja2",
+            "backup_params.jinja2",
             {
                 "backup_mode": "Update",
                 "source": str(source.path),
                 "target": str(target.path),
                 "existing_backup": target.existing_backup.name if target.existing_backup else None,
                 "backup_name": target.backup_name,
-                "target_content": target.content,
             },
         )
 

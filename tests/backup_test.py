@@ -150,7 +150,6 @@ def it_gets_dir_selection_with_rescan_option_when_in_media_dir(
 
 def it_gets_dir_at_target_when_in_update_mode(mocker: MockerFixture, tmp_path: Path) -> None:
     create_files_and_dirs(tmp_path, [".file_at_the_top", "backup_1/", "backup_2/", "file_2.txt"])
-    create_files_and_dirs(tmp_path / "backup_2", ["dir_1/", "dir_2/"])
 
     mock_render: Mock = mocker.patch("app.io.render")
     mock_input: MagicMock = mocker.patch("builtins.input")
@@ -166,10 +165,9 @@ def it_gets_dir_at_target_when_in_update_mode(mocker: MockerFixture, tmp_path: P
         assert mock_render.mock_calls[0].args[0] == "select_target_directory.jinja2"
         assert mock_render.mock_calls[0].args[1]["target_content"] == ["backup_1", "backup_2"]
 
-        assert mock_render.mock_calls[1].args[0] == "target_contents.jinja2"
+        assert mock_render.mock_calls[1].args[0] == "backup_params.jinja2"
         assert mock_render.mock_calls[1].args[1]["target"] == str(tmp_path)
         assert mock_render.mock_calls[1].args[1]["existing_backup"] == "backup_2"
-        assert mock_render.mock_calls[1].args[1]["target_content"] == ["dir_1/", "dir_2/"]
 
 
 def it_gets_the_target_name_from_a_selection_menu(mocker: MockerFixture, tmp_path: Path) -> None:
@@ -237,6 +235,7 @@ def it_gets_the_target_name_again_in_create_mode_if_it_already_exists(
     assert target_name == make_backup_name("directory")
 
 
+# !
 def it_prints_backup_information(
     mocker: MockerFixture,
     tmp_path: Path,
@@ -265,12 +264,17 @@ def it_prints_backup_information(
                 call(
                     "target_contents.jinja2",
                     {
+                        "target_content": ["existing_1/", "existing_2/", "file.txt"],
+                    },
+                ),
+                call(
+                    "backup_params.jinja2",
+                    {
                         "backup_mode": "Create",
                         "source": str(source_path),
                         "target": str(tmp_path),
                         "existing_backup": None,
                         "backup_name": make_backup_name(source_path.name),
-                        "target_content": ["existing_1/", "existing_2/", "file.txt"],
                     },
                 ),
             ]

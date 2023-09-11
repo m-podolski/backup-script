@@ -10,7 +10,7 @@ from pytest_mock import MockerFixture
 
 from app.globals import ScarabError
 from app.main import Scarab, ScarabTest
-from tests.conftest import create_files_and_dirs, make_backup_name
+from tests.conftest import make_backup_name
 
 source_path: Path = Path(__file__).resolve()
 config_file_example: str = f"{source_path.parent.parent}/assets/example-config.scarab.yml"
@@ -56,7 +56,6 @@ def it_uses_the_config_file_if_an_existing_profile_is_given(
     empty_config_fixture: TextIOWrapper,
     tmp_path: Path,
 ) -> None:
-    create_files_and_dirs(tmp_path, ["existing_1/", "existing_2/", "file.txt"])
     source_path: Path = Path(f"/home/{os.environ['USER']}")
 
     yaml.dump(
@@ -83,14 +82,13 @@ def it_uses_the_config_file_if_an_existing_profile_is_given(
         mock_render.assert_has_calls(
             [
                 call(
-                    "target_contents.jinja2",
+                    "backup_params.jinja2",
                     {
                         "backup_mode": "Create",
                         "source": str(source_path),
                         "target": str(tmp_path),
                         "existing_backup": None,
                         "backup_name": make_backup_name(source_path.name),
-                        "target_content": ["existing_1/", "existing_2/", "file.txt"],
                     },
                 ),
             ]

@@ -1,10 +1,8 @@
 # Commit
 
-- fix existing-target-check in update
+- split target-contents from backup-params-display in create
 
 ## In Progress
-
-- split target contents display from profile data
 
 - add update-with-config-test
   - check use of ScarabTest
