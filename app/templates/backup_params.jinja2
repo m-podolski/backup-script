@@ -1,5 +1,5 @@
 
-{{"Backup Mode:"|style("EMPH")}} {{ backup_mode }}
+{% if backup_mode %}{{"Backup Mode:"|style("EMPH")}} {{ backup_mode }}{% endif %}
 {{"Source:"|style("EMPH")}} {{ source }}
 {{"Target:"|style("EMPH")}} {{ target }}
 {{ "Backup Name:"|style("EMPH") }} {{ backup_name }}

@@ -12,7 +12,7 @@ from app.main import ScarabTest
 from tests.conftest import (
     create_files_and_dirs,
     get_content_with_slashed_dirs,
-    make_backup_name,
+    make_backup_name_format_5,
 )
 
 
@@ -193,7 +193,7 @@ def it_gets_the_target_name_from_a_selection_menu(mocker: MockerFixture, tmp_pat
             ],
         },
     )
-    assert target_name == make_backup_name("test")
+    assert target_name == make_backup_name_format_5("test")
 
 
 def it_gets_the_target_name_again_in_create_mode_if_it_already_exists(
@@ -232,7 +232,7 @@ def it_gets_the_target_name_again_in_create_mode_if_it_already_exists(
             call_list_item,
         ]
     )
-    assert target_name == make_backup_name("directory")
+    assert target_name == make_backup_name_format_5("directory")
 
 
 # !
@@ -274,7 +274,7 @@ def it_prints_backup_information(
                         "source": str(source_path),
                         "target": str(tmp_path),
                         "existing_backup": None,
-                        "backup_name": make_backup_name(source_path.name),
+                        "backup_name": make_backup_name_format_5(source_path.name),
                     },
                 ),
             ]

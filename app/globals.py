@@ -1,7 +1,7 @@
 from enum import Enum
-from typing import TypeAlias
+from typing import Literal, TypeAlias
 
-ScarabProfile: TypeAlias = dict[str, str | int]
+ScarabProfile: TypeAlias = dict[Literal["profile", "source", "target", "name"], str | int]
 ScarabConfig: TypeAlias = dict[str, list[ScarabProfile]]
 
 

@@ -1,12 +1,12 @@
 # Commit
 
-- change profile-arg from controller- to command-level
+- change profile usage to not using a backup-mode
 
 ## In Progress
 
 - add updating with config
-  - type config-profile keys
   - implement selection of existing backup by name-format
+  - type config-profile keys
   - update README
 
 ## Backlog

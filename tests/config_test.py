@@ -10,7 +10,7 @@ from pytest_mock import MockerFixture
 
 from app.globals import ScarabError
 from app.main import Scarab, ScarabTest
-from tests.conftest import make_backup_name
+from tests.conftest import make_backup_name_format_5
 
 source_path: Path = Path(__file__).resolve()
 config_file_example: str = f"{source_path.parent.parent}/assets/example-config.scarab.yml"
@@ -64,7 +64,6 @@ def it_uses_the_config_file_if_an_existing_profile_is_given(
                 "profiles": [
                     {
                         "profile": "basic",
-                        "mode": "create",
                         "source": str(source_path),
                         "target": str(tmp_path),
                         "name": 5,
@@ -84,11 +83,10 @@ def it_uses_the_config_file_if_an_existing_profile_is_given(
                 call(
                     "backup_params.jinja2",
                     {
-                        "backup_mode": "Create",
                         "source": str(source_path),
                         "target": str(tmp_path),
                         "existing_backup": None,
-                        "backup_name": make_backup_name(source_path.name),
+                        "backup_name": make_backup_name_format_5(source_path.name),
                     },
                 ),
             ]

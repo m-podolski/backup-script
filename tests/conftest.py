@@ -73,7 +73,7 @@ def get_content_with_slashed_dirs(dir: Path) -> list[str]:
     return [slash(path) for path in dir.iterdir()]
 
 
-def make_backup_name(path_name: str) -> str:
+def make_backup_name_format_5(path_name: str) -> str:
     user: str = os.environ["USER"]
     host: str = socket.gethostname()
     date_time: str = datetime.datetime.today().strftime("%Y-%m-%d")

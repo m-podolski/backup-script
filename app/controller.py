@@ -94,25 +94,36 @@ class Backup(Controller):
 
             profile: ScarabProfile = list(filter(find_profile, profiles))[0]  # pyright: ignore
 
-            match profile["mode"]:
-                case "create":
-                    self.create(profile)
-                case "update":
-                    self.update(profile)
-                case _:
-                    pass
+            self._auto(profile)
+
+    def _auto(self, profile: ScarabProfile) -> None:
+        source: Source
+        target: Target
+        name_arg: int
+        source, target, name_arg = self._initialize_by_profile(profile)
+
+        target.backup_name = interactions.select_backup_name(source, target, name_arg)
+
+        io.render(
+            "backup_params.jinja2",
+            {
+                "source": str(source.path),
+                "target": str(target.path),
+                "existing_backup": target.existing_backup.name if target.existing_backup else None,
+                "backup_name": target.backup_name,
+            },
+        )
 
     @ex(
         help="Create a new backup",
         arguments=backup_controller_args,
     )  # pyright: ignore
-    def create(self, profile: Optional[ScarabProfile] = None) -> None:
+    def create(self) -> None:
         source: Source
         target: Target
-        name_arg: Optional[str]
+        name_arg: Optional[int]
         output_mode: OutputMode
-
-        source, target, name_arg, output_mode = self._initialize(profile)
+        source, target, name_arg, output_mode = self._initialize()
 
         if target.is_media_dir:
             target = interactions.select_media_dir(source, target, output_mode)
@@ -127,7 +138,7 @@ class Backup(Controller):
         target.backup_name = interactions.select_backup_name(
             source,
             target,
-            name_arg,  # pyright: ignore
+            name_arg,
             output_mode,
             is_create=True,
         )
@@ -147,13 +158,12 @@ class Backup(Controller):
         help="Update an existing backup",
         arguments=backup_controller_args,
     )  # pyright: ignore
-    def update(self, profile: Optional[ScarabProfile] = None) -> None:
+    def update(self) -> None:
         source: Source
         target: Target
-        name_arg: Optional[str]
+        name_arg: Optional[int]
         output_mode: OutputMode
-
-        source, target, name_arg, output_mode = self._initialize(profile)
+        source, target, name_arg, output_mode = self._initialize()
 
         if target.is_media_dir:
             target = interactions.select_media_dir(source, target, output_mode)
@@ -183,18 +193,12 @@ class Backup(Controller):
             },
         )
 
-    def _initialize(
-        self, profile: Optional[ScarabProfile] = None
-    ) -> Tuple[Source, Target, Optional[str], OutputMode]:
+    def _initialize(self) -> Tuple[Source, Target, Optional[int], OutputMode]:
         quiet: bool = self.app.quiet  # pyright: ignore
-        source_arg: Optional[str] = (
-            self.app.pargs.source if profile is None else profile["source"]  # pyright: ignore
-        )
-        target_arg: Optional[str] = (
-            self.app.pargs.target if profile is None else profile["target"]  # pyright: ignore
-        )
-        name_arg: Optional[str] = (
-            self.app.pargs.name if profile is None else profile["name"]  # pyright: ignore
+        source_arg: Optional[str] = self.app.pargs.source  # pyright: ignore
+        target_arg: Optional[str] = self.app.pargs.target  # pyright: ignore
+        name_arg: Optional[int] = (
+            int(self.app.pargs.name) if self.app.pargs.name else None  # pyright: ignore
         )
 
         if quiet:
@@ -209,7 +213,19 @@ class Backup(Controller):
             target_arg, Target, output_mode  # pyright: ignore
         )
 
-        return source, target, name_arg, output_mode  # pyright: ignore[reportUnknownVariableType]
+        return (source, target, name_arg, output_mode)  # pyright: ignore[reportUnknownVariableType]
+
+    def _initialize_by_profile(
+        self, profile: Optional[ScarabProfile] = None
+    ) -> Tuple[Source, Target, int]:
+        source_arg: str = profile["source"]  # pyright: ignore
+        target_arg: str = profile["target"]  # pyright: ignore
+        name_arg: int = int(profile["name"])  # pyright: ignore
+
+        source: Source = interactions.init_location(source_arg, Source, OutputMode.QUIET)
+        target: Target = interactions.init_location(target_arg, Target, OutputMode.QUIET)
+
+        return (source, target, name_arg)  # pyright: ignore[reportUnknownVariableType]
 
 
 class Config(Controller):

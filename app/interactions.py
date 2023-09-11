@@ -87,7 +87,7 @@ def select_backup_directory(target: Target, output_mode: OutputMode = OutputMode
 def select_backup_name(
     source: Source,
     target: Target,
-    name_arg: Optional[str] = None,
+    name_arg: Optional[int] = None,
     output_mode: OutputMode = OutputMode.NORMAL,
     is_create: bool = False,
 ) -> str:
@@ -114,7 +114,7 @@ def select_backup_name(
         )
         selected_option: int = int(io.get_input("Number: ", output_mode))
     else:
-        selected_option: int = int(name_arg)
+        selected_option = name_arg
 
     selected_format: str = list(name_formats.values())[selected_option - 1]
     selected_name_already_exists: bool = selected_format in [
