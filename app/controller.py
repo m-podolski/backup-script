@@ -222,8 +222,8 @@ class Backup(Controller):
         target_arg: str = profile["target"]  # pyright: ignore
         name_arg: int = int(profile["name"])  # pyright: ignore
 
-        source: Source = interactions.init_location(source_arg, Source, OutputMode.QUIET)
-        target: Target = interactions.init_location(target_arg, Target, OutputMode.QUIET)
+        source: Source = interactions.init_location(source_arg, Source, OutputMode.AUTO)
+        target: Target = interactions.init_location(target_arg, Target, OutputMode.AUTO)
 
         return (source, target, name_arg)  # pyright: ignore[reportUnknownVariableType]
 

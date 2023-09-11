@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import Literal, Optional, TypeAlias, TypeVar
 
 import app.io as io
-from app.globals import OutputMode
+from app.globals import OutputMode, ScarabArgumentError
 from app.locations import Source, Target
 
 T = TypeVar("T", Source, Target)
@@ -32,6 +32,12 @@ def _check_path(location: T, output_mode: OutputMode = OutputMode.NORMAL) -> T:
     if location.is_valid:
         return location
     else:
+        if output_mode is OutputMode.AUTO:
+            raise ScarabArgumentError(
+                "A location has an invalid path",
+                f"{location.name.lower()}",
+                f"{str(location.path)}",
+            )
         location.path = io.get_path_input(
             _get_message("INVALID_PATH", location.name),
             output_mode,

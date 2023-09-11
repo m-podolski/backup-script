@@ -8,6 +8,7 @@ ScarabConfig: TypeAlias = dict[str, list[ScarabProfile]]
 class OutputMode(Enum):
     QUIET = 1
     NORMAL = 2
+    AUTO = 3
 
 
 class ScarabException(Exception):
@@ -26,6 +27,4 @@ class ScarabOptionError(ScarabException):
 
 class ScarabArgumentError(ScarabException):
     def __init__(self, message: str, option: str, argument: str) -> None:
-        super().__init__(
-            f"Scarab got invalid or conflicting arguments: {message}\n'{option}' is '{argument}'"
-        )
+        super().__init__(f"Scarab got invalid arguments: {message}\n'{option}' is '{argument}'")

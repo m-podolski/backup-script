@@ -8,7 +8,7 @@ import pytest
 import yaml
 from pytest_mock import MockerFixture
 
-from app.globals import ScarabError
+from app.globals import ScarabArgumentError, ScarabError
 from app.main import Scarab, ScarabTest
 from tests.conftest import make_backup_name_format_5
 
@@ -91,3 +91,30 @@ def it_uses_the_config_file_if_an_existing_profile_is_given(
                 ),
             ]
         )
+
+
+def it_raises_argument_error_if_given_an_invalid_path(
+    empty_config_fixture: TextIOWrapper,
+    tmp_path: Path,
+) -> None:
+    yaml.dump(
+        {
+            "scarab": {
+                "profiles": [
+                    {
+                        "profile": "basic",
+                        "source": str(tmp_path / "invalid"),
+                        "target": str(tmp_path),
+                        "name": 5,
+                    }
+                ]
+            }
+        },
+        empty_config_fixture,
+    )
+    with pytest.raises(
+        ScarabArgumentError,
+        match=f": A location has an invalid path",
+    ):
+        with Scarab(argv=["backup", "profile", "basic"]) as app:
+            app.run()

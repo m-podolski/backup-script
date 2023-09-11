@@ -83,7 +83,7 @@ def it_raises_when_source_is_the_selected_existing_backup_dir(
 
     with pytest.raises(
         ScarabArgumentError,
-        match=f"Scarab got invalid or conflicting arguments: Source is the selected existing backup-directory\n'source' is '{str(test_path)}'",
+        match=f"Scarab got invalid arguments: Source is the selected existing backup-directory\n'source' is '{str(test_path)}'",
     ):
         with ScarabTest(
             argv=[
@@ -235,7 +235,6 @@ def it_gets_the_target_name_again_in_create_mode_if_it_already_exists(
     assert target_name == make_backup_name_format_5("directory")
 
 
-# !
 def it_prints_backup_information(
     mocker: MockerFixture,
     tmp_path: Path,

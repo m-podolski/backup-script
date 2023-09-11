@@ -13,7 +13,6 @@ class Location:
 
     @property
     def path(self) -> Path:
-        assert self.is_valid
         return self._path
 
     @path.setter
