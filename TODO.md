@@ -1,11 +1,10 @@
 # Commit
 
-- add selection of existing backup by name-format
+- add error for missing required options
 
 ## In Progress
 
 - add updating with config
-  - raise if config is missing required options
   - add ignore-date-option
   - update README
 

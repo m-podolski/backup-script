@@ -8,7 +8,7 @@ import pytest
 import yaml
 from pytest_mock import MockerFixture
 
-from app.globals import ScarabArgumentError, ScarabError
+from app.globals import ScarabArgumentError, ScarabError, ScarabOptionError
 from app.main import Scarab, ScarabTest
 from tests.conftest import create_files_and_dirs, make_backup_name_format_5
 
@@ -51,6 +51,32 @@ def it_overrides_existing_file_with_force_option(
     config_file.unlink()
 
 
+def it_raises_if_config_is_missing_required_args(
+    empty_config_fixture: TextIOWrapper,
+) -> None:
+    yaml.dump(
+        {
+            "scarab": {
+                "profiles": [
+                    {
+                        "profile": "basic",
+                        "source": "~",
+                        "name": 5,
+                    }
+                ]
+            }
+        },
+        empty_config_fixture,
+    )
+
+    with pytest.raises(
+        ScarabOptionError,
+        match=f": Your config-file is missing a required option: 'target'",
+    ):
+        with Scarab(argv=["backup", "profile", "basic"]) as app:
+            app.run()
+
+
 def it_raises_argument_error_if_given_an_invalid_path(
     empty_config_fixture: TextIOWrapper,
     tmp_path: Path,
@@ -72,7 +98,7 @@ def it_raises_argument_error_if_given_an_invalid_path(
     )
     with pytest.raises(
         ScarabArgumentError,
-        match=f": A location has an invalid path",
+        match=": A location has an invalid path",
     ):
         with Scarab(argv=["backup", "profile", "basic"]) as app:
             app.run()

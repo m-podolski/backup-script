@@ -6,7 +6,12 @@ from cement import Controller, ex, get_version  # pyright: ignore
 import app.config as config
 import app.interactions as interactions
 import app.io as io
-from app.globals import OutputMode, ScarabArgumentError, ScarabProfile
+from app.globals import (
+    OutputMode,
+    ScarabArgumentError,
+    ScarabOptionError,
+    ScarabProfile,
+)
 from app.locations import Source, Target
 
 VERSION: tuple[int, int, int, str, int] = (0, 5, 0, "alpha", 0)
@@ -227,9 +232,12 @@ class Backup(Controller):
     def _initialize_by_profile(
         self, profile: Optional[ScarabProfile] = None
     ) -> Tuple[Source, Target, int]:
-        source_arg: str = profile["source"]  # pyright: ignore
-        target_arg: str = profile["target"]  # pyright: ignore
-        name_arg: int = int(profile["name"])  # pyright: ignore
+        try:
+            source_arg: str = profile["source"]  # pyright: ignore
+            target_arg: str = profile["target"]  # pyright: ignore
+            name_arg: int = int(profile["name"])  # pyright: ignore
+        except KeyError as e:
+            raise ScarabOptionError(f"Your config-file is missing a required option: {e}")
 
         source: Source = interactions.init_location(source_arg, Source, OutputMode.AUTO)
         target: Target = interactions.init_location(target_arg, Target, OutputMode.AUTO)
