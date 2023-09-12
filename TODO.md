@@ -1,11 +1,10 @@
 # Commit
 
-- add error for missing required options
+- add ignore-date-option
 
 ## In Progress
 
 - add updating with config
-  - add ignore-date-option
   - update README
 
 ## Backlog

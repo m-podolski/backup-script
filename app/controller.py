@@ -105,12 +105,26 @@ class Backup(Controller):
         source: Source
         target: Target
         name_arg: int
-        source, target, name_arg = self._initialize_by_profile(profile)
+        ignore_datetime: bool
+        source, target, name_arg, ignore_datetime = self._initialize_by_profile(profile)
 
         target.backup_name = interactions.select_backup_name(source, target, name_arg)
 
-        if target.backup_name in target.content_dirs:
-            target.existing_backup = target.path / target.backup_name
+        if ignore_datetime:
+            if name_arg <= 3:
+                name_to_find: str = interactions.select_backup_name(source, target, 1)
+            else:
+                name_to_find = interactions.select_backup_name(source, target, 4)
+
+            matches: list[str] = [
+                dir
+                for dir in sorted(target.content_dirs, reverse=True)
+                if dir.startswith(name_to_find)
+            ]
+            target.existing_backup = target.path / matches[0]
+        else:
+            if target.backup_name in target.content_dirs:
+                target.existing_backup = target.path / target.backup_name
 
         if source.path == target.existing_backup:
             raise ScarabArgumentError(
@@ -231,7 +245,7 @@ class Backup(Controller):
 
     def _initialize_by_profile(
         self, profile: Optional[ScarabProfile] = None
-    ) -> Tuple[Source, Target, int]:
+    ) -> Tuple[Source, Target, int, bool]:
         try:
             source_arg: str = profile["source"]  # pyright: ignore
             target_arg: str = profile["target"]  # pyright: ignore
@@ -239,10 +253,20 @@ class Backup(Controller):
         except KeyError as e:
             raise ScarabOptionError(f"Your config-file is missing a required option: {e}")
 
+        try:
+            ignore_datetime: bool = profile["ignore_datetime"]  # pyright: ignore
+        except KeyError as e:
+            ignore_datetime = False
+
         source: Source = interactions.init_location(source_arg, Source, OutputMode.AUTO)
         target: Target = interactions.init_location(target_arg, Target, OutputMode.AUTO)
 
-        return (source, target, name_arg)  # pyright: ignore[reportUnknownVariableType]
+        return (
+            source,
+            target,
+            name_arg,
+            ignore_datetime,
+        )  # pyright: ignore[reportUnknownVariableType]
 
 
 class Config(Controller):

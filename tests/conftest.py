@@ -4,7 +4,7 @@ import shutil
 import socket
 from io import TextIOWrapper
 from pathlib import Path
-from typing import Generator
+from typing import Generator, Optional
 
 import pytest
 
@@ -73,8 +73,29 @@ def get_content_with_slashed_dirs(dir: Path) -> list[str]:
     return [slash(path) for path in dir.iterdir()]
 
 
-def make_backup_name_format_5(path_name: str) -> str:
+def make_backup_name_format(
+    source_dir: str, name_arg: int, set_date: Optional[datetime.datetime] = None
+) -> str:
     user: str = os.environ["USER"]
     host: str = socket.gethostname()
-    date_time: str = datetime.datetime.today().strftime("%Y-%m-%d")
-    return f"{user}@{host}_{path_name}_{date_time}"
+    date: str = (
+        set_date.strftime("%Y-%m-%d")
+        if set_date
+        else datetime.datetime.today().strftime("%Y-%m-%d")
+    )
+    time: str = (
+        set_date.strftime("%H-%M-%S")
+        if set_date
+        else datetime.datetime.today().strftime("%H-%M-%S")
+    )
+
+    name_formats: list[str] = [
+        source_dir,
+        f"{source_dir}_{date}",
+        f"{source_dir}_{date}-{time}",
+        f"{user}@{host}_{source_dir}",
+        f"{user}@{host}_{source_dir}_{date}",
+        f"{user}@{host}_{source_dir}_{date}-{time}",
+    ]
+
+    return name_formats[name_arg - 1]
