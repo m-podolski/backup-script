@@ -1,11 +1,8 @@
 # Commit
 
-- add ignore-date-option
+- update README
 
 ## In Progress
-
-- add updating with config
-  - update README
 
 ## Backlog
 

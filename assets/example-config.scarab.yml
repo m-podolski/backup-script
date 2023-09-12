@@ -6,13 +6,18 @@
 
 scarab:
   profiles:
-    - basic
-      # "create" or "update"
+    # required, the argument to pass to the "profile"-command
+    - profile: myProfile
+
+      # required, "create" or "update"
       mode: create
 
-      # backup-paths (absolute paths, "~" will be expanded)
+      # required, absolute paths, "~" will be expanded)
       source: /source/path
       target: /target/path
 
-      # name-format 1..6 (see README)
+      # required, name-format 1..6
       name: 5
+
+      # optional, default false
+      ignore_datetime: true
