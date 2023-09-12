@@ -104,9 +104,18 @@ class Backup(Controller):
 
         target.backup_name = interactions.select_backup_name(source, target, name_arg)
 
+        if target.backup_name in target.content_dirs:
+            target.existing_backup = target.path / target.backup_name
+
+        if source.path == target.existing_backup:
+            raise ScarabArgumentError(
+                "Source is the selected existing backup-directory", "source", str(source.path)
+            )
+
         io.render(
             "backup_params.jinja2",
             {
+                "backup_mode": "Auto",
                 "source": str(source.path),
                 "target": str(target.path),
                 "existing_backup": target.existing_backup.name if target.existing_backup else None,

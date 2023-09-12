@@ -1,12 +1,12 @@
 # Commit
 
-- change profile usage to not using a backup-mode
+- add selection of existing backup by name-format
 
 ## In Progress
 
 - add updating with config
-  - implement selection of existing backup by name-format
-  - type config-profile keys
+  - raise if config is missing required options
+  - add ignore-date-option
   - update README
 
 ## Backlog

@@ -2,7 +2,7 @@ import filecmp
 import os
 from io import TextIOWrapper
 from pathlib import Path
-from unittest.mock import Mock, call
+from unittest.mock import Mock
 
 import pytest
 import yaml
@@ -10,7 +10,7 @@ from pytest_mock import MockerFixture
 
 from app.globals import ScarabArgumentError, ScarabError
 from app.main import Scarab, ScarabTest
-from tests.conftest import make_backup_name_format_5
+from tests.conftest import create_files_and_dirs, make_backup_name_format_5
 
 source_path: Path = Path(__file__).resolve()
 config_file_example: str = f"{source_path.parent.parent}/assets/example-config.scarab.yml"
@@ -51,48 +51,6 @@ def it_overrides_existing_file_with_force_option(
     config_file.unlink()
 
 
-def it_uses_the_config_file_if_an_existing_profile_is_given(
-    mocker: MockerFixture,
-    empty_config_fixture: TextIOWrapper,
-    tmp_path: Path,
-) -> None:
-    source_path: Path = Path(f"/home/{os.environ['USER']}")
-
-    yaml.dump(
-        {
-            "scarab": {
-                "profiles": [
-                    {
-                        "profile": "basic",
-                        "source": str(source_path),
-                        "target": str(tmp_path),
-                        "name": 5,
-                    }
-                ]
-            }
-        },
-        empty_config_fixture,
-    )
-
-    mock_render: Mock = mocker.patch("app.io.render")
-
-    with Scarab(argv=["backup", "profile", "basic"]) as app:
-        app.run()
-        mock_render.assert_has_calls(
-            [
-                call(
-                    "backup_params.jinja2",
-                    {
-                        "source": str(source_path),
-                        "target": str(tmp_path),
-                        "existing_backup": None,
-                        "backup_name": make_backup_name_format_5(source_path.name),
-                    },
-                ),
-            ]
-        )
-
-
 def it_raises_argument_error_if_given_an_invalid_path(
     empty_config_fixture: TextIOWrapper,
     tmp_path: Path,
@@ -118,3 +76,83 @@ def it_raises_argument_error_if_given_an_invalid_path(
     ):
         with Scarab(argv=["backup", "profile", "basic"]) as app:
             app.run()
+
+
+def it_uses_the_config_file_if_an_existing_profile_is_given(
+    mocker: MockerFixture,
+    empty_config_fixture: TextIOWrapper,
+    tmp_path: Path,
+) -> None:
+    create_files_and_dirs(tmp_path, ["source/", "target/"])
+    create_files_and_dirs(tmp_path / "target", ["other/"])
+
+    yaml.dump(
+        {
+            "scarab": {
+                "profiles": [
+                    {
+                        "profile": "basic",
+                        "source": str(tmp_path / "source"),
+                        "target": str(tmp_path / "target"),
+                        "name": 5,
+                    }
+                ]
+            }
+        },
+        empty_config_fixture,
+    )
+
+    mock_render: Mock = mocker.patch("app.io.render")
+
+    with Scarab(argv=["backup", "profile", "basic"]) as app:
+        app.run()
+
+        assert mock_render.mock_calls[0].args[1]["target"] == str(tmp_path / "target")
+        assert mock_render.mock_calls[0].args[1]["existing_backup"] == None
+        assert mock_render.mock_calls[0].args[1]["backup_name"] == make_backup_name_format_5(
+            "source"
+        )
+
+
+def it_selects_an_existing_backup_by_name_format(
+    mocker: MockerFixture,
+    empty_config_fixture: TextIOWrapper,
+    tmp_path: Path,
+) -> None:
+    source_path: Path = Path(f"/home/{os.environ['USER']}")
+    create_files_and_dirs(tmp_path, ["target/"])
+    existing_backup: str = f"{make_backup_name_format_5(source_path.name)}"
+    create_files_and_dirs(
+        tmp_path / "target",
+        [
+            f"{existing_backup}/",
+            f"{make_backup_name_format_5('other')}/",
+        ],
+    )
+
+    yaml.dump(
+        {
+            "scarab": {
+                "profiles": [
+                    {
+                        "profile": "basic",
+                        "source": "~",
+                        "target": str(tmp_path / "target"),
+                        "name": 5,
+                    }
+                ]
+            }
+        },
+        empty_config_fixture,
+    )
+
+    mock_render: Mock = mocker.patch("app.io.render")
+
+    with Scarab(argv=["backup", "profile", "basic"]) as app:
+        app.run()
+
+        assert mock_render.mock_calls[0].args[1]["target"] == str(tmp_path / "target")
+        assert mock_render.mock_calls[0].args[1]["existing_backup"] == existing_backup
+        assert mock_render.mock_calls[0].args[1]["backup_name"] == make_backup_name_format_5(
+            source_path.name
+        )
