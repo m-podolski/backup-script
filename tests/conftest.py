@@ -73,7 +73,7 @@ def get_content_with_slashed_dirs(dir: Path) -> list[str]:
     return [slash(path) for path in dir.iterdir()]
 
 
-def make_backup_name_format(
+def make_backup_name(
     source_dir: str, name_arg: int, set_date: Optional[datetime.datetime] = None
 ) -> str:
     user: str = os.environ["USER"]

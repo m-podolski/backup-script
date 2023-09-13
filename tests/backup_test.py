@@ -1,3 +1,4 @@
+import datetime
 import os
 from pathlib import Path
 from unittest.mock import MagicMock, Mock, _Call, call  # pyright: ignore
@@ -12,7 +13,7 @@ from app.main import ScarabTest
 from tests.conftest import (
     create_files_and_dirs,
     get_content_with_slashed_dirs,
-    make_backup_name_format,
+    make_backup_name,
 )
 
 
@@ -193,7 +194,7 @@ def it_gets_the_target_name_from_a_selection_menu(mocker: MockerFixture, tmp_pat
             ],
         },
     )
-    assert target_name == make_backup_name_format("test", 5)
+    assert target_name == make_backup_name("test", 5)
 
 
 def it_gets_the_target_name_again_in_create_mode_if_it_already_exists(
@@ -232,7 +233,65 @@ def it_gets_the_target_name_again_in_create_mode_if_it_already_exists(
             call_list_item,
         ]
     )
-    assert target_name == make_backup_name_format("directory", 5)
+    assert target_name == make_backup_name("directory", 5)
+
+
+def it_creates_and_updates_in_auto_mode(
+    mocker: MockerFixture,
+    tmp_path: Path,
+) -> None:
+    create_files_and_dirs(tmp_path, ["source/", "target/"])
+    new_backup: str = make_backup_name("source", 3)
+    existing_backup_older: str = make_backup_name("source", 5, datetime.datetime(2023, 9, 1))
+    existing_backup_newer: str = make_backup_name("source", 5, datetime.datetime(2023, 9, 2))
+    create_files_and_dirs(
+        tmp_path / "target",
+        [
+            f"{existing_backup_older}/",
+            f"{existing_backup_newer}/",
+        ],
+    )
+
+    mock_render: Mock = mocker.patch("app.io.render")
+
+    with ScarabTest(
+        argv=[
+            "backup",
+            "auto",
+            "--source",
+            str(tmp_path / "source"),
+            "--target",
+            str(tmp_path / "target"),
+            "--name",
+            "3",
+        ]
+    ) as app:
+        app.run()
+
+        mock_arg_1: dict[str, str | int | None] = mock_render.mock_calls[0].args[1]
+        assert mock_arg_1["target"] == str(tmp_path / "target")
+        assert mock_arg_1["existing_backup"] == None
+        assert mock_arg_1["backup_name"] == new_backup
+
+    with ScarabTest(
+        argv=[
+            "backup",
+            "auto",
+            "--source",
+            str(tmp_path / "source"),
+            "--target",
+            str(tmp_path / "target"),
+            "--name",
+            "5",
+            "--ignore-datetime",
+        ]
+    ) as app:
+        app.run()
+
+        mock_arg_2: dict[str, str | int | None] = mock_render.mock_calls[1].args[1]
+        assert mock_arg_2["target"] == str(tmp_path / "target")
+        assert mock_arg_2["existing_backup"] == existing_backup_newer
+        assert mock_arg_2["backup_name"] == make_backup_name("source", 5)
 
 
 def it_prints_backup_information(
@@ -273,7 +332,7 @@ def it_prints_backup_information(
                         "source": str(source_path),
                         "target": str(tmp_path),
                         "existing_backup": None,
-                        "backup_name": make_backup_name_format(source_path.name, 5),
+                        "backup_name": make_backup_name(source_path.name, 5),
                     },
                 ),
             ]

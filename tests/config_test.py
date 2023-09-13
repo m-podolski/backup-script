@@ -11,7 +11,7 @@ from pytest_mock import MockerFixture
 
 from app.globals import ScarabArgumentError, ScarabError, ScarabOptionError
 from app.main import Scarab, ScarabTest
-from tests.conftest import create_files_and_dirs, make_backup_name_format
+from tests.conftest import create_files_and_dirs, make_backup_name
 
 source_path: Path = Path(__file__).resolve()
 config_file_example: str = f"{source_path.parent.parent}/assets/example-config.scarab.yml"
@@ -136,9 +136,7 @@ def it_uses_the_config_file_if_an_existing_profile_is_given(
 
         assert mock_render.mock_calls[0].args[1]["target"] == str(tmp_path / "target")
         assert mock_render.mock_calls[0].args[1]["existing_backup"] == None
-        assert mock_render.mock_calls[0].args[1]["backup_name"] == make_backup_name_format(
-            "source", 5
-        )
+        assert mock_render.mock_calls[0].args[1]["backup_name"] == make_backup_name("source", 5)
 
 
 def it_selects_an_existing_backup_by_name_format(
@@ -147,12 +145,12 @@ def it_selects_an_existing_backup_by_name_format(
     tmp_path: Path,
 ) -> None:
     create_files_and_dirs(tmp_path, ["source/", "target/"])
-    existing_backup: str = make_backup_name_format("source", 5)
+    existing_backup: str = make_backup_name("source", 5)
     create_files_and_dirs(
         tmp_path / "target",
         [
             f"{existing_backup}/",
-            f"{make_backup_name_format('other', 5)}/",
+            f"{make_backup_name('other', 5)}/",
         ],
     )
 
@@ -179,9 +177,7 @@ def it_selects_an_existing_backup_by_name_format(
 
         assert mock_render.mock_calls[0].args[1]["target"] == str(tmp_path / "target")
         assert mock_render.mock_calls[0].args[1]["existing_backup"] == existing_backup
-        assert mock_render.mock_calls[0].args[1]["backup_name"] == make_backup_name_format(
-            "source", 5
-        )
+        assert mock_render.mock_calls[0].args[1]["backup_name"] == make_backup_name("source", 5)
 
 
 def it_selects_an_existing_backup_ignoring_the_date_if_configured(
@@ -190,10 +186,10 @@ def it_selects_an_existing_backup_ignoring_the_date_if_configured(
     tmp_path: Path,
 ) -> None:
     create_files_and_dirs(tmp_path, ["source/", "target/"])
-    existing_backup_older: str = make_backup_name_format("source", 5, datetime.datetime(2023, 9, 1))
-    existing_backup_newer: str = make_backup_name_format("source", 5, datetime.datetime(2023, 9, 2))
-    other_backup_newer: str = make_backup_name_format("other", 5)
-    other_backup_older: str = make_backup_name_format("other", 5, datetime.datetime(2023, 9, 2))
+    existing_backup_older: str = make_backup_name("source", 5, datetime.datetime(2023, 9, 1))
+    existing_backup_newer: str = make_backup_name("source", 5, datetime.datetime(2023, 9, 2))
+    other_backup_newer: str = make_backup_name("other", 5)
+    other_backup_older: str = make_backup_name("other", 5, datetime.datetime(2023, 9, 2))
     create_files_and_dirs(
         tmp_path / "target",
         [
@@ -228,6 +224,4 @@ def it_selects_an_existing_backup_ignoring_the_date_if_configured(
 
         assert mock_render.mock_calls[0].args[1]["target"] == str(tmp_path / "target")
         assert mock_render.mock_calls[0].args[1]["existing_backup"] == existing_backup_newer
-        assert mock_render.mock_calls[0].args[1]["backup_name"] == make_backup_name_format(
-            "source", 5
-        )
+        assert mock_render.mock_calls[0].args[1]["backup_name"] == make_backup_name("source", 5)

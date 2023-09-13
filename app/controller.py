@@ -99,14 +99,32 @@ class Backup(Controller):
 
             profile: ScarabProfile = list(filter(find_profile, profiles))[0]  # pyright: ignore
 
-            self._auto(profile)
+            self.auto(profile)
 
-    def _auto(self, profile: ScarabProfile) -> None:
+    @ex(
+        help="Automatically create and update backups",
+        arguments=[
+            *backup_controller_args,
+            (
+                ["-i", "--ignore-datetime"],
+                {
+                    "help": "Select the latest existing backup-directory and rename it",
+                    "action": "store_true",
+                    "dest": "ignore_datetime",
+                },
+            ),
+        ],
+    )  # pyright: ignore
+    def auto(self, profile: Optional[ScarabProfile] = None) -> None:
         source: Source
         target: Target
         name_arg: int
         ignore_datetime: bool
-        source, target, name_arg, ignore_datetime = self._initialize_by_profile(profile)
+
+        if profile:
+            source, target, name_arg, ignore_datetime = self._initialize_required(profile)
+        else:
+            source, target, name_arg, ignore_datetime = self._initialize_required()
 
         target.backup_name = interactions.select_backup_name(source, target, name_arg)
 
@@ -151,7 +169,7 @@ class Backup(Controller):
         target: Target
         name_arg: Optional[int]
         output_mode: OutputMode
-        source, target, name_arg, output_mode = self._initialize()
+        source, target, name_arg, output_mode = self._initialize_optional()
 
         if target.is_media_dir:
             target = interactions.select_media_dir(source, target, output_mode)
@@ -191,7 +209,7 @@ class Backup(Controller):
         target: Target
         name_arg: Optional[int]
         output_mode: OutputMode
-        source, target, name_arg, output_mode = self._initialize()
+        source, target, name_arg, output_mode = self._initialize_optional()
 
         if target.is_media_dir:
             target = interactions.select_media_dir(source, target, output_mode)
@@ -221,7 +239,7 @@ class Backup(Controller):
             },
         )
 
-    def _initialize(self) -> Tuple[Source, Target, Optional[int], OutputMode]:
+    def _initialize_optional(self) -> Tuple[Source, Target, Optional[int], OutputMode]:
         quiet: bool = self.app.quiet  # pyright: ignore
         source_arg: Optional[str] = self.app.pargs.source  # pyright: ignore
         target_arg: Optional[str] = self.app.pargs.target  # pyright: ignore
@@ -243,19 +261,24 @@ class Backup(Controller):
 
         return (source, target, name_arg, output_mode)  # pyright: ignore[reportUnknownVariableType]
 
-    def _initialize_by_profile(
+    def _initialize_required(
         self, profile: Optional[ScarabProfile] = None
     ) -> Tuple[Source, Target, int, bool]:
+        if profile:
+            args: ScarabProfile = profile  # pyright: ignore
+        else:
+            args: ScarabProfile = vars(self.app.pargs)  # pyright: ignore
+
         try:
-            source_arg: str = profile["source"]  # pyright: ignore
-            target_arg: str = profile["target"]  # pyright: ignore
-            name_arg: int = int(profile["name"])  # pyright: ignore
+            source_arg: str = args["source"]  # pyright: ignore
+            target_arg: str = args["target"]  # pyright: ignore
+            name_arg: int = int(args["name"])  # pyright: ignore
         except KeyError as e:
             raise ScarabOptionError(f"Your config-file is missing a required option: {e}")
 
         try:
-            ignore_datetime: bool = profile["ignore_datetime"]  # pyright: ignore
-        except KeyError as e:
+            ignore_datetime: bool = args["ignore_datetime"]  # pyright: ignore
+        except KeyError:
             ignore_datetime = False
 
         source: Source = interactions.init_location(source_arg, Source, OutputMode.AUTO)

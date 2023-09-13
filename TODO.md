@@ -1,8 +1,18 @@
 # Commit
 
-- update README
+- add auto-command
 
 ## In Progress
+
+- add dataclass BackupParams
+
+- refactor command-initialization
+  - put newest-matching onto target
+  - remove location-init from argument-init
+  - improve argument-init interface(s)
+  - rename interactions to init
+  - refactor OutputMode.AUTO into separate function
+  - ? change typevar
 
 ## Backlog
 
