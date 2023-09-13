@@ -5,7 +5,13 @@ from pathlib import Path
 from typing import Literal, Optional, TypeAlias, TypeVar
 
 import app.io as io
-from app.globals import OutputMode, ScarabArgumentError
+from app.globals import (
+    NameFormats,
+    OutputMode,
+    ScarabArgumentError,
+    ScarabMessage,
+    TargetContent,
+)
 from app.locations import Source, Target
 
 T = TypeVar("T", Source, Target)
@@ -48,10 +54,14 @@ def _check_path(location: T, output_mode: OutputMode = OutputMode.NORMAL) -> T:
 MessageType: TypeAlias = Literal["INVALID_PATH", "NO_PATH_GIVEN"]
 
 
-def _get_message(key: MessageType, name: str) -> str:
-    messages: dict[MessageType, str] = {
-        "INVALID_PATH": f"Your {name.lower()} is not a valid directory! Please check and enter it again.",
-        "NO_PATH_GIVEN": f"Please specify a {name}-path to the directory you want {'backed up' if name == 'source' else 'to back up to'}.",
+def _get_message(key: MessageType, name: str) -> ScarabMessage:
+    messages: dict[MessageType, ScarabMessage] = {
+        "INVALID_PATH": ScarabMessage(
+            f"Your {name.lower()} is not a valid directory! Please check and enter it again."
+        ),
+        "NO_PATH_GIVEN": ScarabMessage(
+            f"Please specify a {name}-path to the directory you want {'backed up' if name == 'source' else 'to back up to'}."
+        ),
     }
     return messages[key]
 
@@ -61,11 +71,11 @@ def select_media_dir(
 ) -> Target:
     io.render(
         "select_directory.jinja2",
-        {
-            "source": str(source.path),
-            "target": str(target.path),
-            "target_content": [*target.content, "-> Rescan Directory"],
-        },
+        TargetContent(
+            source=source.path,
+            target=target.path,
+            target_content=[*target.content, "-> Rescan Directory"],
+        ),
     )
     selected_option: int = int(io.get_input("Number: ", output_mode))
     selected_option_is_rescan: bool = selected_option == len(target.content) + 1
@@ -81,9 +91,9 @@ def select_media_dir(
 def select_backup_directory(target: Target, output_mode: OutputMode = OutputMode.NORMAL) -> Path:
     io.render(
         "select_target_directory.jinja2",
-        {
-            "target_content": target.content_dirs,
-        },
+        TargetContent(
+            target_content=target.content_dirs,
+        ),
     )
     selected_option: int = int(io.get_input("Number: ", output_mode))
     selected_dir: str = target.content_dirs[selected_option - 1]

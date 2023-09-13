@@ -1,10 +1,9 @@
 # Commit
 
-- add auto-command
+- refactor to use ScarabRecords
+  - check name-formats
 
 ## In Progress
-
-- add dataclass BackupParams
 
 - refactor command-initialization
   - put newest-matching onto target

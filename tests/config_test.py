@@ -9,7 +9,12 @@ import pytest
 import yaml
 from pytest_mock import MockerFixture
 
-from app.globals import ScarabArgumentError, ScarabError, ScarabOptionError
+from app.globals import (
+    BackupParams,
+    ScarabArgumentError,
+    ScarabError,
+    ScarabOptionError,
+)
 from app.main import Scarab, ScarabTest
 from tests.conftest import create_files_and_dirs, make_backup_name
 
@@ -134,9 +139,10 @@ def it_uses_the_config_file_if_an_existing_profile_is_given(
     with Scarab(argv=["backup", "profile", "basic"]) as app:
         app.run()
 
-        assert mock_render.mock_calls[0].args[1]["target"] == str(tmp_path / "target")
-        assert mock_render.mock_calls[0].args[1]["existing_backup"] == None
-        assert mock_render.mock_calls[0].args[1]["backup_name"] == make_backup_name("source", 5)
+        mock_arg: BackupParams = mock_render.mock_calls[0].args[1]
+        assert mock_arg.target == str(tmp_path / "target")
+        assert mock_arg.existing_backup == None
+        assert mock_arg.backup_name == make_backup_name("source", 5)
 
 
 def it_selects_an_existing_backup_by_name_format(
@@ -175,9 +181,10 @@ def it_selects_an_existing_backup_by_name_format(
     with Scarab(argv=["backup", "profile", "basic"]) as app:
         app.run()
 
-        assert mock_render.mock_calls[0].args[1]["target"] == str(tmp_path / "target")
-        assert mock_render.mock_calls[0].args[1]["existing_backup"] == existing_backup
-        assert mock_render.mock_calls[0].args[1]["backup_name"] == make_backup_name("source", 5)
+        mock_arg: BackupParams = mock_render.mock_calls[0].args[1]
+        assert mock_arg.target == str(tmp_path / "target")
+        assert mock_arg.existing_backup == existing_backup
+        assert mock_arg.backup_name == make_backup_name("source", 5)
 
 
 def it_selects_an_existing_backup_ignoring_the_date_if_configured(
@@ -222,6 +229,7 @@ def it_selects_an_existing_backup_ignoring_the_date_if_configured(
     with Scarab(argv=["backup", "profile", "basic"]) as app:
         app.run()
 
-        assert mock_render.mock_calls[0].args[1]["target"] == str(tmp_path / "target")
-        assert mock_render.mock_calls[0].args[1]["existing_backup"] == existing_backup_newer
-        assert mock_render.mock_calls[0].args[1]["backup_name"] == make_backup_name("source", 5)
+        mock_arg: BackupParams = mock_render.mock_calls[0].args[1]
+        assert mock_arg.target == str(tmp_path / "target")
+        assert mock_arg.existing_backup == existing_backup_newer
+        assert mock_arg.backup_name == make_backup_name("source", 5)

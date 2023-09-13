@@ -1,8 +1,9 @@
-from typing import Any, Literal, TypeAlias
+import dataclasses
+from typing import Literal, TypeAlias
 
 from jinja2 import Environment, PackageLoader, Template
 
-from app.globals import OutputMode, ScarabOptionError
+from app.globals import OutputMode, ScarabMessage, ScarabOptionError, ScarabRecord
 
 env = Environment(loader=PackageLoader("app"))
 
@@ -22,9 +23,9 @@ STYLES: dict[Style, str] = {
 }
 
 
-def render(file: str, content: dict[str, Any], style: Style = "NONE") -> None:
+def render(file: str, content: ScarabRecord, style: Style = "NONE") -> None:
     template: Template = env.get_template(file)
-    styled: str = _escape_string(template.render(content), style)
+    styled: str = _escape_string(template.render(dataclasses.asdict(content)), style)
     print(styled)
 
 
@@ -38,8 +39,8 @@ def get_input(prompt: str, output_mode: OutputMode) -> str:
     return input(prompt)
 
 
-def get_path_input(prompt_message: str, output_mode: OutputMode) -> str:
-    render("input_prompt.jinja2", {"message": prompt_message})
+def get_path_input(prompt_message: ScarabMessage, output_mode: OutputMode) -> str:
+    render("input_prompt.jinja2", prompt_message)
     return get_input("Path: ", output_mode)
 
 

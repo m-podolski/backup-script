@@ -7,10 +7,12 @@ import app.config as config
 import app.interactions as interactions
 import app.io as io
 from app.globals import (
+    BackupParams,
     OutputMode,
     ScarabArgumentError,
     ScarabOptionError,
     ScarabProfile,
+    TargetContent,
 )
 from app.locations import Source, Target
 
@@ -151,13 +153,13 @@ class Backup(Controller):
 
         io.render(
             "backup_params.jinja2",
-            {
-                "backup_mode": "Auto",
-                "source": str(source.path),
-                "target": str(target.path),
-                "existing_backup": target.existing_backup.name if target.existing_backup else None,
-                "backup_name": target.backup_name,
-            },
+            BackupParams(
+                backup_mode="Auto",
+                source=source.path,
+                target=target.path,
+                existing_backup=target.existing_backup,
+                backup_name=target.backup_name,
+            ),
         )
 
     @ex(
@@ -174,12 +176,7 @@ class Backup(Controller):
         if target.is_media_dir:
             target = interactions.select_media_dir(source, target, output_mode)
 
-        io.render(
-            "target_contents.jinja2",
-            {
-                "target_content": target.content,
-            },
-        )
+        io.render("target_contents.jinja2", TargetContent(target_content=target.content))
 
         target.backup_name = interactions.select_backup_name(
             source,
@@ -191,13 +188,13 @@ class Backup(Controller):
 
         io.render(
             "backup_params.jinja2",
-            {
-                "backup_mode": "Create",
-                "source": str(source.path),
-                "target": str(target.path),
-                "existing_backup": target.existing_backup.name if target.existing_backup else None,
-                "backup_name": target.backup_name,
-            },
+            BackupParams(
+                backup_mode="Create",
+                source=source.path,
+                target=target.path,
+                existing_backup=target.existing_backup,
+                backup_name=target.backup_name,
+            ),
         )
 
     @ex(
@@ -230,13 +227,13 @@ class Backup(Controller):
 
         io.render(
             "backup_params.jinja2",
-            {
-                "backup_mode": "Update",
-                "source": str(source.path),
-                "target": str(target.path),
-                "existing_backup": target.existing_backup.name if target.existing_backup else None,
-                "backup_name": target.backup_name,
-            },
+            BackupParams(
+                backup_mode="Update",
+                source=source.path,
+                target=target.path,
+                existing_backup=target.existing_backup,
+                backup_name=target.backup_name,
+            ),
         )
 
     def _initialize_optional(self) -> Tuple[Source, Target, Optional[int], OutputMode]:

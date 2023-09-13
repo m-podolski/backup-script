@@ -7,7 +7,13 @@ import pytest
 from pytest_mock import MockerFixture
 
 import app.interactions as interactions
-from app.globals import ScarabArgumentError, ScarabOptionError
+from app.globals import (
+    BackupParams,
+    NameFormats,
+    ScarabArgumentError,
+    ScarabOptionError,
+    TargetContent,
+)
 from app.locations import Location, Source, Target
 from app.main import ScarabTest
 from tests.conftest import (
@@ -131,11 +137,9 @@ def it_gets_dir_selection_with_rescan_option_when_in_media_dir(
 
     call_list_item: _Call = call(
         "select_directory.jinja2",
-        {
-            "source": os.environ["HOME"],
-            "target": str(media_dir_fixture),
-            "target_content": target_content,
-        },
+        TargetContent(
+            source=Path(os.environ["HOME"]), target=media_dir_fixture, target_content=target_content
+        ),
     )
 
     mock_input.assert_called_with("Number: ")
@@ -163,12 +167,12 @@ def it_gets_dir_at_target_when_in_update_mode(mocker: MockerFixture, tmp_path: P
 
         mock_input.assert_called_with("Number: ")
 
-        assert mock_render.mock_calls[0].args[0] == "select_target_directory.jinja2"
-        assert mock_render.mock_calls[0].args[1]["target_content"] == ["backup_1", "backup_2"]
+        mock_arg_1: TargetContent = mock_render.mock_calls[0].args[1]
+        assert mock_arg_1.target_content == ["backup_1", "backup_2"]
 
-        assert mock_render.mock_calls[1].args[0] == "backup_params.jinja2"
-        assert mock_render.mock_calls[1].args[1]["target"] == str(tmp_path)
-        assert mock_render.mock_calls[1].args[1]["existing_backup"] == "backup_2"
+        mock_arg_2: BackupParams = mock_render.mock_calls[1].args[1]
+        assert mock_arg_2.target == str(tmp_path)
+        assert mock_arg_2.existing_backup == "backup_2"
 
 
 def it_gets_the_target_name_from_a_selection_menu(mocker: MockerFixture, tmp_path: Path) -> None:
@@ -183,16 +187,7 @@ def it_gets_the_target_name_from_a_selection_menu(mocker: MockerFixture, tmp_pat
     mock_input.assert_called_with("Number: ")
     mock_render.assert_called_with(
         "select_target_name.jinja2",
-        {
-            "name_formats": [
-                "<source-dir>",
-                "<source-dir>_<date>",
-                "<source-dir>_<date-time>",
-                "<user>@<host>_<source-dir>",
-                "<user>@<host>_<source-dir>_<date>",
-                "<user>@<host>_<source-dir>_<date-time>",
-            ],
-        },
+        NameFormats(),
     )
     assert target_name == make_backup_name("test", 5)
 
@@ -215,16 +210,7 @@ def it_gets_the_target_name_again_in_create_mode_if_it_already_exists(
 
     call_list_item: _Call = call(
         "select_target_name.jinja2",
-        {
-            "name_formats": [
-                "<source-dir>",
-                "<source-dir>_<date>",
-                "<source-dir>_<date-time>",
-                "<user>@<host>_<source-dir>",
-                "<user>@<host>_<source-dir>_<date>",
-                "<user>@<host>_<source-dir>_<date-time>",
-            ],
-        },
+        NameFormats(),
     )
 
     mock_render.assert_has_calls(
@@ -268,10 +254,10 @@ def it_creates_and_updates_in_auto_mode(
     ) as app:
         app.run()
 
-        mock_arg_1: dict[str, str | int | None] = mock_render.mock_calls[0].args[1]
-        assert mock_arg_1["target"] == str(tmp_path / "target")
-        assert mock_arg_1["existing_backup"] == None
-        assert mock_arg_1["backup_name"] == new_backup
+        mock_arg_1: BackupParams = mock_render.mock_calls[0].args[1]
+        assert mock_arg_1.target == str(tmp_path / "target")
+        assert mock_arg_1.existing_backup == None
+        assert mock_arg_1.backup_name == new_backup
 
     with ScarabTest(
         argv=[
@@ -288,10 +274,10 @@ def it_creates_and_updates_in_auto_mode(
     ) as app:
         app.run()
 
-        mock_arg_2: dict[str, str | int | None] = mock_render.mock_calls[1].args[1]
-        assert mock_arg_2["target"] == str(tmp_path / "target")
-        assert mock_arg_2["existing_backup"] == existing_backup_newer
-        assert mock_arg_2["backup_name"] == make_backup_name("source", 5)
+        mock_arg_2: BackupParams = mock_render.mock_calls[1].args[1]
+        assert mock_arg_2.target == str(tmp_path / "target")
+        assert mock_arg_2.existing_backup == existing_backup_newer
+        assert mock_arg_2.backup_name == make_backup_name("source", 5)
 
 
 def it_prints_backup_information(
@@ -321,19 +307,17 @@ def it_prints_backup_information(
             [
                 call(
                     "target_contents.jinja2",
-                    {
-                        "target_content": ["existing_1/", "existing_2/", "file.txt"],
-                    },
+                    TargetContent(target_content=["existing_1/", "existing_2/", "file.txt"]),
                 ),
                 call(
                     "backup_params.jinja2",
-                    {
-                        "backup_mode": "Create",
-                        "source": str(source_path),
-                        "target": str(tmp_path),
-                        "existing_backup": None,
-                        "backup_name": make_backup_name(source_path.name, 5),
-                    },
+                    BackupParams(
+                        backup_mode="Create",
+                        source=source_path,
+                        target=tmp_path,
+                        existing_backup=None,
+                        backup_name=make_backup_name(source_path.name, 5),
+                    ),
                 ),
             ]
         )
