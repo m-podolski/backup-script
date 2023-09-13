@@ -1,7 +1,6 @@
 # Commit
 
-- refactor to use ScarabRecords
-  - check name-formats
+- refactor to extract NameFormats
 
 ## In Progress
 

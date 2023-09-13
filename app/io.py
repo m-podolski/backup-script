@@ -3,7 +3,8 @@ from typing import Literal, TypeAlias
 
 from jinja2 import Environment, PackageLoader, Template
 
-from app.globals import OutputMode, ScarabMessage, ScarabOptionError, ScarabRecord
+from app.globals import OutputMode, ScarabOptionError
+from app.records import ScarabMessage, ScarabRecord
 
 env = Environment(loader=PackageLoader("app"))
 

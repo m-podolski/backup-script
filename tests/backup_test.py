@@ -7,15 +7,10 @@ import pytest
 from pytest_mock import MockerFixture
 
 import app.interactions as interactions
-from app.globals import (
-    BackupParams,
-    NameFormats,
-    ScarabArgumentError,
-    ScarabOptionError,
-    TargetContent,
-)
+from app.globals import ScarabArgumentError, ScarabOptionError
 from app.locations import Location, Source, Target
 from app.main import ScarabTest
+from app.records import BackupParams, NameFormats, TargetContent
 from tests.conftest import (
     create_files_and_dirs,
     get_content_with_slashed_dirs,
@@ -187,7 +182,7 @@ def it_gets_the_target_name_from_a_selection_menu(mocker: MockerFixture, tmp_pat
     mock_input.assert_called_with("Number: ")
     mock_render.assert_called_with(
         "select_target_name.jinja2",
-        NameFormats(),
+        NameFormats("test"),
     )
     assert target_name == make_backup_name("test", 5)
 
@@ -210,7 +205,7 @@ def it_gets_the_target_name_again_in_create_mode_if_it_already_exists(
 
     call_list_item: _Call = call(
         "select_target_name.jinja2",
-        NameFormats(),
+        NameFormats("directory"),
     )
 
     mock_render.assert_has_calls(

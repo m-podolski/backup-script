@@ -1,18 +1,10 @@
-import datetime
-import os
-import socket
 from pathlib import Path
 from typing import Literal, Optional, TypeAlias, TypeVar
 
 import app.io as io
-from app.globals import (
-    NameFormats,
-    OutputMode,
-    ScarabArgumentError,
-    ScarabMessage,
-    TargetContent,
-)
+from app.globals import OutputMode, ScarabArgumentError
 from app.locations import Source, Target
+from app.records import NameFormats, ScarabMessage, TargetContent
 
 T = TypeVar("T", Source, Target)
 
@@ -107,32 +99,18 @@ def select_backup_name(
     output_mode: OutputMode = OutputMode.NORMAL,
     is_create: bool = False,
 ) -> str:
-    user: str = os.environ["USER"]
-    host: str = socket.gethostname()
-    date: str = datetime.datetime.today().strftime("%Y-%m-%d")
-    time: str = datetime.datetime.today().strftime("%H-%M-%S")
-
-    name_formats: dict[str, str] = {
-        "<source-dir>": source.path.name,
-        "<source-dir>_<date>": f"{source.path.name}_{date}",
-        "<source-dir>_<date-time>": f"{source.path.name}_{date}-{time}",
-        "<user>@<host>_<source-dir>": f"{user}@{host}_{source.path.name}",
-        "<user>@<host>_<source-dir>_<date>": f"{user}@{host}_{source.path.name}_{date}",
-        "<user>@<host>_<source-dir>_<date-time>": f"{user}@{host}_{source.path.name}_{date}-{time}",
-    }
+    name_formats = NameFormats(source.path.name)
 
     if name_arg is None:
         io.render(
             "select_target_name.jinja2",
-            {
-                "name_formats": [format for format in name_formats.keys()],
-            },
+            name_formats,
         )
         selected_option: int = int(io.get_input("Number: ", output_mode))
     else:
         selected_option = name_arg
 
-    selected_format: str = list(name_formats.values())[selected_option - 1]
+    selected_format: str = name_formats.select(selected_option)
     selected_name_already_exists: bool = selected_format in [
         item[0 : len(item) - 1 :] for item in target.content
     ]

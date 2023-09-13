@@ -7,14 +7,13 @@ import app.config as config
 import app.interactions as interactions
 import app.io as io
 from app.globals import (
-    BackupParams,
     OutputMode,
     ScarabArgumentError,
     ScarabOptionError,
     ScarabProfile,
-    TargetContent,
 )
 from app.locations import Source, Target
+from app.records import BackupParams, TargetContent
 
 VERSION: tuple[int, int, int, str, int] = (0, 5, 0, "alpha", 0)
 VERSION_BANNER: str = """

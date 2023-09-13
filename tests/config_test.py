@@ -9,13 +9,9 @@ import pytest
 import yaml
 from pytest_mock import MockerFixture
 
-from app.globals import (
-    BackupParams,
-    ScarabArgumentError,
-    ScarabError,
-    ScarabOptionError,
-)
+from app.globals import ScarabArgumentError, ScarabError, ScarabOptionError
 from app.main import Scarab, ScarabTest
+from app.records import BackupParams
 from tests.conftest import create_files_and_dirs, make_backup_name
 
 source_path: Path = Path(__file__).resolve()
