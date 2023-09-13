@@ -135,12 +135,8 @@ class Backup(Controller):
             else:
                 name_to_find = interactions.select_backup_name(source, target, 4)
 
-            matches: list[str] = [
-                dir
-                for dir in sorted(target.content_dirs, reverse=True)
-                if dir.startswith(name_to_find)
-            ]
-            target.existing_backup = target.path / matches[0]
+            target.select_latest_existing_backup(name_to_find)
+
         else:
             if target.backup_name in target.content_dirs:
                 target.existing_backup = target.path / target.backup_name

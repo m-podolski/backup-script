@@ -103,3 +103,9 @@ class Target(Location):
         return sorted(
             [item[0 : len(item) - 1 :] for item in self.content if item[len(item) - 1] == "/"]
         )
+
+    def select_latest_existing_backup(self, name_to_find: str) -> None:
+        matches: list[str] = [
+            dir for dir in sorted(self.content_dirs, reverse=True) if dir.startswith(name_to_find)
+        ]
+        self.existing_backup = self.path / matches[0]

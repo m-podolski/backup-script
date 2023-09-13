@@ -1,15 +1,15 @@
 # Commit
 
-- refactor to extract NameFormats
+- refactor newest-backup-matching onto target
 
 ## In Progress
 
 - refactor command-initialization
-  - put newest-matching onto target
   - remove location-init from argument-init
   - improve argument-init interface(s)
+
+- refactor interactions-uses in auto() into separate functions
   - rename interactions to init
-  - refactor OutputMode.AUTO into separate function
   - ? change typevar
 
 ## Backlog
