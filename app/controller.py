@@ -117,15 +117,17 @@ class Backup(Controller):
         ],
     )  # pyright: ignore
     def auto(self, profile: Optional[ScarabProfile] = None) -> None:
-        source: Source
-        target: Target
+        source_arg: str
+        target_arg: str
         name_arg: int
         ignore_datetime: bool
 
-        if profile:
-            source, target, name_arg, ignore_datetime = self._initialize_required(profile)
-        else:
-            source, target, name_arg, ignore_datetime = self._initialize_required()
+        source_arg, target_arg, name_arg, ignore_datetime = (
+            self._initialize_required_args(profile) if profile else self._initialize_required_args()
+        )
+
+        source: Source = interactions.init_location(source_arg, Source, OutputMode.AUTO)
+        target: Target = interactions.init_location(target_arg, Target, OutputMode.AUTO)
 
         target.backup_name = interactions.select_backup_name(source, target, name_arg)
 
@@ -162,11 +164,18 @@ class Backup(Controller):
         arguments=backup_controller_args,
     )  # pyright: ignore
     def create(self) -> None:
-        source: Source
-        target: Target
+        source_arg: str
+        target_arg: str
         name_arg: Optional[int]
         output_mode: OutputMode
-        source, target, name_arg, output_mode = self._initialize_optional()
+        source_arg, target_arg, name_arg, output_mode = self._initialize_optional_args()
+
+        source: Source = interactions.init_location(
+            source_arg, Source, output_mode  # pyright: ignore
+        )
+        target: Target = interactions.init_location(
+            target_arg, Target, output_mode  # pyright: ignore
+        )
 
         if target.is_media_dir:
             target = interactions.select_media_dir(source, target, output_mode)
@@ -197,11 +206,18 @@ class Backup(Controller):
         arguments=backup_controller_args,
     )  # pyright: ignore
     def update(self) -> None:
-        source: Source
-        target: Target
+        source_arg: str
+        target_arg: str
         name_arg: Optional[int]
         output_mode: OutputMode
-        source, target, name_arg, output_mode = self._initialize_optional()
+        source_arg, target_arg, name_arg, output_mode = self._initialize_optional_args()
+
+        source: Source = interactions.init_location(
+            source_arg, Source, output_mode  # pyright: ignore
+        )
+        target: Target = interactions.init_location(
+            target_arg, Target, output_mode  # pyright: ignore
+        )
 
         if target.is_media_dir:
             target = interactions.select_media_dir(source, target, output_mode)
@@ -231,7 +247,7 @@ class Backup(Controller):
             ),
         )
 
-    def _initialize_optional(self) -> Tuple[Source, Target, Optional[int], OutputMode]:
+    def _initialize_optional_args(self) -> Tuple[str, str, Optional[int], OutputMode]:
         quiet: bool = self.app.quiet  # pyright: ignore
         source_arg: Optional[str] = self.app.pargs.source  # pyright: ignore
         target_arg: Optional[str] = self.app.pargs.target  # pyright: ignore
@@ -244,18 +260,16 @@ class Backup(Controller):
         else:
             output_mode = OutputMode.NORMAL
 
-        source: Source = interactions.init_location(
-            source_arg, Source, output_mode  # pyright: ignore
-        )
-        target: Target = interactions.init_location(
-            target_arg, Target, output_mode  # pyright: ignore
-        )
+        return (
+            source_arg,
+            target_arg,
+            name_arg,
+            output_mode,
+        )  # pyright: ignore
 
-        return (source, target, name_arg, output_mode)  # pyright: ignore[reportUnknownVariableType]
-
-    def _initialize_required(
+    def _initialize_required_args(
         self, profile: Optional[ScarabProfile] = None
-    ) -> Tuple[Source, Target, int, bool]:
+    ) -> Tuple[str, str, int, bool]:
         if profile:
             args: ScarabProfile = profile  # pyright: ignore
         else:
@@ -273,12 +287,9 @@ class Backup(Controller):
         except KeyError:
             ignore_datetime = False
 
-        source: Source = interactions.init_location(source_arg, Source, OutputMode.AUTO)
-        target: Target = interactions.init_location(target_arg, Target, OutputMode.AUTO)
-
         return (
-            source,
-            target,
+            source_arg,
+            target_arg,
             name_arg,
             ignore_datetime,
         )  # pyright: ignore[reportUnknownVariableType]

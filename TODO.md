@@ -1,12 +1,8 @@
 # Commit
 
-- refactor newest-backup-matching onto target
+- refactor arg-initialization
 
 ## In Progress
-
-- refactor command-initialization
-  - remove location-init from argument-init
-  - improve argument-init interface(s)
 
 - refactor interactions-uses in auto() into separate functions
   - rename interactions to init
