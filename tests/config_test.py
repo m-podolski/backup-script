@@ -73,7 +73,7 @@ def it_raises_if_config_is_missing_required_args(
 
     with pytest.raises(
         ScarabOptionError,
-        match=f": Your config-file is missing a required option: 'target'",
+        match="Your config-file is missing a required option: 'target'",
     ):
         with Scarab(argv=["backup", "profile", "basic"]) as app:
             app.run()
@@ -100,7 +100,7 @@ def it_raises_argument_error_if_given_an_invalid_path(
     )
     with pytest.raises(
         ScarabArgumentError,
-        match=": A location has an invalid path",
+        match="A location has an invalid path",
     ):
         with Scarab(argv=["backup", "profile", "basic"]) as app:
             app.run()

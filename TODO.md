@@ -1,15 +1,13 @@
 # Commit
 
-- improve records
-
-- update README for auto-command
+- fix checking of required args when running with cli-args
 
 ## In Progress
 
 - refactor interactions-uses in auto() into separate functions
   - rename interactions to init
   - rename controller->s
-  - catch EOFError form inputs
+  - catch EOFError from inputs
   - ? change typevar
 
 ## Backlog

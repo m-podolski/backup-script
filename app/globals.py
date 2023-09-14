@@ -27,8 +27,14 @@ class ScarabError(ScarabException):
 
 
 class ScarabOptionError(ScarabException):
-    def __init__(self, message: str) -> None:
-        super().__init__(f"Scarab got wrong or conflicting options: {message}")
+    message_prefix: str = "Scarab got wrong or conflicting options"
+
+    def __init__(
+        self,
+        message: str,
+        option: str,
+    ) -> None:
+        super().__init__(f"Scarab got wrong or conflicting options: {message}: '{option}'")
 
 
 class ScarabArgumentError(ScarabException):

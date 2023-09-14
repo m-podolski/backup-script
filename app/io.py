@@ -36,7 +36,7 @@ def print_styled(content: str, style: Style) -> None:
 
 def get_input(prompt: str, output_mode: OutputMode) -> str:
     if output_mode is OutputMode.QUIET:
-        raise ScarabOptionError("Cannot receive input in quiet mode")
+        raise ScarabOptionError("Cannot receive input in quiet mode", "--quiet")
     return input(prompt)
 
 

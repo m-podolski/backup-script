@@ -6,7 +6,7 @@ from unittest.mock import MagicMock, Mock, _Call, call  # pyright: ignore
 import pytest
 from pytest_mock import MockerFixture
 
-import app.interactions as interactions
+import app.init as init
 from app.globals import BackupMode, ScarabArgumentError, ScarabOptionError
 from app.locations import Location, Source, Target
 from app.main import ScarabTest
@@ -25,7 +25,7 @@ from tests.conftest import (
 def it_expands_paths(
     path_in: str | None,
 ) -> None:
-    source: Source = interactions.init_location(path_in, Source)
+    source: Source = init.init_location(path_in, Source)
 
     assert str(source.path) == os.environ["HOME"]
 
@@ -55,7 +55,7 @@ def it_gets_paths_if_arg_is_missing_empty_or_invalid(
     mock_input: MagicMock = mocker.patch("builtins.input")
     mock_input.side_effect = ["", "invalid_again", valid_path]
 
-    source: Source = interactions.init_location(path_in, Source)
+    source: Source = init.init_location(path_in, Source)
 
     mock_input.assert_called_with("Path: ")
     assert mock_input.call_count == 3
@@ -69,7 +69,7 @@ def it_raises_in_quiet_mode_when_input_required(
 
     with pytest.raises(
         ScarabOptionError,
-        match=r": Cannot receive input in quiet mode$",
+        match=r"Cannot receive input in quiet mode: '--quiet'",
     ):
         with ScarabTest(argv=["-q", "backup", "create", "--source", "invalid"]) as app:
             app.run()
@@ -85,7 +85,7 @@ def it_raises_when_source_is_the_selected_existing_backup_dir(
 
     with pytest.raises(
         ScarabArgumentError,
-        match=f"Scarab got invalid arguments: Source is the selected existing backup-directory\n'source' is '{str(test_path)}'",
+        match=f"Source is the selected existing backup-directory\n'source' is '{str(test_path)}'",
     ):
         with ScarabTest(
             argv=[
@@ -128,7 +128,7 @@ def it_gets_dir_selection_with_rescan_option_when_in_media_dir(
     mock_input: Mock = mocker.patch("builtins.input")
     mock_input.side_effect = [target_content_rescan_option_num, "1"]
 
-    target: Target = interactions.select_media_dir(Source("~"), Target(media_dir_fixture))
+    target: Target = init.select_media_dir(Source("~"), Target(media_dir_fixture))
 
     call_list_item: _Call = call(
         "select_directory.jinja2",
@@ -177,7 +177,7 @@ def it_gets_the_target_name_from_a_selection_menu(mocker: MockerFixture, tmp_pat
     mock_input: MagicMock = mocker.patch("builtins.input")
     mock_input.return_value = "5"
 
-    target_name: str = interactions.select_backup_name(Source(test_source_path), Target("~"))
+    target_name: str = init.select_backup_name(Source(test_source_path), Target("~"))
 
     mock_input.assert_called_with("Number: ")
     mock_render.assert_called_with(
@@ -199,7 +199,7 @@ def it_gets_the_target_name_again_in_create_mode_if_it_already_exists(
     mock_input: MagicMock = mocker.patch("builtins.input")
     mock_input.side_effect = ["1", "5"]
 
-    target_name: str = interactions.select_backup_name(
+    target_name: str = init.select_backup_name(
         Source(test_target_sub_path), Target(test_target_path), is_create=True
     )
 
@@ -273,6 +273,24 @@ def it_creates_and_updates_in_auto_mode(
         assert mock_arg_2.target == str(tmp_path / "target")
         assert mock_arg_2.existing_backup == existing_backup_newer
         assert mock_arg_2.backup_name == make_backup_name("source", 5)
+
+
+def it_auto_raises_if_run_without_required_args(
+    tmp_path: Path,
+) -> None:
+    with pytest.raises(
+        ScarabOptionError,
+        match="You did not specify a required option: 'target'",
+    ):
+        with ScarabTest(
+            argv=[
+                "backup",
+                "auto",
+                "--source",
+                str(tmp_path / "source"),
+            ]
+        ) as app:
+            app.run()
 
 
 def it_prints_backup_information(

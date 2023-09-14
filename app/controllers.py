@@ -4,7 +4,7 @@ from typing import Optional, Tuple
 from cement import Controller, ex, get_version  # pyright: ignore
 
 import app.config as config
-import app.interactions as interactions
+import app.init as init
 import app.io as io
 from app.globals import (
     BackupMode,
@@ -123,20 +123,26 @@ class Backup(Controller):
         name_arg: int
         ignore_datetime: bool
 
-        source_arg, target_arg, name_arg, ignore_datetime = (
-            self._initialize_required_args(profile) if profile else self._initialize_required_args()
-        )
+        if profile:
+            (
+                source_arg,
+                target_arg,
+                name_arg,
+                ignore_datetime,
+            ) = self._init_required_args_from_config(profile)
+        else:
+            source_arg, target_arg, name_arg, ignore_datetime = self._init_required_args_from_cli()
 
-        source: Source = interactions.init_location(source_arg, Source, OutputMode.AUTO)
-        target: Target = interactions.init_location(target_arg, Target, OutputMode.AUTO)
+        source: Source = init.init_location(source_arg, Source, OutputMode.AUTO)  # pyright: ignore
+        target: Target = init.init_location(target_arg, Target, OutputMode.AUTO)  # pyright: ignore
 
-        target.backup_name = interactions.select_backup_name(source, target, name_arg)
+        target.backup_name = init.select_backup_name(source, target, name_arg)  # pyright: ignore
 
         if ignore_datetime:
             if name_arg <= 3:
-                name_to_find: str = interactions.select_backup_name(source, target, 1)
+                name_to_find: str = init.select_backup_name(source, target, 1)
             else:
-                name_to_find = interactions.select_backup_name(source, target, 4)
+                name_to_find = init.select_backup_name(source, target, 4)
 
             target.select_latest_existing_backup(name_to_find)
 
@@ -169,21 +175,17 @@ class Backup(Controller):
         target_arg: str
         name_arg: Optional[int]
         output_mode: OutputMode
-        source_arg, target_arg, name_arg, output_mode = self._initialize_optional_args()
+        source_arg, target_arg, name_arg, output_mode = self._init_optional_args()
 
-        source: Source = interactions.init_location(
-            source_arg, Source, output_mode  # pyright: ignore
-        )
-        target: Target = interactions.init_location(
-            target_arg, Target, output_mode  # pyright: ignore
-        )
+        source: Source = init.init_location(source_arg, Source, output_mode)  # pyright: ignore
+        target: Target = init.init_location(target_arg, Target, output_mode)  # pyright: ignore
 
         if target.is_media_dir:
-            target = interactions.select_media_dir(source, target, output_mode)
+            target = init.select_media_dir(source, target, output_mode)
 
         io.render("target_contents.jinja2", TargetContent(target_content=target.content))
 
-        target.backup_name = interactions.select_backup_name(
+        target.backup_name = init.select_backup_name(
             source,
             target,
             name_arg,
@@ -211,26 +213,22 @@ class Backup(Controller):
         target_arg: str
         name_arg: Optional[int]
         output_mode: OutputMode
-        source_arg, target_arg, name_arg, output_mode = self._initialize_optional_args()
+        source_arg, target_arg, name_arg, output_mode = self._init_optional_args()
 
-        source: Source = interactions.init_location(
-            source_arg, Source, output_mode  # pyright: ignore
-        )
-        target: Target = interactions.init_location(
-            target_arg, Target, output_mode  # pyright: ignore
-        )
+        source: Source = init.init_location(source_arg, Source, output_mode)  # pyright: ignore
+        target: Target = init.init_location(target_arg, Target, output_mode)  # pyright: ignore
 
         if target.is_media_dir:
-            target = interactions.select_media_dir(source, target, output_mode)
+            target = init.select_media_dir(source, target, output_mode)
 
-        target.existing_backup = interactions.select_backup_directory(target, output_mode)
+        target.existing_backup = init.select_backup_directory(target, output_mode)
 
         if source.path == target.existing_backup:
             raise ScarabArgumentError(
                 "Source is the selected existing backup-directory", "source", str(source.path)
             )
 
-        target.backup_name = interactions.select_backup_name(
+        target.backup_name = init.select_backup_name(
             source,
             target,
             name_arg,  # pyright: ignore
@@ -248,7 +246,7 @@ class Backup(Controller):
             ),
         )
 
-    def _initialize_optional_args(self) -> Tuple[str, str, Optional[int], OutputMode]:
+    def _init_optional_args(self) -> Tuple[str, str, Optional[int], OutputMode]:
         quiet: bool = self.app.quiet  # pyright: ignore
         source_arg: Optional[str] = self.app.pargs.source  # pyright: ignore
         target_arg: Optional[str] = self.app.pargs.target  # pyright: ignore
@@ -268,20 +266,17 @@ class Backup(Controller):
             output_mode,
         )  # pyright: ignore
 
-    def _initialize_required_args(
-        self, profile: Optional[ScarabProfile] = None
-    ) -> Tuple[str, str, int, bool]:
-        if profile:
-            args: ScarabProfile = profile  # pyright: ignore
-        else:
-            args: ScarabProfile = vars(self.app.pargs)  # pyright: ignore
+    def _init_required_args_from_config(self, profile: ScarabProfile) -> Tuple[str, str, int, bool]:
+        args: ScarabProfile = profile  # pyright: ignore
 
         try:
             source_arg: str = args["source"]  # pyright: ignore
             target_arg: str = args["target"]  # pyright: ignore
-            name_arg: int = int(args["name"])  # pyright: ignore
+            name_arg: int = args["name"]  # pyright: ignore
         except KeyError as e:
-            raise ScarabOptionError(f"Your config-file is missing a required option: {e}")
+            raise ScarabOptionError(
+                f"Your config-file is missing a required option", f"{e.args[0]}"
+            )
 
         try:
             ignore_datetime: bool = args["ignore_datetime"]  # pyright: ignore
@@ -291,9 +286,34 @@ class Backup(Controller):
         return (
             source_arg,
             target_arg,
-            name_arg,
+            int(name_arg),
             ignore_datetime,
-        )  # pyright: ignore[reportUnknownVariableType]
+        )
+
+    def _init_required_args_from_cli(self) -> Tuple[str, str, int, bool]:
+        args: ScarabProfile = vars(self.app.pargs)  # pyright: ignore
+
+        required_args: list[str] = ["source", "target", "name"]
+        none_args: list[str] = [
+            key
+            for key, value in args.items()  # pyright: ignore
+            if key in required_args and value is None
+        ]
+        if len(none_args) > 0:
+            raise ScarabOptionError(f"You did not specify a required option", f"{none_args[0]}")
+        else:
+            source_arg: str = args["source"]  # pyright: ignore
+            target_arg: str = args["target"]  # pyright: ignore
+            name_arg: int = args["name"]  # pyright: ignore
+
+            ignore_datetime: bool = args["ignore_datetime"]  # pyright: ignore
+
+        return (
+            source_arg,
+            target_arg,
+            int(name_arg),
+            ignore_datetime,
+        )
 
 
 class Config(Controller):

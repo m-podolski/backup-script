@@ -27,10 +27,18 @@ So running your backup becomes a easy as remembering the names of your own profi
 ```conf
 scarab backup
   [--help]
-  [create | update]
+  create | update
   [--source <path>]
   [--target <path> | --media]
   [--name]
+
+scarab backup
+  [--help]
+  auto
+  --source <path>
+  --target <path> | --media
+  --name
+  [--ignore-datetime]
 
 scarab backup [--help] profile <profile_name>
 
@@ -50,6 +58,7 @@ scarab config [--help] [put] [--force]
 | - | - |
 | create | Create a new backup |
 | update | Update an existing backup |
+| auto | Create or update based on existing backups |
 | profile | Use a profile from your config-file |
 
 #### Options
@@ -63,6 +72,7 @@ Note that you can start scarab without any arguments and will be prompted for in
 | -t \<path> | --target \<path> | The target-path |
 | -m | --media | Select your media-directory as target |
 | -n 1..6 | --name 1..6 | The name-format for your backup (see below) |
+| -i | --ignore-datetime | Select the latest existing backup-directory and rename it |
 
 #### Arguments
 
