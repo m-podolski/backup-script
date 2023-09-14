@@ -5,6 +5,12 @@ ScarabProfile: TypeAlias = dict[Literal["profile", "source", "target", "name"], 
 ScarabConfig: TypeAlias = dict[str, list[ScarabProfile]]
 
 
+class BackupMode(Enum):
+    AUTO = "Auto"
+    CREATE = "Create"
+    UPDATE = "Update"
+
+
 class OutputMode(Enum):
     QUIET = 1
     NORMAL = 2

@@ -1,25 +1,27 @@
-from dataclasses import dataclass
 import datetime
 import os
-from pathlib import Path
 import socket
-from typing import Literal, Optional, TypeAlias
+from dataclasses import asdict, dataclass
+from pathlib import Path
+from typing import Mapping, Optional, Sequence
+
+from typing_extensions import override
+
+from app.globals import BackupMode
 
 
-@dataclass
+@dataclass(init=True, kw_only=True)
 class ScarabRecord:
-    pass
+    def to_dict(self) -> Mapping[str, str | Sequence[str] | int]:
+        return asdict(self)
 
 
-@dataclass(init=True, repr=True)
-class ScarabMessage(ScarabRecord):
+@dataclass(init=True)
+class Message(ScarabRecord):
     message: str
 
 
-BackupMode: TypeAlias = Literal["Auto", "Create", "Update"]
-
-
-@dataclass(repr=True)
+@dataclass
 class BackupParams(ScarabRecord):
     backup_mode: BackupMode
     source: str
@@ -29,6 +31,7 @@ class BackupParams(ScarabRecord):
 
     def __init__(
         self,
+        *,
         backup_mode: BackupMode,
         source: Path,
         target: Path,
@@ -42,7 +45,7 @@ class BackupParams(ScarabRecord):
         self.backup_name = backup_name
 
 
-@dataclass(repr=True)
+@dataclass
 class TargetContent(ScarabRecord):
     target_content: list[str]
     source: Optional[str]
@@ -50,13 +53,14 @@ class TargetContent(ScarabRecord):
 
     def __init__(
         self,
+        *,
         target_content: list[str],
         source: Optional[Path] = None,
         target: Optional[Path] = None,
     ) -> None:
+        self.target_content = target_content
         self.source = str(source)
         self.target = str(target)
-        self.target_content = target_content
 
 
 class NameFormats(ScarabRecord):
@@ -68,24 +72,36 @@ class NameFormats(ScarabRecord):
     ) -> None:
         self._source = source
 
+    @override
+    def to_dict(self) -> dict[str, Sequence[str]]:
+        return {"name_formats": self.name_formats}
+
     @property
-    def name_formats(self) -> list[str]:
-        return list(self._map_formats().keys())
+    def name_formats(self) -> Sequence[str]:
+        return self._print_templates()
 
     def select(self, option: int) -> str:
-        return list(self._map_formats().values())[option - 1]
+        return self._render_templates()[option - 1]
 
-    def _map_formats(self) -> dict[str, str]:
+    def _print_templates(self) -> Sequence[str]:
+        return self._make_templates("<source_dir>", "<user>", "<host>", "<date>", "<time>")
+
+    def _render_templates(self) -> Sequence[str]:
         user: str = os.environ["USER"]
         host: str = socket.gethostname()
         date: str = datetime.datetime.today().strftime("%Y-%m-%d")
         time: str = datetime.datetime.today().strftime("%H-%M-%S")
 
-        return {
-            "<source-dir>": self._source,
-            "<source-dir>_<date>": f"{self._source}_{date}",
-            "<source-dir>_<date-time>": f"{self._source}_{date}-{time}",
-            "<user>@<host>_<source-dir>": f"{user}@{host}_{self._source}",
-            "<user>@<host>_<source-dir>_<date>": f"{user}@{host}_{self._source}_{date}",
-            "<user>@<host>_<source-dir>_<date-time>": f"{user}@{host}_{self._source}_{date}-{time}",
-        }
+        return self._make_templates(self._source, user, host, date, time)
+
+    def _make_templates(
+        self, source: str, user: str, host: str, date: str, time: str
+    ) -> Sequence[str]:
+        return (
+            f"{source}",
+            f"{source}_{date}",
+            f"{source}_{date}-{time}",
+            f"{user}@{host}_{source}",
+            f"{user}@{host}_{source}_{date}",
+            f"{user}@{host}_{source}_{date}-{time}",
+        )

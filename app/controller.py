@@ -7,6 +7,7 @@ import app.config as config
 import app.interactions as interactions
 import app.io as io
 from app.globals import (
+    BackupMode,
     OutputMode,
     ScarabArgumentError,
     ScarabOptionError,
@@ -151,7 +152,7 @@ class Backup(Controller):
         io.render(
             "backup_params.jinja2",
             BackupParams(
-                backup_mode="Auto",
+                backup_mode=BackupMode.AUTO,
                 source=source.path,
                 target=target.path,
                 existing_backup=target.existing_backup,
@@ -193,7 +194,7 @@ class Backup(Controller):
         io.render(
             "backup_params.jinja2",
             BackupParams(
-                backup_mode="Create",
+                backup_mode=BackupMode.CREATE,
                 source=source.path,
                 target=target.path,
                 existing_backup=target.existing_backup,
@@ -239,7 +240,7 @@ class Backup(Controller):
         io.render(
             "backup_params.jinja2",
             BackupParams(
-                backup_mode="Update",
+                backup_mode=BackupMode.UPDATE,
                 source=source.path,
                 target=target.path,
                 existing_backup=target.existing_backup,

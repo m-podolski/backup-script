@@ -4,7 +4,7 @@ from typing import Literal, Optional, TypeAlias, TypeVar
 import app.io as io
 from app.globals import OutputMode, ScarabArgumentError
 from app.locations import Source, Target
-from app.records import NameFormats, ScarabMessage, TargetContent
+from app.records import Message, NameFormats, TargetContent
 
 T = TypeVar("T", Source, Target)
 
@@ -46,12 +46,12 @@ def _check_path(location: T, output_mode: OutputMode = OutputMode.NORMAL) -> T:
 MessageType: TypeAlias = Literal["INVALID_PATH", "NO_PATH_GIVEN"]
 
 
-def _get_message(key: MessageType, name: str) -> ScarabMessage:
-    messages: dict[MessageType, ScarabMessage] = {
-        "INVALID_PATH": ScarabMessage(
+def _get_message(key: MessageType, name: str) -> Message:
+    messages: dict[MessageType, Message] = {
+        "INVALID_PATH": Message(
             f"Your {name.lower()} is not a valid directory! Please check and enter it again."
         ),
-        "NO_PATH_GIVEN": ScarabMessage(
+        "NO_PATH_GIVEN": Message(
             f"Please specify a {name}-path to the directory you want {'backed up' if name == 'source' else 'to back up to'}."
         ),
     }

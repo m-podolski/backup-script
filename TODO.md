@@ -1,11 +1,15 @@
 # Commit
 
-- refactor arg-initialization
+- improve records
+
+- update README for auto-command
 
 ## In Progress
 
 - refactor interactions-uses in auto() into separate functions
   - rename interactions to init
+  - rename controller->s
+  - catch EOFError form inputs
   - ? change typevar
 
 ## Backlog
@@ -17,8 +21,8 @@
   - add source-tree-generation for selective backup
   - add incremental backup-strategy
 
-- cronjob-doc
-
 - configure ci/cd and publish
+  - installation docs
+    - cronjob-doc
 
 > 0.6.0
