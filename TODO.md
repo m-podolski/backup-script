@@ -1,10 +1,8 @@
 # Commit
 
-- refactor to use NameFormats instead of init.select_backup_name
+- catch EOFError from inputs
 
 ## In Progress
-
-- catch EOFError from inputs
 
 ## Backlog
 

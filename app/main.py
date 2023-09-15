@@ -51,6 +51,9 @@ def main() -> None:
             print("\n%s" % e)
             app.exit_code = 0
 
+        except EOFError as e:
+            app.exit_code = 0
+
 
 if __name__ == "__main__":
     main()
