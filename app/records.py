@@ -1,6 +1,7 @@
 import datetime
 import os
 import socket
+from abc import ABC, abstractmethod
 from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Mapping, Optional, Sequence
@@ -10,20 +11,26 @@ from typing_extensions import override
 from app.globals import BackupMode
 
 
+class ScarabRecord(ABC):
+    @abstractmethod
+    def to_dict(self) -> Mapping[str, str | Sequence[str] | int]:
+        ...
+
+
 @dataclass(init=True, kw_only=True)
-class ScarabRecord:
+class ScarabDataclass(ScarabRecord):
     def to_dict(self) -> Mapping[str, str | Sequence[str] | int]:
         return asdict(self)
 
 
 @dataclass(init=True)
-class Message(ScarabRecord):
+class Message(ScarabDataclass):
     message: str
 
 
 @dataclass
-class BackupParams(ScarabRecord):
-    backup_mode: BackupMode
+class BackupParams(ScarabDataclass):
+    backup_mode: str
     source: str
     target: str
     existing_backup: Optional[str]
@@ -38,7 +45,7 @@ class BackupParams(ScarabRecord):
         existing_backup: Optional[Path],
         backup_name: str,
     ) -> None:
-        self.backup_mode = backup_mode
+        self.backup_mode = backup_mode.value
         self.source = str(source)
         self.target = str(target)
         self.existing_backup = str(existing_backup.name) if existing_backup else None
@@ -46,7 +53,7 @@ class BackupParams(ScarabRecord):
 
 
 @dataclass
-class TargetContent(ScarabRecord):
+class TargetContent(ScarabDataclass):
     target_content: list[str]
     source: Optional[str]
     target: Optional[str]

@@ -180,9 +180,14 @@ def it_gets_the_target_name_from_a_selection_menu(mocker: MockerFixture, tmp_pat
     target_name: str = init.select_backup_name(Source(test_source_path), Target("~"))
 
     mock_input.assert_called_with("Number: ")
-    mock_render.assert_called_with(
-        "select_target_name.jinja2",
-        NameFormats("test"),
+    mock_arg: NameFormats = mock_render.mock_calls[0].args[1]
+    assert mock_arg.name_formats == (
+        "<source_dir>",
+        "<source_dir>_<date>",
+        "<source_dir>_<date>-<time>",
+        "<user>@<host>_<source_dir>",
+        "<user>@<host>_<source_dir>_<date>",
+        "<user>@<host>_<source_dir>_<date>-<time>",
     )
     assert target_name == make_backup_name("test", 5)
 
@@ -203,16 +208,14 @@ def it_gets_the_target_name_again_in_create_mode_if_it_already_exists(
         Source(test_target_sub_path), Target(test_target_path), is_create=True
     )
 
-    call_list_item: _Call = call(
-        "select_target_name.jinja2",
-        NameFormats("directory"),
-    )
-
-    mock_render.assert_has_calls(
-        [
-            call_list_item,
-            call_list_item,
-        ]
+    mock_arg: NameFormats = mock_render.mock_calls[0].args[1]
+    assert mock_arg.name_formats == (
+        "<source_dir>",
+        "<source_dir>_<date>",
+        "<source_dir>_<date>-<time>",
+        "<user>@<host>_<source_dir>",
+        "<user>@<host>_<source_dir>_<date>",
+        "<user>@<host>_<source_dir>_<date>-<time>",
     )
     assert target_name == make_backup_name("directory", 5)
 

@@ -1,14 +1,14 @@
 # Commit
 
-- fix checking of required args when running with cli-args
+- add separate class hierarchy for dataclass-scarab-records
 
 ## In Progress
 
-- refactor interactions-uses in auto() into separate functions
-  - rename interactions to init
-  - rename controller->s
-  - catch EOFError from inputs
+- refactor interactions for use with auto
+  - refactor interactions-uses in auto() into separate functions
   - ? change typevar
+
+- catch EOFError from inputs
 
 ## Backlog
 

@@ -272,7 +272,7 @@ class Backup(Controller):
         try:
             source_arg: str = args["source"]  # pyright: ignore
             target_arg: str = args["target"]  # pyright: ignore
-            name_arg: int = args["name"]  # pyright: ignore
+            name_arg: str = args["name"]  # pyright: ignore
         except KeyError as e:
             raise ScarabOptionError(
                 f"Your config-file is missing a required option", f"{e.args[0]}"
@@ -304,7 +304,7 @@ class Backup(Controller):
         else:
             source_arg: str = args["source"]  # pyright: ignore
             target_arg: str = args["target"]  # pyright: ignore
-            name_arg: int = args["name"]  # pyright: ignore
+            name_arg: str = args["name"]  # pyright: ignore
 
             ignore_datetime: bool = args["ignore_datetime"]  # pyright: ignore
 
