@@ -1,12 +1,9 @@
 # Commit
 
-- add separate class hierarchy for dataclass-scarab-records
+- refactor init for use with auto
+  - refactor location-init into normal and interactive functions
 
 ## In Progress
-
-- refactor interactions for use with auto
-  - refactor interactions-uses in auto() into separate functions
-  - ? change typevar
 
 - catch EOFError from inputs
 

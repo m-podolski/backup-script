@@ -133,8 +133,8 @@ class Backup(Controller):
         else:
             source_arg, target_arg, name_arg, ignore_datetime = self._init_required_args_from_cli()
 
-        source: Source = init.init_location(source_arg, Source, OutputMode.AUTO)  # pyright: ignore
-        target: Target = init.init_location(target_arg, Target, OutputMode.AUTO)  # pyright: ignore
+        source: Source = init.init_location(Source(source_arg))
+        target: Target = init.init_location(Target(target_arg))
 
         target.backup_name = init.select_backup_name(source, target, name_arg)  # pyright: ignore
 
@@ -177,8 +177,8 @@ class Backup(Controller):
         output_mode: OutputMode
         source_arg, target_arg, name_arg, output_mode = self._init_optional_args()
 
-        source: Source = init.init_location(source_arg, Source, output_mode)  # pyright: ignore
-        target: Target = init.init_location(target_arg, Target, output_mode)  # pyright: ignore
+        source: Source = init.init_location_interactively(source_arg, Source, output_mode)
+        target: Target = init.init_location_interactively(target_arg, Target, output_mode)
 
         if target.is_media_dir:
             target = init.select_media_dir(source, target, output_mode)
@@ -215,8 +215,8 @@ class Backup(Controller):
         output_mode: OutputMode
         source_arg, target_arg, name_arg, output_mode = self._init_optional_args()
 
-        source: Source = init.init_location(source_arg, Source, output_mode)  # pyright: ignore
-        target: Target = init.init_location(target_arg, Target, output_mode)  # pyright: ignore
+        source: Source = init.init_location_interactively(source_arg, Source, output_mode)
+        target: Target = init.init_location_interactively(target_arg, Target, output_mode)
 
         if target.is_media_dir:
             target = init.select_media_dir(source, target, output_mode)

@@ -14,7 +14,6 @@ class BackupMode(Enum):
 class OutputMode(Enum):
     QUIET = 1
     NORMAL = 2
-    AUTO = 3
 
 
 class ScarabException(Exception):

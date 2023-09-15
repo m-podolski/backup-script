@@ -10,12 +10,25 @@ T = TypeVar("T", Source, Target)
 
 
 def init_location(
+    location: T,
+) -> T:
+    if location.is_valid:
+        return location
+    else:
+        raise ScarabArgumentError(
+            "A location has an invalid path",
+            f"{location.name.lower()}",
+            f"{str(location.path)}",
+        )
+
+
+def init_location_interactively(
     path_arg: Optional[str],
-    location: type[T],
+    location_class: type[T],
     output_mode: OutputMode = OutputMode.NORMAL,
 ) -> T:
-    path_input: str = _check_for_empty_arg(path_arg, location.__name__, output_mode)
-    return _check_path(location(path_input), output_mode)
+    path_input: str = _check_for_empty_arg(path_arg, location_class.__name__, output_mode)
+    return _check_path(location_class(path_input), output_mode)
 
 
 def _check_for_empty_arg(path_arg: Optional[str], name: str, output_mode: OutputMode) -> str:
@@ -30,12 +43,6 @@ def _check_path(location: T, output_mode: OutputMode = OutputMode.NORMAL) -> T:
     if location.is_valid:
         return location
     else:
-        if output_mode is OutputMode.AUTO:
-            raise ScarabArgumentError(
-                "A location has an invalid path",
-                f"{location.name.lower()}",
-                f"{str(location.path)}",
-            )
         location.path = io.get_path_input(
             _get_message("INVALID_PATH", location.name),
             output_mode,

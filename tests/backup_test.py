@@ -25,7 +25,7 @@ from tests.conftest import (
 def it_expands_paths(
     path_in: str | None,
 ) -> None:
-    source: Source = init.init_location(path_in, Source)
+    source: Source = init.init_location_interactively(path_in, Source)
 
     assert str(source.path) == os.environ["HOME"]
 
@@ -55,7 +55,7 @@ def it_gets_paths_if_arg_is_missing_empty_or_invalid(
     mock_input: MagicMock = mocker.patch("builtins.input")
     mock_input.side_effect = ["", "invalid_again", valid_path]
 
-    source: Source = init.init_location(path_in, Source)
+    source: Source = init.init_location_interactively(path_in, Source)
 
     mock_input.assert_called_with("Path: ")
     assert mock_input.call_count == 3
