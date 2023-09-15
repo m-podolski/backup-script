@@ -14,7 +14,7 @@ from app.globals import (
     ScarabProfile,
 )
 from app.locations import Source, Target
-from app.records import BackupParams, TargetContent
+from app.records import BackupParams, NameFormats, TargetContent
 
 VERSION: tuple[int, int, int, str, int] = (0, 5, 0, "alpha", 0)
 VERSION_BANNER: str = """
@@ -136,13 +136,14 @@ class Backup(Controller):
         source: Source = init.init_location(Source(source_arg))
         target: Target = init.init_location(Target(target_arg))
 
-        target.backup_name = init.select_backup_name(source, target, name_arg)  # pyright: ignore
+        name_formats = NameFormats(source.path.name)
+        target.backup_name = name_formats.select(name_arg)
 
         if ignore_datetime:
             if name_arg <= 3:
-                name_to_find: str = init.select_backup_name(source, target, 1)
+                name_to_find: str = name_formats.select(1)
             else:
-                name_to_find = init.select_backup_name(source, target, 4)
+                name_to_find: str = name_formats.select(4)
 
             target.select_latest_existing_backup(name_to_find)
 

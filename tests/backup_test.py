@@ -182,12 +182,12 @@ def it_gets_the_target_name_from_a_selection_menu(mocker: MockerFixture, tmp_pat
     mock_input.assert_called_with("Number: ")
     mock_arg: NameFormats = mock_render.mock_calls[0].args[1]
     assert mock_arg.name_formats == (
-        "<source_dir>",
-        "<source_dir>_<date>",
-        "<source_dir>_<date>-<time>",
-        "<user>@<host>_<source_dir>",
-        "<user>@<host>_<source_dir>_<date>",
-        "<user>@<host>_<source_dir>_<date>-<time>",
+        "<source-dir>",
+        "<source-dir>_<date>",
+        "<source-dir>_<date>-<time>",
+        "<user>@<host>_<source-dir>",
+        "<user>@<host>_<source-dir>_<date>",
+        "<user>@<host>_<source-dir>_<date>-<time>",
     )
     assert target_name == make_backup_name("test", 5)
 
@@ -210,12 +210,12 @@ def it_gets_the_target_name_again_in_create_mode_if_it_already_exists(
 
     mock_arg: NameFormats = mock_render.mock_calls[0].args[1]
     assert mock_arg.name_formats == (
-        "<source_dir>",
-        "<source_dir>_<date>",
-        "<source_dir>_<date>-<time>",
-        "<user>@<host>_<source_dir>",
-        "<user>@<host>_<source_dir>_<date>",
-        "<user>@<host>_<source_dir>_<date>-<time>",
+        "<source-dir>",
+        "<source-dir>_<date>",
+        "<source-dir>_<date>-<time>",
+        "<user>@<host>_<source-dir>",
+        "<user>@<host>_<source-dir>_<date>",
+        "<user>@<host>_<source-dir>_<date>-<time>",
     )
     assert target_name == make_backup_name("directory", 5)
 

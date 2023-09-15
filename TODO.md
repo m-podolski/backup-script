@@ -1,7 +1,6 @@
 # Commit
 
-- refactor init for use with auto
-  - refactor location-init into normal and interactive functions
+- refactor to use NameFormats instead of init.select_backup_name
 
 ## In Progress
 

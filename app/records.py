@@ -19,6 +19,7 @@ class ScarabRecord(ABC):
 
 @dataclass(init=True, kw_only=True)
 class ScarabDataclass(ScarabRecord):
+    @override
     def to_dict(self) -> Mapping[str, str | Sequence[str] | int]:
         return asdict(self)
 
@@ -91,7 +92,7 @@ class NameFormats(ScarabRecord):
         return self._render_templates()[option - 1]
 
     def _print_templates(self) -> Sequence[str]:
-        return self._make_templates("<source_dir>", "<user>", "<host>", "<date>", "<time>")
+        return self._make_templates("<source-dir>", "<user>", "<host>", "<date>", "<time>")
 
     def _render_templates(self) -> Sequence[str]:
         user: str = os.environ["USER"]

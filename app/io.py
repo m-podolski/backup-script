@@ -26,7 +26,6 @@ STYLES: dict[Style, str] = {
 def render(file: str, content: ScarabRecord, style: Style = "NONE") -> None:
     template: Template = env.get_template(file)
     styled: str = _escape_string(template.render(content.to_dict()), style)
-    # styled: str = _escape_string(template.render(dataclasses.asdict(content)), style)
     print(styled)
 
 
