@@ -4,11 +4,7 @@ from typing import Literal, TypeAlias
 ScarabProfile: TypeAlias = dict[Literal["profile", "source", "target", "name"], str | int]
 ScarabConfig: TypeAlias = dict[str, list[ScarabProfile]]
 
-
-class BackupMode(Enum):
-    AUTO = "Auto"
-    CREATE = "Create"
-    UPDATE = "Update"
+BackupMode: TypeAlias = Literal["Auto", "Create", "Update"]
 
 
 class OutputMode(Enum):

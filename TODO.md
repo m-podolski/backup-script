@@ -1,17 +1,23 @@
 # Commit
 
-- catch EOFError from inputs
+- add simple backup creation and update
+  - refactor existing-backup-selection
 
 ## In Progress
 
+- add copy-operation
+  - refactor empty-config-fixture to send config
+  - add parallel tree-iteration
+  - add incremental backup
+    - add creating new
+    - add removing deleted
+    - add updating newer
+  - add selective backup
+  - add display of data transferred (with path.lstat().st_size)
+
 ## Backlog
 
-- add copy-operation
-  - add basic backup-strategy
-  - add logging
-  - add display of data transferred (with path.lstat().st_size)
-  - add source-tree-generation for selective backup
-  - add incremental backup-strategy
+- add error-logging
 
 - configure ci/cd and publish
   - installation docs

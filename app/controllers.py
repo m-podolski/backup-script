@@ -1,4 +1,5 @@
 import os
+import shutil
 from typing import Optional, Tuple
 
 from cement import Controller, ex, get_version  # pyright: ignore
@@ -139,13 +140,20 @@ class Backup(Controller):
         name_formats = NameFormats(source.path.name)
         target.backup_name = name_formats.select(name_arg)
 
+        # target.select_existing_backup(ignore_datetime, name_arg, name_formats)
+
         if ignore_datetime:
             if name_arg <= 3:
                 name_to_find: str = name_formats.select(1)
             else:
                 name_to_find: str = name_formats.select(4)
 
-            target.select_latest_existing_backup(name_to_find)
+            matches: list[str] = [
+                dir
+                for dir in sorted(target.content_dirs, reverse=True)
+                if dir.startswith(name_to_find)
+            ]
+            target.existing_backup = target.path / matches[0] if matches else None
 
         else:
             if target.backup_name in target.content_dirs:
@@ -156,16 +164,7 @@ class Backup(Controller):
                 "Source is the selected existing backup-directory", "source", str(source.path)
             )
 
-        io.render(
-            "backup_params.jinja2",
-            BackupParams(
-                backup_mode=BackupMode.AUTO,
-                source=source.path,
-                target=target.path,
-                existing_backup=target.existing_backup,
-                backup_name=target.backup_name,
-            ),
-        )
+        self._execute(source, target, "Auto")
 
     @ex(
         help="Create a new backup",
@@ -194,16 +193,7 @@ class Backup(Controller):
             is_create=True,
         )
 
-        io.render(
-            "backup_params.jinja2",
-            BackupParams(
-                backup_mode=BackupMode.CREATE,
-                source=source.path,
-                target=target.path,
-                existing_backup=target.existing_backup,
-                backup_name=target.backup_name,
-            ),
-        )
+        self._execute(source, target, "Create")
 
     @ex(
         help="Update an existing backup",
@@ -232,20 +222,11 @@ class Backup(Controller):
         target.backup_name = init.select_backup_name(
             source,
             target,
-            name_arg,  # pyright: ignore
+            name_arg,
             output_mode,
         )
 
-        io.render(
-            "backup_params.jinja2",
-            BackupParams(
-                backup_mode=BackupMode.UPDATE,
-                source=source.path,
-                target=target.path,
-                existing_backup=target.existing_backup,
-                backup_name=target.backup_name,
-            ),
-        )
+        self._execute(source, target, "Update")
 
     def _init_optional_args(self) -> Tuple[str, str, Optional[int], OutputMode]:
         quiet: bool = self.app.quiet  # pyright: ignore
@@ -314,6 +295,26 @@ class Backup(Controller):
             target_arg,
             int(name_arg),
             ignore_datetime,
+        )
+
+    def _execute(self, source: Source, target: Target, backup_mode: BackupMode) -> None:
+        io.render(
+            "backup_params.jinja2",
+            BackupParams(
+                backup_mode=backup_mode,
+                source=source.path,
+                target=target.path,
+                existing_backup=target.existing_backup,
+                backup_name=target.backup_name,
+            ),
+        )
+
+        assert target.backup_name
+
+        if target.existing_backup:
+            shutil.rmtree(target.existing_backup)
+        shutil.copytree(
+            source.path, target.path / target.backup_name, ignore_dangling_symlinks=True
         )
 
 

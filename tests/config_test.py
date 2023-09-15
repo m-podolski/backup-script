@@ -61,7 +61,7 @@ def it_raises_if_config_is_missing_required_args(
             "scarab": {
                 "profiles": [
                     {
-                        "profile": "basic",
+                        "profile": "test",
                         "source": "~",
                         "name": 5,
                     }
@@ -75,7 +75,7 @@ def it_raises_if_config_is_missing_required_args(
         ScarabOptionError,
         match="Your config-file is missing a required option: 'target'",
     ):
-        with Scarab(argv=["backup", "profile", "basic"]) as app:
+        with Scarab(argv=["backup", "profile", "test"]) as app:
             app.run()
 
 
@@ -88,7 +88,7 @@ def it_raises_argument_error_if_given_an_invalid_path(
             "scarab": {
                 "profiles": [
                     {
-                        "profile": "basic",
+                        "profile": "test",
                         "source": str(tmp_path / "invalid"),
                         "target": str(tmp_path),
                         "name": 5,
@@ -102,7 +102,7 @@ def it_raises_argument_error_if_given_an_invalid_path(
         ScarabArgumentError,
         match="A location has an invalid path",
     ):
-        with Scarab(argv=["backup", "profile", "basic"]) as app:
+        with Scarab(argv=["backup", "profile", "test"]) as app:
             app.run()
 
 
@@ -119,7 +119,7 @@ def it_uses_the_config_file_if_an_existing_profile_is_given(
             "scarab": {
                 "profiles": [
                     {
-                        "profile": "basic",
+                        "profile": "test",
                         "source": str(tmp_path / "source"),
                         "target": str(tmp_path / "target"),
                         "name": 5,
@@ -132,7 +132,7 @@ def it_uses_the_config_file_if_an_existing_profile_is_given(
 
     mock_render: Mock = mocker.patch("app.io.render")
 
-    with Scarab(argv=["backup", "profile", "basic"]) as app:
+    with Scarab(argv=["backup", "profile", "test"]) as app:
         app.run()
 
         mock_arg: BackupParams = mock_render.mock_calls[0].args[1]
@@ -161,7 +161,7 @@ def it_selects_an_existing_backup_by_name_format(
             "scarab": {
                 "profiles": [
                     {
-                        "profile": "basic",
+                        "profile": "test",
                         "source": str(tmp_path / "source"),
                         "target": str(tmp_path / "target"),
                         "name": 5,
@@ -174,7 +174,7 @@ def it_selects_an_existing_backup_by_name_format(
 
     mock_render: Mock = mocker.patch("app.io.render")
 
-    with Scarab(argv=["backup", "profile", "basic"]) as app:
+    with Scarab(argv=["backup", "profile", "test"]) as app:
         app.run()
 
         mock_arg: BackupParams = mock_render.mock_calls[0].args[1]
@@ -208,7 +208,7 @@ def it_selects_an_existing_backup_ignoring_the_date_if_configured(
             "scarab": {
                 "profiles": [
                     {
-                        "profile": "basic",
+                        "profile": "test",
                         "source": str(tmp_path / "source"),
                         "target": str(tmp_path / "target"),
                         "name": 5,
@@ -222,7 +222,7 @@ def it_selects_an_existing_backup_ignoring_the_date_if_configured(
 
     mock_render: Mock = mocker.patch("app.io.render")
 
-    with Scarab(argv=["backup", "profile", "basic"]) as app:
+    with Scarab(argv=["backup", "profile", "test"]) as app:
         app.run()
 
         mock_arg: BackupParams = mock_render.mock_calls[0].args[1]

@@ -4,6 +4,8 @@ from pathlib import Path
 from re import Match
 from typing import Optional
 
+from app.records import NameFormats
+
 
 class Location:
     _path: Path
@@ -58,7 +60,6 @@ class Source(Location):
 
 class Target(Location):
     existing_backup: Optional[Path] = None
-
     backup_name: Optional[str] = None
 
     @property
@@ -104,8 +105,23 @@ class Target(Location):
             [item[0 : len(item) - 1 :] for item in self.content if item[len(item) - 1] == "/"]
         )
 
-    def select_latest_existing_backup(self, name_to_find: str) -> None:
+    def select_existing_backup(
+        self, ignore_datetime: bool, name_arg: int, name_formats: NameFormats
+    ) -> None:
+        if ignore_datetime:
+            if name_arg <= 3:
+                name_to_find: str = name_formats.select(1)
+            else:
+                name_to_find: str = name_formats.select(4)
+
+            self._select_latest_existing_backup(name_to_find)
+
+        else:
+            if self.backup_name in self.content_dirs:
+                self.existing_backup = self.path / self.backup_name
+
+    def _select_latest_existing_backup(self, name_to_find: str) -> None:
         matches: list[str] = [
             dir for dir in sorted(self.content_dirs, reverse=True) if dir.startswith(name_to_find)
         ]
-        self.existing_backup = self.path / matches[0]
+        self.existing_backup = self.path / matches[0] if matches else None

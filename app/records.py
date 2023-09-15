@@ -17,7 +17,7 @@ class ScarabRecord(ABC):
         ...
 
 
-@dataclass(init=True, kw_only=True)
+@dataclass
 class ScarabDataclass(ScarabRecord):
     @override
     def to_dict(self) -> Mapping[str, str | Sequence[str] | int]:
@@ -35,7 +35,7 @@ class BackupParams(ScarabDataclass):
     source: str
     target: str
     existing_backup: Optional[str]
-    backup_name: str
+    backup_name: Optional[str]
 
     def __init__(
         self,
@@ -44,9 +44,9 @@ class BackupParams(ScarabDataclass):
         source: Path,
         target: Path,
         existing_backup: Optional[Path],
-        backup_name: str,
+        backup_name: Optional[str],
     ) -> None:
-        self.backup_mode = backup_mode.value
+        self.backup_mode = backup_mode
         self.source = str(source)
         self.target = str(target)
         self.existing_backup = str(existing_backup.name) if existing_backup else None

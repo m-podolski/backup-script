@@ -7,7 +7,7 @@ import pytest
 from pytest_mock import MockerFixture
 
 import app.init as init
-from app.globals import BackupMode, ScarabArgumentError, ScarabOptionError
+from app.globals import ScarabArgumentError, ScarabOptionError
 from app.locations import Location, Source, Target
 from app.main import ScarabTest
 from app.records import BackupParams, NameFormats, TargetContent
@@ -328,7 +328,7 @@ def it_prints_backup_information(
                 call(
                     "backup_params.jinja2",
                     BackupParams(
-                        backup_mode=BackupMode.CREATE,
+                        backup_mode="Create",
                         source=source_path,
                         target=tmp_path,
                         existing_backup=None,
